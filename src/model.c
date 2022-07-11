@@ -1,9 +1,9 @@
 #define MAX_OBJ_SIZE 2000
 
 struct TNPVertex { // Texture, Normal, Position
-    SceFVector2 texture;
-    SceFVector3 normal;
     SceFVector3 position;
+    SceFVector3 normal;
+    SceFVector2 texture;
 };
 #define TNP_VERTEX_FORMAT (GU_TEXTURE_32BITF | GU_NORMAL_32BITF | GU_VERTEX_32BITF)
 
@@ -27,9 +27,6 @@ enum faceType {
 struct model {
     enum faceType face_type;
 
-    void *texture_vram;
-    int texture_size;
-
     struct TNPVertex *vertices;
     int num_vertices;
 
@@ -39,45 +36,28 @@ struct model {
 struct model loaded_models[10];
 int loaded_models_n;
 
-static void *loadTexture(const char *texture_filename, enum faceType face_type) {
-    return NULL;
-}
-
-/*
-static void *loadTexture(const char *texture_filename, enum faceType face_type) {
-    FILE *f = fopen(texture_filename, "r");
-
-    fseek(f, 0, SEEK_END);
-    int sz = ftell(f) - 128;
-    fseek(f, 128, SEEK_SET);
-
-    void *texture = malloc(sz);
-    fread(texture, 1, sz, f);
-    PSPconvert_dxt1(texture, sz);
-    sceGuTexSync();
-
-    fclose(f);
-
-    return texture;
-}
-
 void drawModel(int model, SceFVector3 *pos, SceFVector3 *rot, SceFVector3 *scale) {
-    sceGumMatrixMode(GU_MODEL);
-    sceGumLoadIdentity();
-    sceGumTranslate(pos);
-    sceGumRotateXYZ(rot);
-    sceGumScale(scale);
+    glBindBuffer(GL_ARRAY_BUFFER, loaded_models[model].vertexBuffer);
 
-    sceGuTexMode(GU_PSM_DXT1, 0, 0, GU_FALSE);
-    sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
-    sceGuTexLevelMode(GU_TEXTURE_AUTO, 0);
-    sceGuTexFilter(GU_LINEAR, GU_LINEAR);
-    sceGuTexImage(0, loaded_models[model].texture_size, loaded_models[model].texture_size, loaded_models[model].texture_size, loaded_models[model].texture_vram);
+    glBufferData(GL_ARRAY_BUFFER, loaded_models[model].num_vertices * sizeof(struct TNPVertex), loaded_models[model].vertices, GL_STATIC_DRAW);
 
-    sceGuColor(0xffffff);
-    sceGumDrawArray(GU_TRIANGLES, TNP_VERTEX_FORMAT | GU_TRANSFORM_3D, loaded_models[model].num_vertices, NULL, loaded_models[model].vertices);
+    glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(positionLoc);
+    glVertexAttribPointer(normalLoc, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(normalLoc);
+    glVertexAttribPointer(textCoordLoc, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(textCoordLoc);
+
+    rotationMatrix(modelviewMat, 2.0f, -0.8f, -1.0f, -0.3f);
+    multMatrix(mvpMat, modelviewMat, projectionMat);
+    glUniformMatrix4fv(mvpLoc, 1, false, &mvpMat->mat[0][0]);
+
+    glDrawArrays(GL_TRIANGLES, 0 , loaded_models[model].num_vertices);
+
+    glDisableVertexAttribArray(positionLoc);
+    glDisableVertexAttribArray(normalLoc);
+    glDisableVertexAttribArray(textCoordLoc);
 }
-*/
 
 void destroyModel(int model) {
     free(loaded_models[model].vertices);
@@ -86,8 +66,9 @@ void destroyModel(int model) {
 }
 
 void updateModelVertices(int model) {
-    //glBindBuffer(GL_ARRAY_BUFFER, vertexID);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, loaded_models[model].vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, loaded_models[model].num_vertices * sizeof(struct TNPVertex), loaded_models[model].vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 int loadModel(const char *obj_filename, const char *texture_filename, enum faceType face_type, int texture_size) {
@@ -158,10 +139,6 @@ int loadModel(const char *obj_filename, const char *texture_filename, enum faceT
 
     struct model *model = &loaded_models[loaded_models_n];
 
-    if (face_type == VERTEX_ALL) {
-        model->texture_vram = loadTexture(texture_filename, face_type);
-    }
-    model->texture_size = texture_size;
     model->face_type = face_type;
     model->vertices = malloc(3 * file.num_faces * sizeof(struct TNPVertex));
     model->num_vertices = 3 * file.num_faces;

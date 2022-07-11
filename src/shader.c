@@ -1,3 +1,8 @@
+GLuint mvpLoc;
+GLuint positionLoc;
+GLuint normalLoc;
+GLuint textCoordLoc;
+
 GLuint loadShader(const GLchar *shaderSrc, GLenum type, GLint *size) {
     print("Creating Shader...\n");
 
@@ -29,6 +34,7 @@ GLuint loadShader(const GLchar *shaderSrc, GLenum type, GLint *size) {
         glDeleteShader(shader);
         return 0;
     }
+
     print("Shader Compiled!\n");
     return shader;
 }
@@ -62,7 +68,7 @@ int initShaders(void) {
 
         GLint status;
         glGetProgramiv(program, GL_LINK_STATUS, &status);
-        print("Status: %d\n", status);
+        print("Shader link status: %d\n", status);
         if (status == GL_FALSE) {
             GLchar log[256];
             glGetProgramInfoLog(fshader, 256, NULL, log);
@@ -74,6 +80,11 @@ int initShaders(void) {
 
             return -1;
         }
+
+        mvpLoc = glGetUniformLocation(program, "mvpMat");
+        positionLoc = glGetAttribLocation(program, "aPos");
+        normalLoc = glGetAttribLocation(program, "aNormal");
+        textCoordLoc = glGetAttribLocation(program, "aTexCoord");
     }
     else {
         print("Failed to create a shader program\n");

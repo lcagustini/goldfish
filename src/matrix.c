@@ -68,8 +68,8 @@ void rotationMatrix(glMatrix *result, GLfloat angle, GLfloat x, GLfloat y, GLflo
     GLfloat sinAngle, cosAngle;
     GLfloat mag = sqrtf(x * x + y * y + z * z);
 
-    sinAngle = sin (angle * M_PI / 180.0f);
-    cosAngle = cos (angle * M_PI / 180.0f);
+    sinAngle = sin(angle * M_PI / 180.0f);
+    cosAngle = cos(angle * M_PI / 180.0f);
 
     if (mag > 0.0f) {
         GLfloat xx, yy, zz, xy, yz, zx, xs, ys, zs;

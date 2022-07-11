@@ -32,12 +32,6 @@ EGLContext Context;
 
 //PIB cube egl stuff
 static GLuint program;
-static GLuint vertexID;
-static GLuint colorID;
-
-static GLuint mvpLoc;
-static GLuint positionLoc;
-static GLuint colorLoc;
 
 typedef struct {
     GLfloat mat[4][4];
@@ -48,108 +42,6 @@ static glMatrix *modelviewMat;
 static glMatrix *mvpMat;
 
 static EGLint surface_width, surface_height;
-
-static const GLfloat vertices[] =
-{
-    /* front */
-    -0.5f, 0.5f, 0.5f,
-    -0.5f, -0.5f, 0.5f,
-    0.5f, 0.5f, 0.5f,
-    0.5f, 0.5f, 0.5f,
-    -0.5f, -0.5f, 0.5f,
-    0.5f, -0.5f, 0.5f,
-
-    /* right */
-    0.5f, 0.5f, 0.5f,
-    0.5f, -0.5f, 0.5f,
-    0.5f, 0.5f, -0.5f,
-    0.5f, 0.5f, -0.5f,
-    0.5f, -0.5f, 0.5f,
-    0.5f, -0.5f, -0.5f,
-
-    /* back */
-    0.5f, 0.5f, -0.5f,
-    0.5f, -0.5f, -0.5f,
-    -0.5f, 0.5f, -0.5f,
-    -0.5f, 0.5f, -0.5f,
-    0.5f, -0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-
-    /* left */
-    -0.5f, 0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-    -0.5f, 0.5f, 0.5f,
-    -0.5f, 0.5f, 0.5f,
-    -0.5f, -0.5f, -0.5f,
-    -0.5f, -0.5f, 0.5f,
-
-    /* top */
-    -0.5f, 0.5f, -0.5f,
-    -0.5f, 0.5f, 0.5f,
-    0.5f, 0.5f, -0.5f,
-    0.5f, 0.5f, -0.5f,
-    -0.5f, 0.5f, 0.5f,
-    0.5f, 0.5f, 0.5f,
-
-    /* bottom */
-    -0.5f, -0.5f, 0.5f,
-    -0.5f, -0.5f, -0.5f,
-    0.5f, -0.5f, 0.5f,
-    0.5f, -0.5f, 0.5f,
-    -0.5f, -0.5f, -0.5f,
-    0.5f, -0.5f, -0.5f
-};
-
-static const GLfloat colors[] =
-{
-    /* front */
-    0.0625f,0.57421875f,0.92578125f,1.0f,
-    0.0625f,0.57421875f,0.92578125f,1.0f,
-    0.0625f,0.57421875f,0.92578125f,1.0f,
-    0.0625f,0.57421875f,0.92578125f,1.0f,
-    0.0625f,0.57421875f,0.92578125f,1.0f,
-    0.0625f,0.57421875f,0.92578125f,1.0f,
-
-    /* right */
-    0.29296875f,0.66796875f,0.92578125f,1.0f,
-    0.29296875f,0.66796875f,0.92578125f,1.0f,
-    0.29296875f,0.66796875f,0.92578125f,1.0f,
-    0.29296875f,0.66796875f,0.92578125f,1.0f,
-    0.29296875f,0.66796875f,0.92578125f,1.0f,
-    0.29296875f,0.66796875f,0.92578125f,1.0f,
-
-    /* back */
-    0.52734375f,0.76171875f,0.92578125f,1.0f,
-    0.52734375f,0.76171875f,0.92578125f,1.0f,
-    0.52734375f,0.76171875f,0.92578125f,1.0f,
-    0.52734375f,0.76171875f,0.92578125f,1.0f,
-    0.52734375f,0.76171875f,0.92578125f,1.0f,
-    0.52734375f,0.76171875f,0.92578125f,1.0f,
-
-    /* left */
-    0.0625f,0.57421875f,0.92578125f,1.0f,
-    0.0625f,0.57421875f,0.92578125f,1.0f,
-    0.0625f,0.57421875f,0.92578125f,1.0f,
-    0.0625f,0.57421875f,0.92578125f,1.0f,
-    0.0625f,0.57421875f,0.92578125f,1.0f,
-    0.0625f,0.57421875f,0.92578125f,1.0f,
-
-    /* top */
-    0.29296875f,0.66796875f,0.92578125f,1.0f,
-    0.29296875f,0.66796875f,0.92578125f,1.0f,
-    0.29296875f,0.66796875f,0.92578125f,1.0f,
-    0.29296875f,0.66796875f,0.92578125f,1.0f,
-    0.29296875f,0.66796875f,0.92578125f,1.0f,
-    0.29296875f,0.66796875f,0.92578125f,1.0f,
-
-    /* bottom */
-    0.52734375f,0.76171875f,0.92578125f,1.0f,
-    0.52734375f,0.76171875f,0.92578125f,1.0f,
-    0.52734375f,0.76171875f,0.92578125f,1.0f,
-    0.52734375f,0.76171875f,0.92578125f,1.0f,
-    0.52734375f,0.76171875f,0.92578125f,1.0f,
-    0.52734375f,0.76171875f,0.92578125f,1.0f
-};
 
 void print(const char *format, ...) {
     va_list args;
@@ -163,56 +55,24 @@ void print(const char *format, ...) {
 }
 
 #include "vector.c"
-#include "model.c"
 #include "matrix.c"
 #include "shader.c"
+#include "model.c"
 
 void render(void) {
-    glViewport(0, 0, surface_width, surface_height);
-
     /* Typical render pass */
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(program);
 
-    /* Enable and bind the vertex information */
-    glEnableVertexAttribArray(positionLoc);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexID);
-    glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
-
-    /* Enable and bind the color information */
-    glEnableVertexAttribArray(colorLoc);
-    glBindBuffer(GL_ARRAY_BUFFER, colorID);
-    glVertexAttribPointer(colorLoc, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
-
-    rotationMatrix(modelviewMat, 2.0f, -0.8f, -1.0f, -0.3f);
-    multMatrix(mvpMat, modelviewMat, projectionMat);
-    glUniformMatrix4fv(mvpLoc, 1, false, &mvpMat->mat[0][0]);
-
-    /* Same draw call as in GLES1 */
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    /* Disable attribute arrays */
-    glDisableVertexAttribArray(positionLoc);
-    glDisableVertexAttribArray(colorLoc);
+    drawModel(0, NULL, NULL, NULL);
 
     eglSwapBuffers(Display, Surface);
 }
 
 /* This handles creating a view matrix for the Vita */
 int initViewMatrix(void) {
-    mvpLoc = glGetUniformLocation(program, "u_mvpMat");
-    positionLoc = glGetAttribLocation(program, "a_position");
-    colorLoc = glGetAttribLocation(program, "a_color");
-
-    /* Generate vertex and color buffers and fill with data */
-    glGenBuffers(1, &vertexID);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &colorID);
-    glBindBuffer(GL_ARRAY_BUFFER, colorID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+    glViewport(0, 0, surface_width, surface_height);
 
     projectionMat = (glMatrix*)malloc(sizeof(glMatrix));
     loadIdentity(projectionMat);
@@ -320,6 +180,7 @@ void EGLInit() {
     glClearColor(0.0f,0.0f,0.0f,1.0f); // You can change the clear color to whatever
 
     glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 
     print("EGL init OK.\n");
 }
