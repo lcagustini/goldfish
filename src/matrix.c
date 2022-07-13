@@ -35,7 +35,7 @@ void loadIdentity(glMatrix *result) {
     result->mat[3][3] = 1.0f;
 }
 
-void scaleMatrix(glMatrix *result, GLfloat sx, GLfloat sy, GLfloat sz) {
+void scaleMatrix(glMatrix *result, float sx, float sy, float sz) {
     result->mat[0][0] *= sx;
     result->mat[0][1] *= sx;
     result->mat[0][2] *= sx;
@@ -64,16 +64,16 @@ void translationMatrix(glMatrix *result, float x, float y, float z) {
     multMatrix(result, &m1, result);
 }
 
-void rotationMatrix(glMatrix *result, GLfloat angle, GLfloat x, GLfloat y, GLfloat z) {
-    GLfloat sinAngle, cosAngle;
-    GLfloat mag = sqrtf(x * x + y * y + z * z);
+void rotationMatrix(glMatrix *result, float angle, float x, float y, float z) {
+    float sinAngle, cosAngle;
+    float mag = sqrtf(x * x + y * y + z * z);
 
     sinAngle = sin(angle * M_PI / 180.0f);
     cosAngle = cos(angle * M_PI / 180.0f);
 
     if (mag > 0.0f) {
-        GLfloat xx, yy, zz, xy, yz, zx, xs, ys, zs;
-        GLfloat oneMinusCos;
+        float xx, yy, zz, xy, yz, zx, xs, ys, zs;
+        float oneMinusCos;
         glMatrix rotMat;
 
         x /= mag;
@@ -122,7 +122,7 @@ void frustumMatrix(glMatrix *result, float left, float right, float bottom, floa
     glMatrix frust;
 
     if ((nearZ <= 0.0f) || (farZ <= 0.0f) || (deltaX <= 0.0f) || (deltaY <= 0.0f) || (deltaZ <= 0.0f)) {
-        return; 
+        return;
     }
 
     frust.mat[0][0] = 2.0f * nearZ / deltaX;
@@ -140,4 +140,28 @@ void frustumMatrix(glMatrix *result, float left, float right, float bottom, floa
     frust.mat[3][0] = frust.mat[3][1] = frust.mat[3][3] = 0.0f;
 
     multMatrix(result, &frust, result);
+}
+
+void lookAt(glMatrix *result, SceFVector3 position, SceFVector3 target, SceFVector3 worldUp) {
+    SceFVector3 dir = vectorSubtract(target, position);
+    vectorNormalize(&dir);
+
+    SceFVector3 right = vectorCross(dir, worldUp);
+    vectorNormalize(&right);
+
+    SceFVector3 up = vectorCross(right, dir);
+
+    loadIdentity(result);
+    result->mat[0][0] = right.x;
+    result->mat[1][0] = right.y;
+    result->mat[2][0] = right.z;
+    result->mat[0][1] = up.x;
+    result->mat[1][1] = up.y;
+    result->mat[2][1] = up.z;
+    result->mat[0][2] = -dir.x;
+    result->mat[1][2] = -dir.y;
+    result->mat[2][2] = -dir.z;
+    result->mat[3][0] = -vectorDot(right, position);
+    result->mat[3][1] = -vectorDot(up, position);
+    result->mat[3][2] = vectorDot(dir, position);
 }

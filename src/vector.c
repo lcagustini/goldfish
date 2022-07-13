@@ -1,13 +1,13 @@
-inline float vectorLenSquared(SceFVector3 v) {
+float vectorLenSquared(SceFVector3 v) {
     float len = v.x * v.x + v.y * v.y + v.z * v.z;
     return len;
 }
 
-inline float vectorLen(SceFVector3 v) {
+float vectorLen(SceFVector3 v) {
     return sqrt(vectorLenSquared(v));
 }
 
-inline void vectorNormalize2D(SceFVector3 *v) {
+void vectorNormalize2D(SceFVector3 *v) {
     float len = v->x * v->x + v->y * v->y;
     if (!len) return;
     float div = sqrt(len);
@@ -15,7 +15,7 @@ inline void vectorNormalize2D(SceFVector3 *v) {
     v->y *= div;
 }
 
-inline void vectorNormalize(SceFVector3 *v) {
+void vectorNormalize(SceFVector3 *v) {
     float len = v->x * v->x + v->y * v->y + v->z * v->z;
     if (!len) return;
     float div = 1.0f/sqrt(len);
@@ -24,11 +24,11 @@ inline void vectorNormalize(SceFVector3 *v) {
     v->z *= div;
 }
 
-inline float vectorDot(SceFVector3 a, SceFVector3 b) {
+float vectorDot(SceFVector3 a, SceFVector3 b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-inline SceFVector3 vectorCross(SceFVector3 a, SceFVector3 b) {
+SceFVector3 vectorCross(SceFVector3 a, SceFVector3 b) {
     SceFVector3 n = {
         .x = a.y*b.z - a.z*b.y,
         .y = a.z*b.x - a.x*b.z,
@@ -37,21 +37,21 @@ inline SceFVector3 vectorCross(SceFVector3 a, SceFVector3 b) {
     return n;
 }
 
-inline SceFVector3 vectorScale(float a, SceFVector3 v) {
+SceFVector3 vectorScale(float a, SceFVector3 v) {
     v.x *= a;
     v.y *= a;
     v.z *= a;
     return v;
 }
 
-inline SceFVector3 vectorAdd(SceFVector3 a, SceFVector3 b) {
+SceFVector3 vectorAdd(SceFVector3 a, SceFVector3 b) {
     a.x += b.x;
     a.y += b.y;
     a.z += b.z;
     return a;
 }
 
-inline SceFVector3 vectorSubtract(SceFVector3 a, SceFVector3 b) {
+SceFVector3 vectorSubtract(SceFVector3 a, SceFVector3 b) {
     a.x -= b.x;
     a.y -= b.y;
     a.z -= b.z;

@@ -1,6 +1,8 @@
 precision mediump float;
 
-uniform mat4 mvpMat;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
 
 attribute vec3 aPos;
 attribute vec3 aNormal;
@@ -11,7 +13,7 @@ varying vec2 TexCoord;
 
 void main()
 {
-    gl_Position = mvpMat * vec4(aPos, 1.0);
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
     ourColor = abs(aNormal);
     TexCoord = vec2(aTexCoord.x, aTexCoord.y);
 }

@@ -39,8 +39,6 @@ int loaded_models_n;
 void drawModel(int model, SceFVector3 *pos, SceFVector3 *rot, SceFVector3 *scale) {
     glBindBuffer(GL_ARRAY_BUFFER, loaded_models[model].vertexBuffer);
 
-    glBufferData(GL_ARRAY_BUFFER, loaded_models[model].num_vertices * sizeof(struct TNPVertex), loaded_models[model].vertices, GL_STATIC_DRAW);
-
     glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(positionLoc);
     glVertexAttribPointer(normalLoc, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
@@ -48,9 +46,9 @@ void drawModel(int model, SceFVector3 *pos, SceFVector3 *rot, SceFVector3 *scale
     glVertexAttribPointer(textCoordLoc, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(textCoordLoc);
 
-    rotationMatrix(modelviewMat, 2.0f, -0.8f, -1.0f, -0.3f);
-    multMatrix(mvpMat, modelviewMat, projectionMat);
-    glUniformMatrix4fv(mvpLoc, 1, false, &mvpMat->mat[0][0]);
+    glUniformMatrix4fv(modelLoc, 1, false, &modelMat->mat[0][0]);
+    glUniformMatrix4fv(viewLoc, 1, false, &viewMat->mat[0][0]);
+    glUniformMatrix4fv(projectionLoc, 1, false, &projectionMat->mat[0][0]);
 
     glDrawArrays(GL_TRIANGLES, 0 , loaded_models[model].num_vertices);
 
@@ -142,7 +140,6 @@ int loadModel(const char *obj_filename, const char *texture_filename, enum faceT
     model->face_type = face_type;
     model->vertices = malloc(3 * file.num_faces * sizeof(struct TNPVertex));
     model->num_vertices = 3 * file.num_faces;
-
     glGenBuffers(1, &model->vertexBuffer);
 
     int k = 0;
@@ -161,6 +158,8 @@ int loadModel(const char *obj_filename, const char *texture_filename, enum faceT
 
         k += 3;
     }
+
+    updateModelVertices(loaded_models_n);
 
     loaded_models_n++;
     return loaded_models_n - 1;

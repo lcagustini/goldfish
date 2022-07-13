@@ -1,4 +1,7 @@
-GLuint mvpLoc;
+GLuint modelLoc;
+GLuint viewLoc;
+GLuint projectionLoc;
+
 GLuint positionLoc;
 GLuint normalLoc;
 GLuint textCoordLoc;
@@ -81,7 +84,10 @@ int initShaders(void) {
             return -1;
         }
 
-        mvpLoc = glGetUniformLocation(program, "mvpMat");
+        modelLoc = glGetUniformLocation(program, "model");
+        viewLoc = glGetUniformLocation(program, "view");
+        projectionLoc = glGetUniformLocation(program, "projection");
+
         positionLoc = glGetAttribLocation(program, "aPos");
         normalLoc = glGetAttribLocation(program, "aNormal");
         textCoordLoc = glGetAttribLocation(program, "aTexCoord");

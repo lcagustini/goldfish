@@ -38,8 +38,8 @@ typedef struct {
 } glMatrix;
 
 static glMatrix *projectionMat;
-static glMatrix *modelviewMat;
-static glMatrix *mvpMat;
+static glMatrix *viewMat;
+static glMatrix *modelMat;
 
 static EGLint surface_width, surface_height;
 
@@ -71,33 +71,30 @@ void render(void) {
 }
 
 /* This handles creating a view matrix for the Vita */
-int initViewMatrix(void) {
+void initViewMatrix(void) {
     glViewport(0, 0, surface_width, surface_height);
 
     projectionMat = (glMatrix*)malloc(sizeof(glMatrix));
-    loadIdentity(projectionMat);
+    memset(projectionMat, 0, sizeof(glMatrix));
 
-    GLfloat aspect = (float)surface_width/(float)surface_height;
-    GLfloat near = -1.0f;
-    GLfloat far  = 1.0f;
-    GLfloat yFOV  = 75.0f;
-    GLfloat height = tanf(yFOV / 360.0f * M_PI) * near;
-    GLfloat width = height * aspect;
+    float aspect = (float)surface_width/(float)surface_height;
+    float near = 0.1f;
+    float far  = 100.0f;
+    float yFOV  = 40.0f;
 
-    frustumMatrix(projectionMat, -width, width, -height, height, near, far);
+    float tanHalfFovy = tan(yFOV / 2.0f);
 
-    if (surface_width > surface_height) {
-        scaleMatrix(projectionMat, (float)surface_height/(float)surface_width, 1.0f, 1.0f);
-    }
-    else {
-        scaleMatrix(projectionMat, 1.0f, (float)surface_width/(float)surface_height, 1.0f);
-    }
+    projectionMat->mat[0][0] = 1 / (aspect * tanHalfFovy);
+    projectionMat->mat[1][1] = 1 / (tanHalfFovy);
+    projectionMat->mat[2][2] = far / (near - far);
+    projectionMat->mat[2][3] = -1;
+    projectionMat->mat[3][2] = -(far * near) / (far - near);
 
-    modelviewMat = (glMatrix*)malloc(sizeof(glMatrix));
-    loadIdentity(modelviewMat);
-    mvpMat = (glMatrix*)malloc(sizeof(glMatrix));
+    viewMat = (glMatrix*)malloc(sizeof(glMatrix));
+    loadIdentity(viewMat);
 
-    return 0;
+    modelMat = (glMatrix*)malloc(sizeof(glMatrix));
+    loadIdentity(modelMat);
 }
 
 void ModuleInit() {
@@ -177,9 +174,9 @@ void EGLInit() {
     eglQuerySurface(Display, Surface, EGL_HEIGHT, &surface_height);
     print("Surface Width: %d, Surface Height: %d\n", surface_width, surface_height);
     glClearDepthf(1.0f);
-    glClearColor(0.0f,0.0f,0.0f,1.0f); // You can change the clear color to whatever
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // You can change the clear color to whatever
 
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
     print("EGL init OK.\n");
@@ -210,9 +207,25 @@ int main() {
 
     loadModel("app0:model/test.obj", NULL, VERTEX_ALL, 0);
 
+    float i = 0;
+    const float radius = 2.0f;
     while (1) {
+        i += 0.01f;
+
+        float camX = sin(i) * radius;
+        float camZ = cos(i) * radius;
+
+        SceFVector3 pos = {camX, 0.5f, camZ};
+        SceFVector3 target = {0};
+        SceFVector3 up = {0, 1, 0};
+        lookAt(viewMat, pos, target, up);
+
         render();
     }
+
+    free(projectionMat);
+    free(viewMat);
+    free(modelMat);
 
     EGLEnd();
 
