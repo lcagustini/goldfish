@@ -60,8 +60,8 @@ GLuint loadShaderFromFile(const char *shaderFile, GLenum type) {
 }
 
 int initShaders(void) {
-    GLuint fshader = loadShaderFromFile("app0:shader/fragment.glsl", GL_FRAGMENT_SHADER);
-    GLuint vshader = loadShaderFromFile("app0:shader/vertex.glsl", GL_VERTEX_SHADER);
+    GLuint fshader = loadShaderFromFile("app0:assets/shaders/default_f.glsl", GL_FRAGMENT_SHADER);
+    GLuint vshader = loadShaderFromFile("app0:assets/shaders/default_v.glsl", GL_VERTEX_SHADER);
 
     program = glCreateProgram();
     if (program) {

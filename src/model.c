@@ -27,7 +27,7 @@ int loaded_models_n;
 
 void drawModel(int model, SceFVector3 *pos, SceFVector3 *rot, SceFVector3 *scale) {
     glBindBuffer(GL_ARRAY_BUFFER, loaded_models[model].vertexBuffer);
-    
+
     glBindTexture(GL_TEXTURE_2D, loaded_models[model].textureBuffer);
 
     glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -51,6 +51,7 @@ void drawModel(int model, SceFVector3 *pos, SceFVector3 *rot, SceFVector3 *scale
 void destroyModel(int model) {
     free(loaded_models[model].vertices);
     glDeleteBuffers(1, &loaded_models[model].vertexBuffer);
+    glDeleteTextures(1, &loaded_models[model].textureBuffer);
     memset(&loaded_models[model], 0, sizeof(loaded_models[model]));
 }
 

@@ -158,7 +158,6 @@ void EGLInit() {
     glViewport(0, 0, surface_width, surface_height);
 
     print("EGL init OK.\n");
-
 }
 
 void EGLEnd() {
@@ -189,12 +188,12 @@ int main() {
     initShaders();
     createProjectionMatrix(75);
 
-    loadModel("app0:model/test.obj", "app0:model/test.qoi", VERTEX_ALL);
+    loadModel("app0:assets/car.obj", "app0:assets/car.qoi", VERTEX_ALL);
 
     SceCtrlData ctrl;
 
     float i = 0;
-    const float radius = 4.0f;
+    const float radius = 2.5f;
     while (1) {
         sceCtrlPeekBufferPositive(0, &ctrl, 1);
 
@@ -214,7 +213,7 @@ int main() {
         lookAt(viewMat, pos, target, up);
 
         loadIdentity(modelMat);
-        translationMatrix(modelMat, 0, (sin(10*i) + sin(20*i))/10.0f, 0);
+        translationMatrix(modelMat, 0, (sin(20*i) + sin(40*i))/20.0f, 0);
 
         render();
     }

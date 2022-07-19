@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 2.8)
 
-if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-  if(DEFINED ENV{VITASDK})
+if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+  if (DEFINED ENV{VITASDK})
     set(CMAKE_TOOLCHAIN_FILE "$ENV{VITASDK}/share/vita.toolchain.cmake" CACHE PATH "toolchain file")
-  else()
+  else ()
     message(FATAL_ERROR "Please define VITASDK to point to your SDK path!")
-  endif()
-endif()
+  endif ()
+endif ()
 
-project(Cube-GLES2-PVR_PSP2)
+project(psvita-opengl)
 include("${VITASDK}/share/vita.cmake" REQUIRED)
 
 set(VITA_APP_NAME "psvita-opengl")
@@ -34,7 +34,6 @@ link_directories(
 # Add all the files needed to compile here
 add_executable(${PROJECT_NAME}
   src/main.c
-
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -70,10 +69,10 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
   FILE module/libpvrPSP2_WSEGL.suprx module/libpvrPSP2_WSEGL.suprx
 
   #shaders
-  FILE src/vertex.glsl shader/vertex.glsl
-  FILE src/fragment.glsl shader/fragment.glsl
+  FILE assets/shaders/default_v.glsl assets/shaders/default_v.glsl
+  FILE assets/shaders/default_f.glsl assets/shaders/default_f.glsl
 
   #models
-  FILE src/test.obj model/test.obj
-  FILE src/test.qoi model/test.qoi
+  FILE assets/car.obj assets/car.obj
+  FILE assets/car.qoi assets/car.qoi
 )
