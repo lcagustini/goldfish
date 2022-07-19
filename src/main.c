@@ -54,6 +54,9 @@ void print(const char *format, ...) {
     va_end(args);
 }
 
+#define QOI_IMPLEMENTATION
+#include "qoi.h"
+
 #include "vector.c"
 #include "matrix.c"
 #include "shader.c"
@@ -68,33 +71,6 @@ void render(void) {
     drawModel(0, NULL, NULL, NULL);
 
     eglSwapBuffers(Display, Surface);
-}
-
-/* This handles creating a view matrix for the Vita */
-void initViewMatrix(void) {
-    glViewport(0, 0, surface_width, surface_height);
-
-    projectionMat = (glMatrix*)malloc(sizeof(glMatrix));
-    memset(projectionMat, 0, sizeof(glMatrix));
-
-    float aspect = (float)surface_width/(float)surface_height;
-    float near = 0.1f;
-    float far  = 100.0f;
-    float yFOV  = 40.0f;
-
-    float tanHalfFovy = tan(yFOV / 2.0f);
-
-    projectionMat->mat[0][0] = 1 / (aspect * tanHalfFovy);
-    projectionMat->mat[1][1] = 1 / (tanHalfFovy);
-    projectionMat->mat[2][2] = far / (near - far);
-    projectionMat->mat[2][3] = -1;
-    projectionMat->mat[3][2] = -(far * near) / (far - near);
-
-    viewMat = (glMatrix*)malloc(sizeof(glMatrix));
-    loadIdentity(viewMat);
-
-    modelMat = (glMatrix*)malloc(sizeof(glMatrix));
-    loadIdentity(modelMat);
 }
 
 void ModuleInit() {
@@ -176,10 +152,13 @@ void EGLInit() {
     glClearDepthf(1.0f);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // You can change the clear color to whatever
 
-    //glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
+    glViewport(0, 0, surface_width, surface_height);
+
     print("EGL init OK.\n");
+
 }
 
 void EGLEnd() {
@@ -198,18 +177,32 @@ int main() {
     ModuleInit();
     PVR_PSP2Init();
     EGLInit();
-
     SCEInit();
+
+    projectionMat = (glMatrix*)malloc(sizeof(glMatrix));
+    viewMat = (glMatrix*)malloc(sizeof(glMatrix));
+    modelMat = (glMatrix*)malloc(sizeof(glMatrix));
+    loadIdentity(modelMat);
+
     print("All init OK.\n");
 
     initShaders();
-    initViewMatrix();
+    createProjectionMatrix(75);
 
-    loadModel("app0:model/test.obj", NULL, VERTEX_ALL, 0);
+    loadModel("app0:model/test.obj", "app0:model/test.qoi", VERTEX_ALL);
+
+    SceCtrlData ctrl;
 
     float i = 0;
-    const float radius = 2.0f;
+    const float radius = 4.0f;
     while (1) {
+        sceCtrlPeekBufferPositive(0, &ctrl, 1);
+
+        if (ctrl.buttons & SCE_CTRL_LTRIGGER) {
+        }
+        if (ctrl.buttons & SCE_CTRL_RTRIGGER) {
+        }
+
         i += 0.01f;
 
         float camX = sin(i) * radius;
@@ -219,6 +212,9 @@ int main() {
         SceFVector3 target = {0};
         SceFVector3 up = {0, 1, 0};
         lookAt(viewMat, pos, target, up);
+
+        loadIdentity(modelMat);
+        translationMatrix(modelMat, 0, (sin(10*i) + sin(20*i))/10.0f, 0);
 
         render();
     }

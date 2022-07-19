@@ -5,18 +5,6 @@ struct TNPVertex { // Texture, Normal, Position
     SceFVector3 normal;
     SceFVector2 texture;
 };
-#define TNP_VERTEX_FORMAT (GU_TEXTURE_32BITF | GU_NORMAL_32BITF | GU_VERTEX_32BITF)
-
-struct NPVertex { // Normal, Position
-    SceFVector3 normal;
-    SceFVector3 position;
-};
-#define NP_VERTEX_FORMAT (GU_NORMAL_32BITF | GU_VERTEX_32BITF)
-
-struct PVertex { // Position
-    SceFVector3 position;
-};
-#define P_VERTEX_FORMAT (GU_VERTEX_32BITF)
 
 enum faceType {
     VERTEX_ONLY,
@@ -31,6 +19,7 @@ struct model {
     int num_vertices;
 
     GLuint vertexBuffer;
+    GLuint textureBuffer;
 };
 
 struct model loaded_models[10];
@@ -38,6 +27,8 @@ int loaded_models_n;
 
 void drawModel(int model, SceFVector3 *pos, SceFVector3 *rot, SceFVector3 *scale) {
     glBindBuffer(GL_ARRAY_BUFFER, loaded_models[model].vertexBuffer);
+    
+    glBindTexture(GL_TEXTURE_2D, loaded_models[model].textureBuffer);
 
     glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(positionLoc);
@@ -69,7 +60,7 @@ void updateModelVertices(int model) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-int loadModel(const char *obj_filename, const char *texture_filename, enum faceType face_type, int texture_size) {
+int loadModel(const char *obj_filename, const char *texture_filename, enum faceType face_type) {
     struct {
         struct face {
             int vertices[3];
@@ -140,7 +131,19 @@ int loadModel(const char *obj_filename, const char *texture_filename, enum faceT
     model->face_type = face_type;
     model->vertices = malloc(3 * file.num_faces * sizeof(struct TNPVertex));
     model->num_vertices = 3 * file.num_faces;
+
     glGenBuffers(1, &model->vertexBuffer);
+    glGenTextures(1, &model->textureBuffer);
+
+    qoi_desc desc;
+    void *rgb_pixels = qoi_read(texture_filename, &desc, 3);
+
+    glBindTexture(GL_TEXTURE_2D, model->textureBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, desc.width, desc.height, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_pixels);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    free(rgb_pixels);
 
     int k = 0;
     for (int i = 0; i < file.num_faces; i++) {

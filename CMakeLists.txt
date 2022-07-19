@@ -75,4 +75,5 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
 
   #models
   FILE src/test.obj model/test.obj
+  FILE src/test.qoi model/test.qoi
 )
