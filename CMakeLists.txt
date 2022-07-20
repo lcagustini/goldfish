@@ -69,8 +69,8 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
   FILE module/libpvrPSP2_WSEGL.suprx module/libpvrPSP2_WSEGL.suprx
 
   #shaders
-  FILE assets/shaders/default_v.glsl assets/shaders/default_v.glsl
-  FILE assets/shaders/default_f.glsl assets/shaders/default_f.glsl
+  FILE src/shaders/default_v.glsl assets/shaders/default_v.glsl
+  FILE src/shaders/default_f.glsl assets/shaders/default_f.glsl
 
   #models
   FILE assets/car.obj assets/car.obj

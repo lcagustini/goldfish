@@ -62,17 +62,6 @@ void print(const char *format, ...) {
 #include "shader.c"
 #include "model.c"
 
-void render(void) {
-    /* Typical render pass */
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glUseProgram(program);
-
-    drawModel(0, NULL, NULL, NULL);
-
-    eglSwapBuffers(Display, Surface);
-}
-
 void ModuleInit() {
     sceKernelLoadStartModule("vs0:sys/external/libfios2.suprx", 0, NULL, 0, NULL, NULL);
     sceKernelLoadStartModule("vs0:sys/external/libc.suprx", 0, NULL, 0, NULL, NULL);
@@ -215,7 +204,14 @@ int main() {
         loadIdentity(modelMat);
         translationMatrix(modelMat, 0, (sin(20*i) + sin(40*i))/20.0f, 0);
 
-        render();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glUseProgram(program);
+
+        glUniform3fv(cameraPosLoc, 1, &pos.x);
+        drawModel(0, NULL, NULL, NULL);
+
+        eglSwapBuffers(Display, Surface);
     }
 
     free(projectionMat);

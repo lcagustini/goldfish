@@ -1,10 +1,11 @@
 precision mediump float;
 
+uniform vec3 viewPos;
+uniform sampler2D textureMap;
+
 varying vec3 Pos;
 varying vec3 Normal;
 varying vec2 TexCoord;
-
-uniform sampler2D textureMap;
 
 void main()
 {
@@ -22,5 +23,12 @@ void main()
     float diffuseStrength = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diffuseStrength * lightColor;
 
-    gl_FragColor = vec4((ambient + diffuse) * fragColor, 1.0);
+    float specularStrength = 0.5;
+    vec3 viewDir = normalize(viewPos - Pos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
+    vec3 specular = specularStrength * spec * lightColor;
+
+    gl_FragColor = vec4((ambient + diffuse + specular) * fragColor, 1.0);
 }

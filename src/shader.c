@@ -6,6 +6,8 @@ GLuint positionLoc;
 GLuint normalLoc;
 GLuint textCoordLoc;
 
+GLuint cameraPosLoc;
+
 GLuint loadShader(const GLchar *shaderSrc, GLenum type, GLint *size) {
     print("Creating Shader...\n");
 
@@ -91,6 +93,8 @@ int initShaders(void) {
         positionLoc = glGetAttribLocation(program, "aPos");
         normalLoc = glGetAttribLocation(program, "aNormal");
         textCoordLoc = glGetAttribLocation(program, "aTexCoord");
+
+        cameraPosLoc = glGetUniformLocation(program, "viewPos");
     }
     else {
         print("Failed to create a shader program\n");
