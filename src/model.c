@@ -20,15 +20,22 @@ struct model {
 
     GLuint vertexBuffer;
     GLuint textureBuffer;
+    GLuint normalBuffer;
+    GLuint specularBuffer;
 };
 
 struct model loaded_models[10];
 int loaded_models_n;
 
 void drawModel(int model, SceFVector3 *pos, SceFVector3 *rot, SceFVector3 *scale) {
-    glBindBuffer(GL_ARRAY_BUFFER, loaded_models[model].vertexBuffer);
-
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, loaded_models[model].textureBuffer);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, loaded_models[model].normalBuffer);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, loaded_models[model].specularBuffer);
+
+    glBindBuffer(GL_ARRAY_BUFFER, loaded_models[model].vertexBuffer);
 
     glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(positionLoc);
@@ -61,7 +68,7 @@ void updateModelVertices(int model) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-int loadModel(const char *obj_filename, const char *texture_filename, enum faceType face_type) {
+int loadModel(const char *obj_filename, const char *texture_filename, const char *specular_filename, const char *normal_filename, enum faceType face_type) {
     struct {
         struct face {
             int vertices[3];
@@ -135,11 +142,29 @@ int loadModel(const char *obj_filename, const char *texture_filename, enum faceT
 
     glGenBuffers(1, &model->vertexBuffer);
     glGenTextures(1, &model->textureBuffer);
+    glGenTextures(1, &model->normalBuffer);
 
     qoi_desc desc;
     void *rgb_pixels = qoi_read(texture_filename, &desc, 3);
 
     glBindTexture(GL_TEXTURE_2D, model->textureBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, desc.width, desc.height, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_pixels);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    free(rgb_pixels);
+
+    rgb_pixels = qoi_read(normal_filename, &desc, 3);
+
+    glBindTexture(GL_TEXTURE_2D, model->normalBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, desc.width, desc.height, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_pixels);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    free(rgb_pixels);
+
+    rgb_pixels = qoi_read(specular_filename, &desc, 3);
+
+    glBindTexture(GL_TEXTURE_2D, model->specularBuffer);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, desc.width, desc.height, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_pixels);
     glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);

@@ -95,6 +95,11 @@ int initShaders(void) {
         textCoordLoc = glGetAttribLocation(program, "aTexCoord");
 
         cameraPosLoc = glGetUniformLocation(program, "viewPos");
+
+        glUseProgram(program);
+        glUniform1i(glGetUniformLocation(program, "textureMap"), 0);
+        glUniform1i(glGetUniformLocation(program, "normalMap"), 1);
+        glUniform1i(glGetUniformLocation(program, "specularMap"), 2);
     }
     else {
         print("Failed to create a shader program\n");

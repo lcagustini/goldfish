@@ -75,4 +75,9 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
   #models
   FILE assets/car.obj assets/car.obj
   FILE assets/car.qoi assets/car.qoi
+
+  FILE assets/chest.obj assets/chest.obj
+  FILE assets/chest.qoi assets/chest.qoi
+  FILE assets/chest_normal.qoi assets/chest_normal.qoi
+  FILE assets/chest_specular.qoi assets/chest_specular.qoi
 )

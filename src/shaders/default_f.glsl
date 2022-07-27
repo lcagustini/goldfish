@@ -1,7 +1,10 @@
 precision mediump float;
 
 uniform vec3 viewPos;
+
 uniform sampler2D textureMap;
+uniform sampler2D normalMap;
+uniform sampler2D specularMap;
 
 varying vec3 Pos;
 varying vec3 Normal;
@@ -10,7 +13,7 @@ varying vec2 TexCoord;
 void main()
 {
     vec3 lightColor = vec3(1.0, 1.0, 1.0);
-    vec3 lightPos = vec3(0.5, 1.0, 0.5);
+    vec3 lightPos = vec3(80.0, 80.0, 80.0);
 
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(lightPos - Pos);
@@ -23,7 +26,7 @@ void main()
     float diffuseStrength = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diffuseStrength * lightColor;
 
-    float specularStrength = 0.5;
+    float specularStrength = texture2D(specularMap, TexCoord).r;
     vec3 viewDir = normalize(viewPos - Pos);
     vec3 reflectDir = reflect(-lightDir, norm);
 

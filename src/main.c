@@ -143,6 +143,8 @@ void EGLInit() {
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_2D);
+    glDepthFunc(GL_LEQUAL);
 
     glViewport(0, 0, surface_width, surface_height);
 
@@ -177,12 +179,12 @@ int main() {
     initShaders();
     createProjectionMatrix(75);
 
-    loadModel("app0:assets/car.obj", "app0:assets/car.qoi", VERTEX_ALL);
+    loadModel("app0:assets/chest.obj", "app0:assets/chest.qoi", "app0:assets/chest_specular.qoi", "app0:assets/chest_normal.qoi", VERTEX_ALL);
 
     SceCtrlData ctrl;
 
     float i = 0;
-    const float radius = 2.5f;
+    const float radius = 80;
     while (1) {
         sceCtrlPeekBufferPositive(0, &ctrl, 1);
 
@@ -196,8 +198,8 @@ int main() {
         float camX = sin(i) * radius;
         float camZ = cos(i) * radius;
 
-        SceFVector3 pos = {camX, 0.5f, camZ};
-        SceFVector3 target = {0};
+        SceFVector3 pos = {camX, 30.0f, camZ};
+        SceFVector3 target = {0, 40.0f, 0};
         SceFVector3 up = {0, 1, 0};
         lookAt(viewMat, pos, target, up);
 
