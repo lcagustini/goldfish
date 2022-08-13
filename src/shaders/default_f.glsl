@@ -18,7 +18,8 @@ void main()
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(lightPos - Pos);
 
-    vec3 fragColor = texture2D(textureMap, TexCoord).rgb;
+    //vec3 fragColor = texture2D(textureMap, TexCoord).rgb;
+    vec3 fragColor = Normal;
 
     float ambientStrength = 0.1;
     vec3 ambient = ambientStrength * lightColor;
@@ -26,12 +27,14 @@ void main()
     float diffuseStrength = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diffuseStrength * lightColor;
 
-    float specularStrength = texture2D(specularMap, TexCoord).r;
+    //float specularStrength = texture2D(specularMap, TexCoord).r;
+    float specularStrength = 0.2;
     vec3 viewDir = normalize(viewPos - Pos);
     vec3 reflectDir = reflect(-lightDir, norm);
 
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
     vec3 specular = specularStrength * spec * lightColor;
 
-    gl_FragColor = vec4((ambient + diffuse + specular) * fragColor, 1.0);
+    //gl_FragColor = vec4((ambient + diffuse + specular) * fragColor, 1.0);
+    gl_FragColor = vec4(fragColor, 1.0);
 }

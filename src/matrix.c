@@ -47,14 +47,14 @@ void translationMatrix(glMatrix *result, float x, float y, float z) {
     multMatrix(result, &m1, result);
 }
 
-void lookAt(glMatrix *result, SceFVector3 position, SceFVector3 target, SceFVector3 worldUp) {
-    SceFVector3 dir = vectorSubtract(target, position);
+void lookAt(glMatrix *result, struct vec3 position, struct vec3 target, struct vec3 worldUp) {
+    struct vec3 dir = vectorSubtract(target, position);
     vectorNormalize(&dir);
 
-    SceFVector3 right = vectorCross(dir, worldUp);
+    struct vec3 right = vectorCross(dir, worldUp);
     vectorNormalize(&right);
 
-    SceFVector3 up = vectorCross(right, dir);
+    struct vec3 up = vectorCross(right, dir);
 
     loadIdentity(result);
     result->mat[0][0] = right.x;

@@ -1,9 +1,9 @@
 #define MAX_OBJ_SIZE 2000
 
-struct TNPVertex { // Texture, Normal, Position
-    SceFVector3 position;
-    SceFVector3 normal;
-    SceFVector2 texture;
+struct vertex {
+    struct vec3 position;
+    struct vec3 normal;
+    struct vec2 texture;
 };
 
 enum faceType {
@@ -12,184 +12,203 @@ enum faceType {
     VERTEX_ALL
 };
 
-struct model {
-    enum faceType face_type;
-
-    struct TNPVertex *vertices;
-    int num_vertices;
-
-    GLuint vertexBuffer;
-    GLuint textureBuffer;
-    GLuint normalBuffer;
-    GLuint specularBuffer;
+enum textureType {
+    TEXTURE_DIFFUSE,
+    TEXTURE_NORMAL,
+    TEXTURE_SPECULAR
 };
 
-struct model loaded_models[10];
-int loaded_models_n;
+struct texture {
+    unsigned int textureBuffer;
+    enum textureType type;
+};
 
-void drawModel(int model, SceFVector3 *pos, SceFVector3 *rot, SceFVector3 *scale) {
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, loaded_models[model].textureBuffer);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, loaded_models[model].normalBuffer);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, loaded_models[model].specularBuffer);
+struct mesh {
+    struct vertex *vertices;
+    unsigned int verticesLength;
 
-    glBindBuffer(GL_ARRAY_BUFFER, loaded_models[model].vertexBuffer);
+    unsigned int *indices;
+    unsigned int indicesLength;
 
-    glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(positionLoc);
-    glVertexAttribPointer(normalLoc, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(normalLoc);
-    glVertexAttribPointer(textCoordLoc, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(textCoordLoc);
+    struct texture *textures;
+    unsigned int texturesLength;
 
-    glUniformMatrix4fv(modelLoc, 1, false, &modelMat->mat[0][0]);
-    glUniformMatrix4fv(viewLoc, 1, false, &viewMat->mat[0][0]);
-    glUniformMatrix4fv(projectionLoc, 1, false, &projectionMat->mat[0][0]);
+    unsigned int VAO, VBO, EBO;
+};
 
-    glDrawArrays(GL_TRIANGLES, 0 , loaded_models[model].num_vertices);
+void setupMesh(struct mesh *mesh) {
+    glGenBuffers(1, &mesh->VBO);
+    GLERROR()
+    glGenBuffers(1, &mesh->EBO);
 
-    glDisableVertexAttribArray(positionLoc);
-    glDisableVertexAttribArray(normalLoc);
-    glDisableVertexAttribArray(textCoordLoc);
-}
+    GLERROR()
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
+    GLERROR()
+    glBufferData(GL_ARRAY_BUFFER, mesh->verticesLength * sizeof(struct vertex), mesh->vertices, GL_STATIC_DRAW);
 
-void destroyModel(int model) {
-    free(loaded_models[model].vertices);
-    glDeleteBuffers(1, &loaded_models[model].vertexBuffer);
-    glDeleteTextures(1, &loaded_models[model].textureBuffer);
-    memset(&loaded_models[model], 0, sizeof(loaded_models[model]));
-}
+    GLERROR()
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->EBO);
+    GLERROR()
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indicesLength * sizeof(unsigned int), mesh->indices, GL_STATIC_DRAW);
 
-void updateModelVertices(int model) {
-    glBindBuffer(GL_ARRAY_BUFFER, loaded_models[model].vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, loaded_models[model].num_vertices * sizeof(struct TNPVertex), loaded_models[model].vertices, GL_STATIC_DRAW);
+    GLERROR()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    GLERROR()
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    GLERROR()
 }
 
-int loadModel(const char *obj_filename, const char *texture_filename, const char *specular_filename, const char *normal_filename, enum faceType face_type) {
-    struct {
-        struct face {
-            int vertices[3];
-            int normals[3];
-            int texture_coords[3];
-        } faces[MAX_OBJ_SIZE];
-        int num_faces;
-        SceFVector3 vertices[MAX_OBJ_SIZE];
-        int num_vertices;
-        SceFVector3 normals[MAX_OBJ_SIZE];
-        int num_normals;
-        SceFVector2 texture_coords[MAX_OBJ_SIZE];
-        int num_texture_coords;
-    } file = {0};
+void drawMesh(struct mesh *mesh, unsigned int shader) {
+    glUseProgram(program);
 
-    FILE *f = fopen(obj_filename, "r");
+    // draw mesh
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->EBO);
 
-    char buffer[40] = {0};
-    while ((fscanf(f, " %s", buffer)) != EOF) {
-        if (!strcmp(buffer, "v")) {
-            SceFVector3 v = {};
-            fscanf(f, " %f %f %f", &v.x, &v.y, &v.z);
-            file.vertices[++file.num_vertices] = v;
-        }
-        else if (!strcmp(buffer, "vn")) {
-            SceFVector3 n = {};
-            fscanf(f, " %f %f %f", &n.x, &n.y, &n.z);
-            file.normals[++file.num_normals] = n;
-        }
-        else if (!strcmp(buffer, "vt")) {
-            SceFVector2 t = {};
-            fscanf(f, " %f %f", &t.x, &t.y);
-            t.y = 1 - t.y;
-            file.texture_coords[++file.num_texture_coords] = t;
-        }
-        else if (!strcmp(buffer, "f")) {
-            struct face face = {};
-            switch (face_type) {
-                case VERTEX_ONLY:
-                    fscanf(f, " %d %d %d",
-                            &face.vertices[0], &face.vertices[1], &face.vertices[2]
-                          );
-                    break;
-                case VERTEX_NORMAL:
-                    fscanf(f, " %d//%d %d//%d %d//%d",
-                            &face.vertices[0], &face.normals[0], &face.vertices[1],
-                            &face.normals[1], &face.vertices[2], &face.normals[2]
-                          );
-                    break;
-                case VERTEX_ALL:
-                    fscanf(f, " %d/%d/%d %d/%d/%d %d/%d/%d",
-                            &face.vertices[0], &face.texture_coords[0], &face.normals[0],
-                            &face.vertices[1], &face.texture_coords[1], &face.normals[1],
-                            &face.vertices[2], &face.texture_coords[2], &face.normals[2]
-                          );
-                    break;
-                default:
-                    assert(false);
-            }
+    GLERROR()
 
-            file.faces[file.num_faces++] = face;
+    // vertex positions
+    glEnableVertexAttribArray(positionLoc);
+    glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)0);
+    // vertex normals
+    glEnableVertexAttribArray(normalLoc);
+    glVertexAttribPointer(normalLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, normal));
+    // vertex texture coords
+    glEnableVertexAttribArray(textCoordLoc);
+    glVertexAttribPointer(textCoordLoc, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, texture));
+
+    GLERROR()
+
+    glDrawElements(GL_TRIANGLES, mesh->indicesLength, GL_UNSIGNED_INT, 0);
+
+    GLERROR()
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+struct mesh *processMesh(struct mesh *mesh, struct aiMesh *aiMesh, const struct aiScene *scene) {
+    print("--Processing Mesh (%d vertices, ", aiMesh->mNumVertices);
+
+    mesh->vertices = malloc(aiMesh->mNumVertices * sizeof(struct vertex));
+
+    mesh->indicesLength = 0;
+    for (int i = 0; i < aiMesh->mNumFaces; i++) {
+        struct aiFace face = aiMesh->mFaces[i];
+        for (int j = 0; j < face.mNumIndices; j++) {
+            mesh->indicesLength++;
         }
     }
-    fclose(f);
+    mesh->indices = malloc(mesh->indicesLength * sizeof(unsigned int));
+    print("%d indices, %d faces)\n", mesh->indicesLength, aiMesh->mNumFaces);
 
-    struct model *model = &loaded_models[loaded_models_n];
+    for (int i = 0; i < aiMesh->mNumVertices; i++) {
+        mesh->vertices[mesh->verticesLength].position.x = aiMesh->mVertices[i].x;
+        mesh->vertices[mesh->verticesLength].position.y = aiMesh->mVertices[i].y;
+        mesh->vertices[mesh->verticesLength].position.z = aiMesh->mVertices[i].z;
 
-    model->face_type = face_type;
-    model->vertices = malloc(3 * file.num_faces * sizeof(struct TNPVertex));
-    model->num_vertices = 3 * file.num_faces;
+        mesh->vertices[mesh->verticesLength].normal.x = aiMesh->mNormals[i].x;
+        mesh->vertices[mesh->verticesLength].normal.y = aiMesh->mNormals[i].y;
+        mesh->vertices[mesh->verticesLength].normal.z = aiMesh->mNormals[i].z;
 
-    glGenBuffers(1, &model->vertexBuffer);
-    glGenTextures(1, &model->textureBuffer);
-    glGenTextures(1, &model->normalBuffer);
+        if (aiMesh->mTextureCoords[0]) {
+            mesh->vertices[mesh->verticesLength].texture.x = aiMesh->mTextureCoords[0][i].x;
+            mesh->vertices[mesh->verticesLength].texture.y = aiMesh->mTextureCoords[0][i].y;
+        }
+        else {
+            mesh->vertices[mesh->verticesLength].texture.x = 0;
+            mesh->vertices[mesh->verticesLength].texture.y = 0;
+        }
 
-    qoi_desc desc;
-    void *rgb_pixels = qoi_read(texture_filename, &desc, 3);
-
-    glBindTexture(GL_TEXTURE_2D, model->textureBuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, desc.width, desc.height, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_pixels);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    free(rgb_pixels);
-
-    rgb_pixels = qoi_read(normal_filename, &desc, 3);
-
-    glBindTexture(GL_TEXTURE_2D, model->normalBuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, desc.width, desc.height, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_pixels);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    free(rgb_pixels);
-
-    rgb_pixels = qoi_read(specular_filename, &desc, 3);
-
-    glBindTexture(GL_TEXTURE_2D, model->specularBuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, desc.width, desc.height, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_pixels);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    free(rgb_pixels);
+        mesh->verticesLength++;
+    }
 
     int k = 0;
-    for (int i = 0; i < file.num_faces; i++) {
-        model->vertices[k].normal = file.normals[file.faces[i].normals[0]];
-        model->vertices[k+1].normal = file.normals[file.faces[i].normals[1]];
-        model->vertices[k+2].normal = file.normals[file.faces[i].normals[2]];
-
-        model->vertices[k].position = file.vertices[file.faces[i].vertices[0]];
-        model->vertices[k+1].position = file.vertices[file.faces[i].vertices[1]];
-        model->vertices[k+2].position = file.vertices[file.faces[i].vertices[2]];
-
-        model->vertices[k].texture = file.texture_coords[file.faces[i].texture_coords[0]];
-        model->vertices[k+1].texture = file.texture_coords[file.faces[i].texture_coords[1]];
-        model->vertices[k+2].texture = file.texture_coords[file.faces[i].texture_coords[2]];
-
-        k += 3;
+    for (int i = 0; i < aiMesh->mNumFaces; i++) {
+        struct aiFace face = aiMesh->mFaces[i];
+        for (int j = 0; j < face.mNumIndices; j++) {
+            mesh->indices[k] = face.mIndices[j];
+            k++;
+        }
     }
 
-    updateModelVertices(loaded_models_n);
+    setupMesh(mesh);
 
-    loaded_models_n++;
-    return loaded_models_n - 1;
+    return mesh;
+}
+
+struct model {
+    struct mesh *meshes;
+    unsigned int meshesLength;
+
+    const char *path;
+};
+
+void processNode(struct model *model, struct aiNode *node, const struct aiScene *scene) {
+    print("- Processing Node (%d meshes, %d children)\n", node->mNumMeshes, node->mNumChildren);
+    for (int i = 0; i < node->mNumMeshes; i++) {
+        struct aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+        processMesh(&model->meshes[model->meshesLength], mesh, scene);
+        model->meshesLength++;
+    }
+
+    for (int i = 0; i < node->mNumChildren; i++) {
+        processNode(model, node->mChildren[i], scene);
+    }
+}
+
+struct model *loadModel(const char *path) {
+    print("[Model load start]\n");
+
+    const struct aiScene *scene = aiImportFile(path, aiProcessPreset_TargetRealtime_Fast);
+
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
+        print("Error loading model %s: %s\n", path, aiGetErrorString());
+        return NULL;
+    }
+
+    struct model *model = malloc(sizeof(struct model));
+    memset(model, 0, sizeof(struct model));
+
+    model->path = path;
+    model->meshes = malloc(scene->mNumMeshes * sizeof(struct mesh));
+    memset(model->meshes, 0, sizeof(struct mesh));
+
+    print("File has %d meshes\n", scene->mNumMeshes);
+    processNode(model, scene->mRootNode, scene);
+
+    aiReleaseImport(scene);
+
+    print("[Model load end]\n\n");
+
+    return model;
+}
+
+void drawModel(struct model *model, unsigned int shader) {
+    for (int i = 0; i < model->meshesLength; i++) {
+        drawMesh(&model->meshes[i], shader);
+    }
+}
+
+void printModel(struct model *model) {
+    print("[Model %s]\n", model->path);
+    print("Total meshes: %u\n", model->meshesLength);
+    for (int i = 0; i < model->meshesLength; i++) {
+        struct mesh *mesh = &model->meshes[i];
+
+        print("-Mesh %d\n", i);
+        print("-Vertices %u\n", mesh->verticesLength);
+        for (int j = 0; j < mesh->verticesLength; j++) {
+            print("--v(%f, %f, %f) vn(%f, %f, %f) vt(%f, %f)\n", mesh->vertices[j].position.x, mesh->vertices[j].position.y, mesh->vertices[j].position.z, mesh->vertices[j].normal.x, mesh->vertices[j].normal.y, mesh->vertices[j].normal.z, mesh->vertices[j].texture.x, mesh->vertices[j].texture.y);
+        }
+
+        print("-Indices %u\n", mesh->indicesLength);
+        for (int j = 0; j < mesh->indicesLength; j++) {
+            print("--%u\n", mesh->indices[j]);
+        }
+
+        print("-VBO %d EBO %d\n", mesh->VBO, mesh->EBO);
+    }
+    print("\n");
 }

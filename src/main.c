@@ -13,6 +13,10 @@
 
 #include <psp2/ctrl.h>
 
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/cimport.h>
+
 #include <assert.h>
 #include <math.h>
 #include <string.h>
@@ -22,8 +26,8 @@
 #include <stdarg.h>
 
 //SCE
-int _newlib_heap_size_user   = 16 * 1024 * 1024;
-unsigned int sceLibcHeapSize = 3 * 1024 * 1024;
+int _newlib_heap_size_user = 200 * 1024 * 1024;
+unsigned int sceLibcHeapSize = 32 * 1024 * 1024;
 
 //EGL
 EGLDisplay Display;
@@ -31,7 +35,7 @@ EGLSurface Surface;
 EGLContext Context;
 
 //PIB cube egl stuff
-static GLuint program;
+static unsigned int program;
 
 typedef struct {
     GLfloat mat[4][4];
@@ -42,6 +46,12 @@ static glMatrix *viewMat;
 static glMatrix *modelMat;
 
 static EGLint surface_width, surface_height;
+
+#define GLERROR() \
+if (glGetError() != GL_NO_ERROR) { \
+    print("!!!!! GL error on line %s: %d !!!!!!\n", __func__, __LINE__); \
+    assert(false);\
+}
 
 void print(const char *format, ...) {
     va_list args;
@@ -134,19 +144,26 @@ void EGLInit() {
 
     eglMakeCurrent(Display, Surface, Surface, Context);
 
+    GLERROR()
+
     // PIB cube demo
     eglQuerySurface(Display, Surface, EGL_WIDTH, &surface_width);
     eglQuerySurface(Display, Surface, EGL_HEIGHT, &surface_height);
     print("Surface Width: %d, Surface Height: %d\n", surface_width, surface_height);
+    GLERROR()
     glClearDepthf(1.0f);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // You can change the clear color to whatever
+    glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
 
-    glEnable(GL_CULL_FACE);
+    GLERROR()
+    //glEnable(GL_CULL_FACE);
+    GLERROR()
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_TEXTURE_2D);
-    glDepthFunc(GL_LEQUAL);
+    GLERROR()
+    //glDepthFunc(GL_LEQUAL);
+    //GLERROR()
 
     glViewport(0, 0, surface_width, surface_height);
+    GLERROR()
 
     print("EGL init OK.\n");
 }
@@ -169,17 +186,27 @@ int main() {
     EGLInit();
     SCEInit();
 
+    FILE *f = fopen("ux0:data/a.txt", "w");
+    fclose(f);
+
     projectionMat = (glMatrix*)malloc(sizeof(glMatrix));
     viewMat = (glMatrix*)malloc(sizeof(glMatrix));
     modelMat = (glMatrix*)malloc(sizeof(glMatrix));
     loadIdentity(modelMat);
 
+    GLERROR()
     print("All init OK.\n");
 
+    GLERROR()
     initShaders();
+    GLERROR()
     createProjectionMatrix(75);
 
-    loadModel("app0:assets/chest.obj", "app0:assets/chest.qoi", "app0:assets/chest_specular.qoi", "app0:assets/chest_normal.qoi", VERTEX_ALL);
+    GLERROR()
+
+    //loadModel("app0:assets/chest.obj", "app0:assets/chest.qoi", "app0:assets/chest_specular.qoi", "app0:assets/chest_normal.qoi", VERTEX_ALL);
+    struct model *chest = loadModel("app0:assets/chest.obj");
+    printModel(chest);
 
     SceCtrlData ctrl;
 
@@ -198,20 +225,22 @@ int main() {
         float camX = sin(i) * radius;
         float camZ = cos(i) * radius;
 
-        SceFVector3 pos = {camX, 30.0f, camZ};
-        SceFVector3 target = {0, 40.0f, 0};
-        SceFVector3 up = {0, 1, 0};
+        struct vec3 pos = {camX, 40, camZ};
+        struct vec3 target = {0, 40, 0};
+        struct vec3 up = {0, 1, 0};
         lookAt(viewMat, pos, target, up);
 
         loadIdentity(modelMat);
-        translationMatrix(modelMat, 0, (sin(20*i) + sin(40*i))/20.0f, 0);
+        //translationMatrix(modelMat, 0, (sin(20*i) + sin(40*i))/20.0f, 0);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(program);
+        glUniformMatrix4fv(modelLoc, 1, false, &modelMat->mat[0][0]);
+        glUniformMatrix4fv(viewLoc, 1, false, &viewMat->mat[0][0]);
+        glUniformMatrix4fv(projectionLoc, 1, false, &projectionMat->mat[0][0]);
 
         glUniform3fv(cameraPosLoc, 1, &pos.x);
-        drawModel(0, NULL, NULL, NULL);
+        drawModel(chest, program);
 
         eglSwapBuffers(Display, Surface);
     }

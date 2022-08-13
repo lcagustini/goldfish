@@ -8,20 +8,29 @@ if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   endif ()
 endif ()
 
-project(psvita-opengl)
 include("${VITASDK}/share/vita.cmake" REQUIRED)
 
-set(VITA_APP_NAME "psvita-opengl")
+project(psvita-opengl)
+
+find_package(assimp REQUIRED)
+
+set(VITA_APP_NAME ${PROJECT_NAME})
 set(VITA_TITLEID  "PVRD00001")
 set(VITA_VERSION  "01.00")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
+add_definitions(-DGLES)
+add_definitions("-Dmemcpy=sceClibMemcpy")
+add_definitions("-Dmemcmp=sceClibMemcmp")
+add_definitions("-marm -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -ftree-vectorize -ffast-math -fsigned-char -fno-optimize-sibling-calls")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O1")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O1 -std=c++11")
 set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d PARENTAL_LEVEL=1")
 set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12")
 
 # Add any additional include paths here
 include_directories(
+    ${ASSIMP_INCLUDE_DIRS}
 )
 
 # Add any additional library paths here
@@ -45,6 +54,9 @@ target_link_libraries(${PROJECT_NAME}
   libIMGEGL_stub_weak
   libgpu_es4_ext_stub_weak
   libGLESv2_stub_weak
+
+  ${ASSIMP_LIBRARIES}
+
   m
 )
 
@@ -74,10 +86,12 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
 
   #models
   FILE assets/car.obj assets/car.obj
-  FILE assets/car.qoi assets/car.qoi
+  #FILE assets/car.qoi assets/car.qoi
 
   FILE assets/chest.obj assets/chest.obj
-  FILE assets/chest.qoi assets/chest.qoi
-  FILE assets/chest_normal.qoi assets/chest_normal.qoi
-  FILE assets/chest_specular.qoi assets/chest_specular.qoi
+  #FILE assets/chest.qoi assets/chest.qoi
+  #FILE assets/chest_normal.qoi assets/chest_normal.qoi
+  #FILE assets/chest_specular.qoi assets/chest_specular.qoi
+
+  FILE assets/man.obj assets/man.obj
 )
