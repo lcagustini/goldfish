@@ -1,94 +1,53 @@
-#define MAX_OBJ_SIZE 2000
+#include <stdlib.h>
 
-struct vertex {
-    struct vec3 position;
-    struct vec3 normal;
-    struct vec2 texture;
-};
+#include <render/model.h>
 
-enum faceType {
-    VERTEX_ONLY,
-    VERTEX_NORMAL,
-    VERTEX_ALL
-};
+#include <PVR_PSP2/GLES2/gl2.h>
 
-enum textureType {
-    TEXTURE_DIFFUSE,
-    TEXTURE_NORMAL,
-    TEXTURE_SPECULAR
-};
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/cimport.h>
 
-struct texture {
-    unsigned int textureBuffer;
-    enum textureType type;
-};
+#include <print.h>
 
-struct mesh {
-    struct vertex *vertices;
-    unsigned int verticesLength;
-
-    unsigned int *indices;
-    unsigned int indicesLength;
-
-    struct texture *textures;
-    unsigned int texturesLength;
-
-    unsigned int VAO, VBO, EBO;
-};
-
-void setupMesh(struct mesh *mesh) {
+static void setupMesh(struct mesh *mesh) {
     glGenBuffers(1, &mesh->VBO);
-    GLERROR()
     glGenBuffers(1, &mesh->EBO);
 
-    GLERROR()
     glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
-    GLERROR()
     glBufferData(GL_ARRAY_BUFFER, mesh->verticesLength * sizeof(struct vertex), mesh->vertices, GL_STATIC_DRAW);
 
-    GLERROR()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->EBO);
-    GLERROR()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indicesLength * sizeof(unsigned int), mesh->indices, GL_STATIC_DRAW);
 
-    GLERROR()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    GLERROR()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    GLERROR()
 }
 
-void drawMesh(struct mesh *mesh, unsigned int shader) {
-    glUseProgram(program);
+static void drawMesh(struct mesh *mesh, struct shader shader) {
+    glUseProgram(shader.program);
 
     // draw mesh
     glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->EBO);
 
-    GLERROR()
-
     // vertex positions
-    glEnableVertexAttribArray(positionLoc);
-    glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)0);
+    glEnableVertexAttribArray(shader.positionLoc);
+    glVertexAttribPointer(shader.positionLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)0);
     // vertex normals
-    glEnableVertexAttribArray(normalLoc);
-    glVertexAttribPointer(normalLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, normal));
+    glEnableVertexAttribArray(shader.normalLoc);
+    glVertexAttribPointer(shader.normalLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, normal));
     // vertex texture coords
-    glEnableVertexAttribArray(textCoordLoc);
-    glVertexAttribPointer(textCoordLoc, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, texture));
-
-    GLERROR()
+    glEnableVertexAttribArray(shader.textCoordLoc);
+    glVertexAttribPointer(shader.textCoordLoc, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, texture));
 
     glDrawElements(GL_TRIANGLES, mesh->indicesLength, GL_UNSIGNED_INT, 0);
-
-    GLERROR()
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-struct mesh *processMesh(struct mesh *mesh, struct aiMesh *aiMesh, const struct aiScene *scene) {
+static struct mesh *processMesh(struct mesh *mesh, struct aiMesh *aiMesh, const struct aiScene *scene) {
     print("--Processing Mesh (%d vertices, ", aiMesh->mNumVertices);
 
     mesh->vertices = malloc(aiMesh->mNumVertices * sizeof(struct vertex));
@@ -138,14 +97,7 @@ struct mesh *processMesh(struct mesh *mesh, struct aiMesh *aiMesh, const struct 
     return mesh;
 }
 
-struct model {
-    struct mesh *meshes;
-    unsigned int meshesLength;
-
-    const char *path;
-};
-
-void processNode(struct model *model, struct aiNode *node, const struct aiScene *scene) {
+static void processNode(struct model *model, struct aiNode *node, const struct aiScene *scene) {
     print("- Processing Node (%d meshes, %d children)\n", node->mNumMeshes, node->mNumChildren);
     for (int i = 0; i < node->mNumMeshes; i++) {
         struct aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
@@ -161,7 +113,7 @@ void processNode(struct model *model, struct aiNode *node, const struct aiScene 
 struct model *loadModel(const char *path) {
     print("[Model load start]\n");
 
-    const struct aiScene *scene = aiImportFile(path, aiProcessPreset_TargetRealtime_Fast);
+    const struct aiScene *scene = aiImportFile(path, 0);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         print("Error loading model %s: %s\n", path, aiGetErrorString());
@@ -185,7 +137,7 @@ struct model *loadModel(const char *path) {
     return model;
 }
 
-void drawModel(struct model *model, unsigned int shader) {
+void drawModel(struct model *model, struct shader shader) {
     for (int i = 0; i < model->meshesLength; i++) {
         drawMesh(&model->meshes[i], shader);
     }

@@ -1,12 +1,13 @@
-GLuint modelLoc;
-GLuint viewLoc;
-GLuint projectionLoc;
+#include <render/shader.h>
 
-GLuint positionLoc;
-GLuint normalLoc;
-GLuint textCoordLoc;
+#include <PVR_PSP2/GLES2/gl2.h>
 
-GLuint cameraPosLoc;
+#include <psp2/io/fcntl.h>
+#include <psp2/io/stat.h>
+
+#include <stdlib.h>
+
+#include <print.h>
 
 GLuint loadShader(const GLchar *shaderSrc, GLenum type, GLint *size) {
     print("Creating Shader...\n");
@@ -32,7 +33,7 @@ GLuint loadShader(const GLchar *shaderSrc, GLenum type, GLint *size) {
 
         if (infoLen > 1) {
             char* infoLog = (char*)malloc(sizeof(char) * infoLen);
-            glGetShaderInfoLog(shader, infoLen, NULL, infoLog);  // Shader Logs through GLES functions work :D
+            glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
             print("Error compiling shader:\n%s\n", infoLog);
             free(infoLog);
         }
@@ -61,18 +62,18 @@ GLuint loadShaderFromFile(const char *shaderFile, GLenum type) {
     return shader;
 }
 
-int initShaders(void) {
+int initShaders(struct shader *shader) {
     GLuint fshader = loadShaderFromFile("app0:assets/shaders/default_f.glsl", GL_FRAGMENT_SHADER);
     GLuint vshader = loadShaderFromFile("app0:assets/shaders/default_v.glsl", GL_VERTEX_SHADER);
 
-    program = glCreateProgram();
-    if (program) {
-        glAttachShader(program, vshader);
-        glAttachShader(program, fshader);
-        glLinkProgram(program);
+    shader->program = glCreateProgram();
+    if (shader->program) {
+        glAttachShader(shader->program, vshader);
+        glAttachShader(shader->program, fshader);
+        glLinkProgram(shader->program);
 
         GLint status;
-        glGetProgramiv(program, GL_LINK_STATUS, &status);
+        glGetProgramiv(shader->program, GL_LINK_STATUS, &status);
         print("Shader link status: %d\n", status);
         if (status == GL_FALSE) {
             GLchar log[256];
@@ -80,26 +81,26 @@ int initShaders(void) {
 
             print("Failed to link shader program: %s\n", log);
 
-            glDeleteProgram(program);
-            program = 0;
+            glDeleteProgram(shader->program);
+            shader->program = 0;
 
             return -1;
         }
 
-        modelLoc = glGetUniformLocation(program, "model");
-        viewLoc = glGetUniformLocation(program, "view");
-        projectionLoc = glGetUniformLocation(program, "projection");
+        shader->modelLoc = glGetUniformLocation(shader->program, "model");
+        shader->viewLoc = glGetUniformLocation(shader->program, "view");
+        shader->projectionLoc = glGetUniformLocation(shader->program, "projection");
 
-        positionLoc = glGetAttribLocation(program, "aPos");
-        normalLoc = glGetAttribLocation(program, "aNormal");
-        textCoordLoc = glGetAttribLocation(program, "aTexCoord");
+        shader->positionLoc = glGetAttribLocation(shader->program, "aPos");
+        shader->normalLoc = glGetAttribLocation(shader->program, "aNormal");
+        shader->textCoordLoc = glGetAttribLocation(shader->program, "aTexCoord");
 
-        cameraPosLoc = glGetUniformLocation(program, "viewPos");
+        shader->cameraPosLoc = glGetUniformLocation(shader->program, "viewPos");
 
-        glUseProgram(program);
-        glUniform1i(glGetUniformLocation(program, "textureMap"), 0);
-        glUniform1i(glGetUniformLocation(program, "normalMap"), 1);
-        glUniform1i(glGetUniformLocation(program, "specularMap"), 2);
+        glUseProgram(shader->program);
+        glUniform1i(glGetUniformLocation(shader->program, "textureMap"), 0);
+        glUniform1i(glGetUniformLocation(shader->program, "normalMap"), 1);
+        glUniform1i(glGetUniformLocation(shader->program, "specularMap"), 2);
     }
     else {
         print("Failed to create a shader program\n");

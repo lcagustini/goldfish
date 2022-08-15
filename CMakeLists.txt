@@ -31,6 +31,7 @@ set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12")
 # Add any additional include paths here
 include_directories(
     ${ASSIMP_INCLUDE_DIRS}
+    include
 )
 
 # Add any additional library paths here
@@ -42,6 +43,12 @@ link_directories(
 ## Build and link
 # Add all the files needed to compile here
 add_executable(${PROJECT_NAME}
+  src/math/matrix.c
+  src/math/vector.c
+  src/render/model.c
+  src/render/shader.c
+  src/print.c
+  src/global.c
   src/main.c
 )
 
@@ -81,8 +88,8 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
   FILE module/libpvrPSP2_WSEGL.suprx module/libpvrPSP2_WSEGL.suprx
 
   #shaders
-  FILE src/shaders/default_v.glsl assets/shaders/default_v.glsl
-  FILE src/shaders/default_f.glsl assets/shaders/default_f.glsl
+  FILE assets/shaders/default_v.glsl assets/shaders/default_v.glsl
+  FILE assets/shaders/default_f.glsl assets/shaders/default_f.glsl
 
   #models
   FILE assets/car.obj assets/car.obj

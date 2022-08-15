@@ -1,14 +1,5 @@
-struct vec2 {
-    float x, y;
-};
-
-struct vec3 {
-    float x, y, z;
-};
-
-struct quat {
-    float x, y, z, w;
-};
+#include <math/vector.h>
+#include <math.h>
 
 float vectorLenSquared(struct vec3 v) {
     float len = v.x * v.x + v.y * v.y + v.z * v.z;

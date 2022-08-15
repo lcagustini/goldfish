@@ -1,5 +1,9 @@
-void multMatrix(glMatrix *result, glMatrix *srcA, glMatrix *srcB) {
-    glMatrix tmp;
+#include <math/matrix.h>
+#include <string.h>
+#include <math.h>
+
+void multMatrix(union mat4 *result, union mat4 *srcA, union mat4 *srcB) {
+    union mat4 tmp;
 
     for (int i = 0; i < 4; i++) {
         tmp.mat[i][0] = (srcA->mat[i][0] * srcB->mat[0][0]) +
@@ -23,11 +27,11 @@ void multMatrix(glMatrix *result, glMatrix *srcA, glMatrix *srcB) {
             (srcA->mat[i][3] * srcB->mat[3][3]) ;
     }
 
-    memcpy(result, &tmp, sizeof(glMatrix));
+    memcpy(result, &tmp, sizeof(union mat4));
 }
 
-void loadIdentity(glMatrix *result) {
-    memset(result, 0x0, sizeof(glMatrix));
+void loadIdentity(union mat4 *result) {
+    memset(result, 0x0, sizeof(union mat4));
 
     result->mat[0][0] = 1.0f;
     result->mat[1][1] = 1.0f;
@@ -35,8 +39,8 @@ void loadIdentity(glMatrix *result) {
     result->mat[3][3] = 1.0f;
 }
 
-void translationMatrix(glMatrix *result, float x, float y, float z) {
-    glMatrix m1;
+void translationMatrix(union mat4 *result, float x, float y, float z) {
+    union mat4 m1;
 
     loadIdentity(&m1);
 
@@ -47,7 +51,7 @@ void translationMatrix(glMatrix *result, float x, float y, float z) {
     multMatrix(result, &m1, result);
 }
 
-void lookAt(glMatrix *result, struct vec3 position, struct vec3 target, struct vec3 worldUp) {
+void lookAt(union mat4 *result, struct vec3 position, struct vec3 target, struct vec3 worldUp) {
     struct vec3 dir = vectorSubtract(target, position);
     vectorNormalize(&dir);
 
@@ -71,20 +75,19 @@ void lookAt(glMatrix *result, struct vec3 position, struct vec3 target, struct v
     result->mat[3][2] = vectorDot(dir, position);
 }
 
-void createProjectionMatrix(int yFOV) {
-    memset(projectionMat, 0, sizeof(glMatrix));
+void createProjectionMatrix(union mat4 *result, int yFOV, float aspect) {
+    memset(result, 0, sizeof(union mat4));
 
-    float aspect = (float)surface_width/(float)surface_height;
     float near = 0.1f;
     float far  = 100.0f;
     yFOV = yFOV * M_PI / 180;
 
     float tanHalfFovy = tan(yFOV / 2.0f);
 
-    projectionMat->mat[0][0] = 1 / (aspect * tanHalfFovy);
-    projectionMat->mat[1][1] = 1 / (tanHalfFovy);
-    projectionMat->mat[2][2] = far / (near - far);
-    projectionMat->mat[2][3] = -1;
-    projectionMat->mat[3][2] = -(far * near) / (far - near);
+    result->mat[0][0] = 1 / (aspect * tanHalfFovy);
+    result->mat[1][1] = 1 / (tanHalfFovy);
+    result->mat[2][2] = far / (near - far);
+    result->mat[2][3] = -1;
+    result->mat[3][2] = -(far * near) / (far - near);
 }
 
