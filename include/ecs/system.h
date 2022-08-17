@@ -11,7 +11,7 @@ enum systemPhase {
 struct system {
     int priority;
     enum systemPhase phase;
-    void (*callback)();
+    void (*callback)(unsigned int);
 };
 
 #endif

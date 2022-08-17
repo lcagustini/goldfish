@@ -50,6 +50,7 @@ add_executable(${PROJECT_NAME}
   src/render/material.c
 
   src/ecs/world.c
+  src/ecs/componentAllocator.c
 
   src/print.c
   src/global.c

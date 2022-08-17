@@ -19,6 +19,8 @@
 
 #include <render/model.h>
 
+#include <ecs/world.h>
+
 #include <print.h>
 #include <global.h>
 
@@ -28,6 +30,18 @@ unsigned int sceLibcHeapSize = 32 * 1024 * 1024;
 static union mat4 *projectionMat;
 static union mat4 *viewMat;
 static union mat4 *modelMat;
+
+void testSystem1(unsigned int entity) {
+    print("1\n");
+}
+
+void testSystem2(unsigned int entity) {
+    print("2\n");
+}
+
+void testSystem3(unsigned int entity) {
+    print("3\n");
+}
 
 int main() {
     resetPrint();
@@ -45,6 +59,11 @@ int main() {
 
     struct model *chest = loadModel("app0:assets/chest.obj", "app0:assets/chest.qoi", "app0:assets/chest_normal.qoi", "app0:assets/chest_specular.qoi");
     printModel(chest);
+
+    struct world ecsWorld = {0};
+    addSystem(&ecsWorld, (struct system) { 2, SYSTEM_ON_UPDATE, testSystem3 });
+    addSystem(&ecsWorld, (struct system) { 0, SYSTEM_ON_UPDATE, testSystem1 });
+    addSystem(&ecsWorld, (struct system) { 1, SYSTEM_ON_UPDATE, testSystem2 });
 
     const struct vec3 up = {0, 1, 0};
     struct vec3 pos = {2, 0.6f, 2};
@@ -69,6 +88,10 @@ int main() {
 
         loadIdentity(modelMat);
         //translationMatrix(modelMat, 0, (sin(20*i) + sin(40*i))/20.0f, 0);
+
+        runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE);
+        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER);
+        print("--\n");
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
