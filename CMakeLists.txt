@@ -45,10 +45,15 @@ link_directories(
 add_executable(${PROJECT_NAME}
   src/math/matrix.c
   src/math/vector.c
+
   src/render/model.c
   src/render/material.c
+
+  src/ecs/world.c
+
   src/print.c
   src/global.c
+
   src/main.c
 )
 
