@@ -8,9 +8,9 @@ if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   endif ()
 endif ()
 
-include("${VITASDK}/share/vita.cmake" REQUIRED)
-
 project(psvita-opengl)
+
+include("${VITASDK}/share/vita.cmake" REQUIRED)
 
 find_package(assimp REQUIRED)
 
@@ -46,7 +46,7 @@ add_executable(${PROJECT_NAME}
   src/math/matrix.c
   src/math/vector.c
   src/render/model.c
-  src/render/shader.c
+  src/render/material.c
   src/print.c
   src/global.c
   src/main.c
@@ -93,12 +93,12 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
 
   #models
   FILE assets/car.obj assets/car.obj
-  #FILE assets/car.qoi assets/car.qoi
+  FILE assets/car.qoi assets/car.qoi
 
   FILE assets/chest.obj assets/chest.obj
-  #FILE assets/chest.qoi assets/chest.qoi
-  #FILE assets/chest_normal.qoi assets/chest_normal.qoi
-  #FILE assets/chest_specular.qoi assets/chest_specular.qoi
+  FILE assets/chest.qoi assets/chest.qoi
+  FILE assets/chest_normal.qoi assets/chest_normal.qoi
+  FILE assets/chest_specular.qoi assets/chest_specular.qoi
 
   FILE assets/man.obj assets/man.obj
 )

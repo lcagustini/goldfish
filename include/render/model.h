@@ -1,24 +1,13 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include <render/material.h>
 #include <math/vector.h>
-#include <render/shader.h>
 
 struct vertex {
     struct vec3 position;
     struct vec3 normal;
     struct vec2 texture;
-};
-
-enum textureType {
-    TEXTURE_DIFFUSE,
-    TEXTURE_NORMAL,
-    TEXTURE_SPECULAR
-};
-
-struct texture {
-    unsigned int textureBuffer;
-    enum textureType type;
 };
 
 struct mesh {
@@ -28,8 +17,7 @@ struct mesh {
     unsigned int *indices;
     unsigned int indicesLength;
 
-    struct texture *textures;
-    unsigned int texturesLength;
+    struct material material;
 
     unsigned int VAO, VBO, EBO;
 };
@@ -41,9 +29,9 @@ struct model {
     const char *path;
 };
 
-struct model *loadModel(const char *path);
+struct model *loadModel(const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath);
 
-void drawModel(struct model *model, struct shader shader);
+void drawModel(struct model *model);
 
 void printModel(struct model *model);
 

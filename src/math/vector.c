@@ -1,6 +1,15 @@
 #include <math/vector.h>
 #include <math.h>
 
+float vectorLenSquared2D(struct vec2 v) {
+    float len = v.x * v.x + v.y * v.y;
+    return len;
+}
+
+float vectorLen2D(struct vec2 v) {
+    return sqrt(vectorLenSquared2D(v));
+}
+
 float vectorLenSquared(struct vec3 v) {
     float len = v.x * v.x + v.y * v.y + v.z * v.z;
     return len;
@@ -10,21 +19,23 @@ float vectorLen(struct vec3 v) {
     return sqrt(vectorLenSquared(v));
 }
 
-void vectorNormalize2D(struct vec3 *v) {
-    float len = v->x * v->x + v->y * v->y;
-    if (!len) return;
+struct vec2 vectorNormalize2D(struct vec2 v) {
+    float len = v.x * v.x + v.y * v.y;
+    if (!len) return v;
     float div = sqrt(len);
-    v->x *= div;
-    v->y *= div;
+    v.x *= div;
+    v.y *= div;
+    return v;
 }
 
-void vectorNormalize(struct vec3 *v) {
-    float len = v->x * v->x + v->y * v->y + v->z * v->z;
-    if (!len) return;
+struct vec3 vectorNormalize(struct vec3 v) {
+    float len = v.x * v.x + v.y * v.y + v.z * v.z;
+    if (!len) return v;
     float div = 1.0f/sqrt(len);
-    v->x *= div;
-    v->y *= div;
-    v->z *= div;
+    v.x *= div;
+    v.y *= div;
+    v.z *= div;
+    return v;
 }
 
 float vectorDot(struct vec3 a, struct vec3 b) {
@@ -38,6 +49,12 @@ struct vec3 vectorCross(struct vec3 a, struct vec3 b) {
         .z = a.x*b.y - a.y*b.x
     };
     return n;
+}
+
+struct vec2 vectorScale2D(float a, struct vec2 v) {
+    v.x *= a;
+    v.y *= a;
+    return v;
 }
 
 struct vec3 vectorScale(float a, struct vec3 v) {
@@ -78,7 +95,7 @@ struct quat getRotationQuat(struct vec3 from, struct vec3 to) {
     H.x = from.x + to.x;
     H.y = from.y + to.y;
     H.z = from.z + to.z;
-    vectorNormalize(&H);
+    H = vectorNormalize(H);
 
     result.w = vectorDot(from, H);
     result.x = from.y*H.z - from.z*H.y;

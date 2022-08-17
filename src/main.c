@@ -17,7 +17,6 @@
 #include <math/vector.h>
 #include <math/matrix.h>
 
-#include <render/shader.h>
 #include <render/model.h>
 
 #include <print.h>
@@ -42,47 +41,45 @@ int main() {
 
     print("All init OK.\n");
 
-    struct shader shader;
-    initShaders(&shader);
     createProjectionMatrix(projectionMat, 75, (float)globalState.surfaceWidth/(float)globalState.surfaceHeight);
 
-    //loadModel("app0:assets/chest.obj", "app0:assets/chest.qoi", "app0:assets/chest_specular.qoi", "app0:assets/chest_normal.qoi", VERTEX_ALL);
-    struct model *chest = loadModel("app0:assets/chest.obj");
+    struct model *chest = loadModel("app0:assets/chest.obj", "app0:assets/chest.qoi", "app0:assets/chest_normal.qoi", "app0:assets/chest_specular.qoi");
     printModel(chest);
 
-    SceCtrlData ctrl;
+    const struct vec3 up = {0, 1, 0};
+    struct vec3 pos = {2, 0.6f, 2};
+    struct vec3 dir = {-0.706665f, -0.0353333f, -0.706665f};
 
-    float i = 0;
-    const float radius = 80;
+    SceCtrlData ctrl;
     while (1) {
         sceCtrlPeekBufferPositive(0, &ctrl, 1);
 
-        if (ctrl.buttons & SCE_CTRL_LTRIGGER) {
-        }
-        if (ctrl.buttons & SCE_CTRL_RTRIGGER) {
-        }
+        struct vec2 leftAnalog = { (ctrl.lx - 128) / 128.0f , (ctrl.ly - 128) / 128.0f };
+        struct vec2 rightAnalog = { (ctrl.rx - 128) / 128.0f , (ctrl.ry - 128) / 128.0f };
 
-        i += 0.01f;
+        if (vectorLenSquared2D(leftAnalog) < 0.1f) leftAnalog = (struct vec2) {0};
+        else leftAnalog = vectorScale2D(1 / 60.0f, leftAnalog);
+        if (vectorLenSquared2D(rightAnalog) < 0.1f) rightAnalog = (struct vec2) {0};
+        else rightAnalog = vectorScale2D(1 / 60.0f, rightAnalog);
 
-        float camX = sin(i) * radius;
-        float camZ = cos(i) * radius;
+        pos = vectorAdd(pos, (struct vec3) { leftAnalog.x, 0, leftAnalog.y });
+        dir = vectorNormalize(vectorAdd(dir, (struct vec3) { rightAnalog.x, 0, rightAnalog.y }));
 
-        struct vec3 pos = {camX, 40, camZ};
-        struct vec3 target = {0, 40, 0};
-        struct vec3 up = {0, 1, 0};
-        lookAt(viewMat, pos, target, up);
+        lookAt(viewMat, pos, vectorAdd(pos, dir), up);
 
         loadIdentity(modelMat);
         //translationMatrix(modelMat, 0, (sin(20*i) + sin(40*i))/20.0f, 0);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUniformMatrix4fv(shader.modelLoc, 1, false, &modelMat->mat[0][0]);
-        glUniformMatrix4fv(shader.viewLoc, 1, false, &viewMat->mat[0][0]);
-        glUniformMatrix4fv(shader.projectionLoc, 1, false, &projectionMat->mat[0][0]);
+        for (int i = 0; i < chest->meshesLength; i++) {
+            glUniformMatrix4fv(chest->meshes[i].material.shader.modelLoc, 1, false, &modelMat->mat[0][0]);
+            glUniformMatrix4fv(chest->meshes[i].material.shader.viewLoc, 1, false, &viewMat->mat[0][0]);
+            glUniformMatrix4fv(chest->meshes[i].material.shader.projectionLoc, 1, false, &projectionMat->mat[0][0]);
 
-        glUniform3fv(shader.cameraPosLoc, 1, &pos.x);
-        drawModel(chest, shader);
+            glUniform3fv(chest->meshes[i].material.shader.cameraPosLoc, 1, &pos.x);
+        }
+        drawModel(chest);
 
         eglSwapBuffers(globalState.display, globalState.surface);
     }

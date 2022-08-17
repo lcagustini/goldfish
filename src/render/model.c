@@ -24,22 +24,27 @@ static void setupMesh(struct mesh *mesh) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-static void drawMesh(struct mesh *mesh, struct shader shader) {
-    glUseProgram(shader.program);
+static void drawMesh(struct mesh *mesh) {
+    glUseProgram(mesh->material.shader.program);
 
     // draw mesh
     glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->EBO);
 
+    for (int i = 0; i < mesh->material.texturesLength; i++) {
+        glActiveTexture(GL_TEXTURE0 + mesh->material.textures[i].type);
+        glBindTexture(GL_TEXTURE_2D, mesh->material.textures[i].textureBuffer);
+    }
+
     // vertex positions
-    glEnableVertexAttribArray(shader.positionLoc);
-    glVertexAttribPointer(shader.positionLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)0);
+    glEnableVertexAttribArray(mesh->material.shader.positionLoc);
+    glVertexAttribPointer(mesh->material.shader.positionLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)0);
     // vertex normals
-    glEnableVertexAttribArray(shader.normalLoc);
-    glVertexAttribPointer(shader.normalLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, normal));
+    glEnableVertexAttribArray(mesh->material.shader.normalLoc);
+    glVertexAttribPointer(mesh->material.shader.normalLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, normal));
     // vertex texture coords
-    glEnableVertexAttribArray(shader.textCoordLoc);
-    glVertexAttribPointer(shader.textCoordLoc, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, texture));
+    glEnableVertexAttribArray(mesh->material.shader.textCoordLoc);
+    glVertexAttribPointer(mesh->material.shader.textCoordLoc, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, texture));
 
     glDrawElements(GL_TRIANGLES, mesh->indicesLength, GL_UNSIGNED_INT, 0);
 
@@ -110,25 +115,38 @@ static void processNode(struct model *model, struct aiNode *node, const struct a
     }
 }
 
-struct model *loadModel(const char *path) {
+struct model *loadModel(const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath) {
     print("[Model load start]\n");
 
-    const struct aiScene *scene = aiImportFile(path, 0);
+    const struct aiScene *scene = aiImportFile(modelPath,
+            aiProcess_CalcTangentSpace |
+            aiProcess_GenNormals |
+            aiProcess_JoinIdenticalVertices |
+            aiProcess_Triangulate |
+            aiProcess_GenUVCoords |
+            aiProcess_SortByPType |
+            aiProcess_FlipUVs);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        print("Error loading model %s: %s\n", path, aiGetErrorString());
+        print("Error loading model %s: %s\n", modelPath, aiGetErrorString());
         return NULL;
     }
 
     struct model *model = malloc(sizeof(struct model));
     memset(model, 0, sizeof(struct model));
 
-    model->path = path;
+    model->path = modelPath;
     model->meshes = malloc(scene->mNumMeshes * sizeof(struct mesh));
     memset(model->meshes, 0, sizeof(struct mesh));
 
     print("File has %d meshes\n", scene->mNumMeshes);
     processNode(model, scene->mRootNode, scene);
+
+    struct material material = {0};
+    createMaterial(&material, diffusePath, normalPath, specularPath);
+    for (int i = 0; i < model->meshesLength; i++) {
+        model->meshes[i].material = material;
+    }
 
     aiReleaseImport(scene);
 
@@ -137,9 +155,9 @@ struct model *loadModel(const char *path) {
     return model;
 }
 
-void drawModel(struct model *model, struct shader shader) {
+void drawModel(struct model *model) {
     for (int i = 0; i < model->meshesLength; i++) {
-        drawMesh(&model->meshes[i], shader);
+        drawMesh(&model->meshes[i]);
     }
 }
 

@@ -52,12 +52,8 @@ void translationMatrix(union mat4 *result, float x, float y, float z) {
 }
 
 void lookAt(union mat4 *result, struct vec3 position, struct vec3 target, struct vec3 worldUp) {
-    struct vec3 dir = vectorSubtract(target, position);
-    vectorNormalize(&dir);
-
-    struct vec3 right = vectorCross(dir, worldUp);
-    vectorNormalize(&right);
-
+    struct vec3 dir = vectorNormalize(vectorSubtract(target, position));
+    struct vec3 right = vectorNormalize(vectorCross(dir, worldUp));
     struct vec3 up = vectorCross(right, dir);
 
     loadIdentity(result);

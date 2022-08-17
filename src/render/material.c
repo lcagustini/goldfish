@@ -1,12 +1,12 @@
-#include <render/shader.h>
-
-#include <PVR_PSP2/GLES2/gl2.h>
+#include <render/material.h>
 
 #include <psp2/io/fcntl.h>
 #include <psp2/io/stat.h>
 
 #include <stdlib.h>
 
+#define QOI_IMPLEMENTATION
+#include <qoi.h>
 #include <print.h>
 
 GLuint loadShader(const GLchar *shaderSrc, GLenum type, GLint *size) {
@@ -62,9 +62,9 @@ GLuint loadShaderFromFile(const char *shaderFile, GLenum type) {
     return shader;
 }
 
-int initShaders(struct shader *shader) {
-    GLuint fshader = loadShaderFromFile("app0:assets/shaders/default_f.glsl", GL_FRAGMENT_SHADER);
-    GLuint vshader = loadShaderFromFile("app0:assets/shaders/default_v.glsl", GL_VERTEX_SHADER);
+int createShader(struct shader *shader, const char *vertexPath, const char *fragmentPath) {
+    GLuint vshader = loadShaderFromFile(vertexPath, GL_VERTEX_SHADER);
+    GLuint fshader = loadShaderFromFile(fragmentPath, GL_FRAGMENT_SHADER);
 
     shader->program = glCreateProgram();
     if (shader->program) {
@@ -98,9 +98,9 @@ int initShaders(struct shader *shader) {
         shader->cameraPosLoc = glGetUniformLocation(shader->program, "viewPos");
 
         glUseProgram(shader->program);
-        glUniform1i(glGetUniformLocation(shader->program, "textureMap"), 0);
-        glUniform1i(glGetUniformLocation(shader->program, "normalMap"), 1);
-        glUniform1i(glGetUniformLocation(shader->program, "specularMap"), 2);
+        glUniform1i(glGetUniformLocation(shader->program, "textureMap"), TEXTURE_DIFFUSE);
+        glUniform1i(glGetUniformLocation(shader->program, "normalMap"), TEXTURE_NORMAL);
+        glUniform1i(glGetUniformLocation(shader->program, "specularMap"), TEXTURE_SPECULAR);
     }
     else {
         print("Failed to create a shader program\n");
@@ -114,4 +114,40 @@ int initShaders(struct shader *shader) {
     glDeleteShader(fshader);
     glDeleteShader(vshader);
     return 0;
+}
+
+void loadTexture(struct texture *texture, const char *path, enum textureType textureType) {
+    glGenTextures(1, &texture->textureBuffer);
+
+    qoi_desc desc;
+    void *rgbPixels = qoi_read(path, &desc, 3);
+
+    glBindTexture(GL_TEXTURE_2D, texture->textureBuffer);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, desc.width, desc.height, 0, GL_RGB, GL_UNSIGNED_BYTE, rgbPixels);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    free(rgbPixels);
+
+    texture->type = textureType;
+    texture->path = path;
+}
+
+void createMaterial(struct material *material, const char *diffusePath, const char *normalPath, const char *specularPath) {
+    createShader(&material->shader, "app0:assets/shaders/default_v.glsl", "app0:assets/shaders/default_f.glsl");
+
+    if (diffusePath) {
+        loadTexture(&material->textures[material->texturesLength], diffusePath, TEXTURE_DIFFUSE);
+        material->texturesLength++;
+    }
+    if (normalPath) {
+        loadTexture(&material->textures[material->texturesLength], normalPath, TEXTURE_NORMAL);
+        material->texturesLength++;
+    }
+    if (specularPath) {
+        loadTexture(&material->textures[material->texturesLength], specularPath, TEXTURE_SPECULAR);
+        material->texturesLength++;
+    }
 }
