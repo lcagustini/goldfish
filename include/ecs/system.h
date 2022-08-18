@@ -1,6 +1,8 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
+struct world;
+
 enum systemPhase {
     SYSTEM_ON_CREATE,
     SYSTEM_ON_UPDATE,
@@ -11,7 +13,7 @@ enum systemPhase {
 struct system {
     int priority;
     enum systemPhase phase;
-    void (*callback)(unsigned int);
+    void (*callback)(struct world *, unsigned int);
 };
 
 #endif

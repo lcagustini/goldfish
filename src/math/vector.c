@@ -139,3 +139,20 @@ struct vec3 quatToEuler(struct quat q) {
     return angles;
 }
 
+struct quat eulerToQuat(struct vec3 v) {
+    double cy = cos(v.z * 0.5);
+    double sy = sin(v.z * 0.5);
+    double cp = cos(v.y * 0.5);
+    double sp = sin(v.y * 0.5);
+    double cr = cos(v.x * 0.5);
+    double sr = sin(v.x * 0.5);
+
+    struct quat q;
+    q.w = cr * cp * cy + sr * sp * sy;
+    q.x = sr * cp * cy - cr * sp * sy;
+    q.y = cr * sp * cy + sr * cp * sy;
+    q.z = cr * cp * sy - sr * sp * cy;
+
+    return q;
+}
+

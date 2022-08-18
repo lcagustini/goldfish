@@ -12,4 +12,9 @@ struct transformComponent {
     union mat4 modelMatrix;
 };
 
+struct cameraComponent {
+    union mat4 viewMat;
+    union mat4 projectionMat;
+};
+
 #endif
