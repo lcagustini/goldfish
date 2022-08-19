@@ -39,14 +39,46 @@ void loadIdentity(union mat4 *result) {
     result->mat[3][3] = 1.0f;
 }
 
-void translationMatrix(union mat4 *result, float x, float y, float z) {
+void translationMatrix(union mat4 *result, struct vec3 vec) {
     union mat4 m1;
 
     loadIdentity(&m1);
 
-    m1.mat[3][0] = x;
-    m1.mat[3][1] = y;
-    m1.mat[3][2] = z;
+    m1.mat[3][0] = vec.x;
+    m1.mat[3][1] = vec.y;
+    m1.mat[3][2] = vec.z;
+
+    multMatrix(result, &m1, result);
+}
+
+void scalingMatrix(union mat4 *result, struct vec3 vec) {
+    union mat4 m1;
+
+    loadIdentity(&m1);
+
+    m1.mat[0][0] = vec.x;
+    m1.mat[1][1] = vec.y;
+    m1.mat[2][2] = vec.z;
+
+    multMatrix(result, &m1, result);
+}
+
+void rotationMatrix(union mat4 *result, struct quat quat) {
+    union mat4 m1;
+
+    loadIdentity(&m1);
+
+    m1.mat[0][0] = 1 - (2 * quat.y * quat.y) - (2 * quat.z * quat.z);
+    m1.mat[1][0] = (2 * quat.x * quat.y) - (2 * quat.w * quat.z);
+    m1.mat[2][0] = (2 * quat.x * quat.z) + (2 * quat.w * quat.y);
+
+    m1.mat[0][1] = (2 * quat.x * quat.y) + (2 * quat.w * quat.z);
+    m1.mat[1][1] = 1 - (2 * quat.x * quat.x) - (2 * quat.z * quat.z);
+    m1.mat[2][1] = (2 * quat.y * quat.z) - (2 * quat.w * quat.x);
+
+    m1.mat[0][2] = (2 * quat.x * quat.z) - (2 * quat.w * quat.y);
+    m1.mat[1][2] = (2 * quat.y * quat.z) + (2 * quat.w * quat.x);
+    m1.mat[2][2] = 1 - (2 * quat.x * quat.x) - (2 * quat.y * quat.y);
 
     multMatrix(result, &m1, result);
 }

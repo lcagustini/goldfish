@@ -115,7 +115,7 @@ static void processNode(struct model *model, struct aiNode *node, const struct a
     }
 }
 
-struct model *loadModel(const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath) {
+struct model loadModel(const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath) {
     print("[Model load start]\n");
 
     const struct aiScene *scene = aiImportFile(modelPath,
@@ -129,23 +129,22 @@ struct model *loadModel(const char *modelPath, const char *diffusePath, const ch
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         print("Error loading model %s: %s\n", modelPath, aiGetErrorString());
-        return NULL;
+        return (struct model) {0};
     }
 
-    struct model *model = malloc(sizeof(struct model));
-    memset(model, 0, sizeof(struct model));
+    struct model model = {0};
 
-    model->path = modelPath;
-    model->meshes = malloc(scene->mNumMeshes * sizeof(struct mesh));
-    memset(model->meshes, 0, sizeof(struct mesh));
+    model.path = modelPath;
+    model.meshes = malloc(scene->mNumMeshes * sizeof(struct mesh));
+    memset(model.meshes, 0, sizeof(struct mesh));
 
     print("File has %d meshes\n", scene->mNumMeshes);
-    processNode(model, scene->mRootNode, scene);
+    processNode(&model, scene->mRootNode, scene);
 
     struct material material = {0};
     createMaterial(&material, diffusePath, normalPath, specularPath);
-    for (int i = 0; i < model->meshesLength; i++) {
-        model->meshes[i].material = material;
+    for (int i = 0; i < model.meshesLength; i++) {
+        model.meshes[i].material = material;
     }
 
     aiReleaseImport(scene);

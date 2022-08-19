@@ -25,10 +25,11 @@ void multMatrix(union mat4 *result, union mat4 *srcA, union mat4 *srcB);
 
 void loadIdentity(union mat4 *result);
 
-void translationMatrix(union mat4 *result, float x, float y, float z);
+void translationMatrix(union mat4 *result, struct vec3 vec);
+void scalingMatrix(union mat4 *result, struct vec3 vec);
+void rotationMatrix(union mat4 *result, struct quat quat);
 
 void lookAt(union mat4 *result, struct vec3 position, struct vec3 target, struct vec3 worldUp);
-
 void createProjectionMatrix(union mat4 *result, int yFOV, float aspect);
 
 #endif

@@ -11,6 +11,7 @@ enum systemPhase {
 };
 
 struct system {
+    char *name;
     int priority;
     enum systemPhase phase;
     void (*callback)(struct world *, unsigned int);

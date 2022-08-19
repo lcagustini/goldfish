@@ -38,5 +38,6 @@ struct quat getRotationQuat(struct vec3 from, struct vec3 to);
 struct quat quatMult(struct quat a, struct quat b);
 struct vec3 quatToEuler(struct quat q);
 struct quat eulerToQuat(struct vec3 v);
+struct quat quatFromAxisAngle(struct vec3 axis, float angle);
 
 #endif

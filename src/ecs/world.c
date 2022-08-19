@@ -1,5 +1,7 @@
 #include <ecs/world.h>
 
+#include <print.h>
+
 #include <string.h>
 #include <assert.h>
 
@@ -55,6 +57,15 @@ void addComponent(struct world *world, unsigned int entity, enum componentType c
             break;
         case COMPONENT_CAMERA:
             validArray = world->componentAllocator.validCameraComponents;
+            break;
+        case COMPONENT_CONTROLLER_DATA:
+            validArray = world->componentAllocator.validControllerDataComponents;
+            break;
+        case COMPONENT_FIRST_PERSON:
+            validArray = world->componentAllocator.validFirstPersonComponents;
+            break;
+        case COMPONENT_MODEL:
+            validArray = world->componentAllocator.validModelComponents;;
             break;
         default:
             assert(false);

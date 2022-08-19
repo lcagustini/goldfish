@@ -156,3 +156,14 @@ struct quat eulerToQuat(struct vec3 v) {
     return q;
 }
 
+struct quat quatFromAxisAngle(struct vec3 axis, float angle) {
+    struct quat q;
+
+    float s = sin(angle / 2);
+    q.x = axis.x * s;
+    q.y = axis.y * s;
+    q.z = axis.z * s;
+    q.w = cos(angle / 2);
+
+    return q;
+}

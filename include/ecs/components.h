@@ -4,6 +4,10 @@
 #include <math/vector.h>
 #include <math/matrix.h>
 
+#include <render/model.h>
+
+#include <psp2/ctrl.h>
+
 struct transformComponent {
     struct vec3 position;
     struct quat rotation;
@@ -15,6 +19,17 @@ struct transformComponent {
 struct cameraComponent {
     union mat4 viewMat;
     union mat4 projectionMat;
+};
+
+struct controllerDataComponent {
+    SceCtrlData data;
+};
+
+struct firstPersonComponent {
+};
+
+struct modelComponent {
+    struct model model;
 };
 
 #endif
