@@ -45,6 +45,9 @@ static void drawMesh(struct mesh *mesh) {
     // vertex texture coords
     glEnableVertexAttribArray(mesh->material.shader.textCoordLoc);
     glVertexAttribPointer(mesh->material.shader.textCoordLoc, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, texture));
+    // vertex tangents
+    glEnableVertexAttribArray(mesh->material.shader.tangentLoc);
+    glVertexAttribPointer(mesh->material.shader.tangentLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, tangent));
 
     glDrawElements(GL_TRIANGLES, mesh->indicesLength, GL_UNSIGNED_INT, 0);
 
@@ -75,6 +78,10 @@ static struct mesh *processMesh(struct mesh *mesh, struct aiMesh *aiMesh, const 
         mesh->vertices[mesh->verticesLength].normal.x = aiMesh->mNormals[i].x;
         mesh->vertices[mesh->verticesLength].normal.y = aiMesh->mNormals[i].y;
         mesh->vertices[mesh->verticesLength].normal.z = aiMesh->mNormals[i].z;
+
+        mesh->vertices[mesh->verticesLength].tangent.x = aiMesh->mTangents[i].x;
+        mesh->vertices[mesh->verticesLength].tangent.y = aiMesh->mTangents[i].y;
+        mesh->vertices[mesh->verticesLength].tangent.z = aiMesh->mTangents[i].z;
 
         if (aiMesh->mTextureCoords[0]) {
             mesh->vertices[mesh->verticesLength].texture.x = aiMesh->mTextureCoords[0][i].x;

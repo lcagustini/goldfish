@@ -8,6 +8,7 @@ struct vertex {
     struct vec3 position;
     struct vec3 normal;
     struct vec2 texture;
+    struct vec3 tangent;
 };
 
 struct mesh {

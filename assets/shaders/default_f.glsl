@@ -1,23 +1,27 @@
 precision mediump float;
 
-uniform vec3 viewPos;
-
 uniform sampler2D textureMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
 
-varying vec3 Pos;
-varying vec3 Normal;
-varying vec2 TexCoord;
+varying vec3 position;
+varying vec3 normal;
+varying vec2 textCoord;
+
+varying vec3 tangentLightPosition;
+varying vec3 tangentViewPosition;
+varying vec3 tangentPosition;
 
 void main() {
     vec3 lightColor = vec3(1.0, 1.0, 1.0);
-    vec3 lightPos = vec3(3.0, 0.9, 2.0);
 
-    vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - Pos);
+    //vec3 norm = normalize(normal);
+    vec3 norm = texture2D(normalMap, textCoord).rgb;
+    norm = normalize(2.0 * norm - 1.0);
 
-    vec3 fragColor = texture2D(textureMap, TexCoord).rgb;
+    vec3 lightDir = normalize(tangentLightPosition - tangentPosition);
+
+    vec3 fragColor = texture2D(textureMap, textCoord).rgb;
 
     float ambientStrength = 0.2;
     vec3 ambient = ambientStrength * lightColor;
@@ -25,8 +29,8 @@ void main() {
     float diffuseStrength = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diffuseStrength * lightColor;
 
-    float specularStrength = texture2D(specularMap, TexCoord).r;
-    vec3 viewDir = normalize(viewPos - Pos);
+    float specularStrength = texture2D(specularMap, textCoord).r;
+    vec3 viewDir = normalize(tangentViewPosition - tangentPosition);
     vec3 reflectDir = reflect(-lightDir, norm);
 
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0);

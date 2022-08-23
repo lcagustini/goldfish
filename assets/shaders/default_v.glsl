@@ -1,5 +1,7 @@
 precision mediump float;
 
+uniform vec3 viewPos;
+
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
@@ -7,12 +9,30 @@ uniform mat4 projection;
 attribute vec3 aPos;
 attribute vec3 aNormal;
 attribute vec2 aTexCoord;
+attribute vec3 aTangent;
 
-varying vec3 Pos;
-varying vec3 Normal;
-varying vec2 TexCoord;
+varying vec3 position;
+varying vec3 normal;
+varying vec2 textCoord;
 
-mat4 transpose(mat4 inMatrix) {
+varying vec3 tangentLightPosition;
+varying vec3 tangentViewPosition;
+varying vec3 tangentPosition;
+
+mat3 transpose3(mat3 inMatrix) {
+    vec3 i0 = inMatrix[0];
+    vec3 i1 = inMatrix[1];
+    vec3 i2 = inMatrix[2];
+
+    mat3 outMatrix = mat3(
+            vec3(i0.x, i1.x, i2.x),
+            vec3(i0.y, i1.y, i2.y),
+            vec3(i0.z, i1.z, i2.z));
+
+    return outMatrix;
+}
+
+mat4 transpose4(mat4 inMatrix) {
     vec4 i0 = inMatrix[0];
     vec4 i1 = inMatrix[1];
     vec4 i2 = inMatrix[2];
@@ -69,9 +89,20 @@ mat4 inverse(mat4 m) {
 }
 
 void main() {
-    Pos = vec3(model * vec4(aPos, 1.0));
-    Normal = mat3(transpose(inverse(model))) * aNormal;
-    TexCoord = aTexCoord;
+    position = vec3(model * vec4(aPos, 1.0));
+    normal = mat3(transpose4(inverse(model))) * aNormal;
+    textCoord = aTexCoord;
+
+    vec3 T = normalize(vec3(model * vec4(aTangent, 0.0)));
+    vec3 N = normalize(vec3(model * vec4(aNormal, 0.0)));
+    vec3 B = cross(N, T);
+    mat3 TBN = transpose3(mat3(T, B, N));
+
+    vec3 lightPos = vec3(3.0, 0.9, 2.0);
+
+    tangentPosition = TBN * position;
+    tangentViewPosition = TBN * viewPos;
+    tangentLightPosition = TBN * lightPos;
 
     gl_Position = projection * view * model * vec4(aPos, 1.0);
 }

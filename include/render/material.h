@@ -11,6 +11,7 @@ struct shader {
     GLuint positionLoc;
     GLuint normalLoc;
     GLuint textCoordLoc;
+    GLuint tangentLoc;
 
     GLuint cameraPosLoc;
 

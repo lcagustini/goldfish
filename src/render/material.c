@@ -94,6 +94,7 @@ int createShader(struct shader *shader, const char *vertexPath, const char *frag
         shader->positionLoc = glGetAttribLocation(shader->program, "aPos");
         shader->normalLoc = glGetAttribLocation(shader->program, "aNormal");
         shader->textCoordLoc = glGetAttribLocation(shader->program, "aTexCoord");
+        shader->tangentLoc = glGetAttribLocation(shader->program, "aTangent");
 
         shader->cameraPosLoc = glGetUniformLocation(shader->program, "viewPos");
 
