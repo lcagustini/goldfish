@@ -15,6 +15,8 @@ struct shader {
 
     GLuint cameraPosLoc;
 
+    GLuint shininessLoc;
+
     GLuint program;
 };
 
@@ -35,6 +37,8 @@ struct texture {
 struct material {
     struct texture textures[TEXTURE_MAX];
     unsigned int texturesLength;
+
+    float shininess;
 
     struct shader shader;
 };

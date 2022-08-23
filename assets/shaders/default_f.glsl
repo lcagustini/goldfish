@@ -1,5 +1,7 @@
 precision mediump float;
 
+uniform float shininess;
+
 uniform sampler2D textureMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
@@ -31,9 +33,11 @@ void main() {
 
     float specularStrength = texture2D(specularMap, textCoord).r;
     vec3 viewDir = normalize(tangentViewPosition - tangentPosition);
-    vec3 reflectDir = reflect(-lightDir, norm);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    //vec3 reflectDir = reflect(-lightDir, norm);
 
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0);
+    //float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0);
+    float spec = pow(max(dot(norm, halfwayDir), 0.0), 64.0);
     vec3 specular = specularStrength * spec * lightColor;
 
     gl_FragColor = vec4((ambient + diffuse + specular) * fragColor, 1.0);

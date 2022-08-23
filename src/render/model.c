@@ -36,6 +36,8 @@ static void drawMesh(struct mesh *mesh) {
         glBindTexture(GL_TEXTURE_2D, mesh->material.textures[i].textureBuffer);
     }
 
+    glUniform1f(mesh->material.shader.shininessLoc, mesh->material.shininess);
+
     // vertex positions
     glEnableVertexAttribArray(mesh->material.shader.positionLoc);
     glVertexAttribPointer(mesh->material.shader.positionLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)0);

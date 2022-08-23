@@ -98,6 +98,8 @@ int createShader(struct shader *shader, const char *vertexPath, const char *frag
 
         shader->cameraPosLoc = glGetUniformLocation(shader->program, "viewPos");
 
+        shader->shininessLoc = glGetUniformLocation(shader->program, "shininess");
+
         glUseProgram(shader->program);
         glUniform1i(glGetUniformLocation(shader->program, "textureMap"), TEXTURE_DIFFUSE);
         glUniform1i(glGetUniformLocation(shader->program, "normalMap"), TEXTURE_NORMAL);
@@ -151,4 +153,6 @@ void createMaterial(struct material *material, const char *diffusePath, const ch
         loadTexture(&material->textures[material->texturesLength], specularPath, TEXTURE_SPECULAR);
         material->texturesLength++;
     }
+
+    material->shininess = 64.0f;
 }

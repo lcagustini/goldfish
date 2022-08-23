@@ -199,6 +199,8 @@ int main() {
     ecsWorld.componentAllocator.modelComponents[ecsWorld.entities[chest].components[COMPONENT_MODEL]].model = loadModel("app0:assets/chest.obj", "app0:assets/chest.qoi", "app0:assets/chest_normal.qoi", "app0:assets/chest_specular.qoi");
 
     while (1) {
+        ecsWorld.componentAllocator.transformComponents[ecsWorld.entities[chest].components[COMPONENT_TRANSFORM]].rotation = quatMult(ecsWorld.componentAllocator.transformComponents[ecsWorld.entities[chest].components[COMPONENT_TRANSFORM]].rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
+
         runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
