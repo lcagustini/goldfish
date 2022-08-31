@@ -32,4 +32,26 @@ struct modelComponent {
     struct model model;
 };
 
+struct dirLightComponent {
+    struct vec3 ambientColor;
+    struct vec3 diffuseColor;
+    struct vec3 specularColor;
+};
+
+struct pointLightComponent {
+    struct vec3 attenuation;
+
+    struct vec3 ambientColor;
+    struct vec3 diffuseColor;
+    struct vec3 specularColor;
+};
+
+struct spotLightComponent {
+    struct vec2 cutOff;
+
+    struct vec3 ambientColor;
+    struct vec3 diffuseColor;
+    struct vec3 specularColor;
+};
+
 #endif

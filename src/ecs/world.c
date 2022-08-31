@@ -67,6 +67,15 @@ void addComponent(struct world *world, unsigned int entity, enum componentType c
         case COMPONENT_MODEL:
             validArray = world->componentAllocator.validModelComponents;;
             break;
+        case COMPONENT_DIR_LIGHT:
+            validArray = world->componentAllocator.validDirLightComponents;;
+            break;
+        case COMPONENT_POINT_LIGHT:
+            validArray = world->componentAllocator.validPointLightComponents;;
+            break;
+        case COMPONENT_SPOT_LIGHT:
+            validArray = world->componentAllocator.validSpotLightComponents;;
+            break;
         default:
             assert(false);
             break;

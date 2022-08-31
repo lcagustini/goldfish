@@ -15,6 +15,9 @@ enum componentType {
     COMPONENT_CONTROLLER_DATA,
     COMPONENT_FIRST_PERSON,
     COMPONENT_MODEL,
+    COMPONENT_DIR_LIGHT,
+    COMPONENT_POINT_LIGHT,
+    COMPONENT_SPOT_LIGHT,
 
     COMPONENT_MAX
 };
@@ -34,6 +37,15 @@ struct componentAllocator {
 
     struct modelComponent modelComponents[MAX_COMPONENT_COUNT];
     bool validModelComponents[MAX_COMPONENT_COUNT];
+
+    struct dirLightComponent dirLightComponents[MAX_COMPONENT_COUNT];
+    bool validDirLightComponents[MAX_COMPONENT_COUNT];
+
+    struct pointLightComponent pointLightComponents[MAX_COMPONENT_COUNT];
+    bool validPointLightComponents[MAX_COMPONENT_COUNT];
+
+    struct spotLightComponent spotLightComponents[MAX_COMPONENT_COUNT];
+    bool validSpotLightComponents[MAX_COMPONENT_COUNT];
 };
 
 unsigned int *getEntitiesWithComponents(struct world *world, enum componentType components[], unsigned int componentsLength);

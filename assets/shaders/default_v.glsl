@@ -15,9 +15,9 @@ varying vec3 position;
 varying vec3 normal;
 varying vec2 textCoord;
 
-varying vec3 tangentLightPosition;
-varying vec3 tangentViewPosition;
 varying vec3 tangentPosition;
+varying vec3 tangentViewPosition;
+varying mat3 TBN;
 
 mat3 transpose3(mat3 inMatrix) {
     vec3 i0 = inMatrix[0];
@@ -96,13 +96,10 @@ void main() {
     vec3 T = normalize(vec3(model * vec4(aTangent, 0.0)));
     vec3 N = normalize(vec3(model * vec4(aNormal, 0.0)));
     vec3 B = cross(N, T);
-    mat3 TBN = transpose3(mat3(T, B, N));
-
-    vec3 lightPos = vec3(3.0, 0.9, 2.0);
+    TBN = transpose3(mat3(T, B, N));
 
     tangentPosition = TBN * position;
     tangentViewPosition = TBN * viewPos;
-    tangentLightPosition = TBN * lightPos;
 
     gl_Position = projection * view * model * vec4(aPos, 1.0);
 }
