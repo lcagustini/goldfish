@@ -152,8 +152,7 @@ void renderModel(struct world *world, unsigned int id) {
 
             glUniform3fv(model->model.meshes[j].material.shader.cameraPosLoc, 1, &world->componentAllocator.transformComponents[world->entities[cameraEntity[1]].components[COMPONENT_TRANSFORM]].position.x);
 
-            /*
-            for (int k = 1; k <= 4; k++) {
+            for (int k = 1; k <= 1; k++) {
                 struct vec3 direction = {0};
                 struct vec3 ambient = {0};
                 struct vec3 diffuse = {0};
@@ -185,7 +184,7 @@ void renderModel(struct world *world, unsigned int id) {
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, specularString), 1, &specular.x);
             }
 
-            for (int k = 1; k <= 4; k++) {
+            for (int k = 1; k <= 0; k++) {
                 struct vec3 position = {0};
                 struct vec3 attenuation = {0};
                 struct vec3 ambient = {0};
@@ -222,7 +221,7 @@ void renderModel(struct world *world, unsigned int id) {
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, specularString), 1, &specular.x);
             }
 
-            for (int k = 1; k <= 4; k++) {
+            for (int k = 1; k <= 0; k++) {
                 struct vec3 position = {0};
                 struct vec3 direction = {0};
                 struct vec2 cutOff = {0};
@@ -266,7 +265,6 @@ void renderModel(struct world *world, unsigned int id) {
                 specularString[10] = '0' + (k - 1);
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, specularString), 1, &specular.x);
             }
-        */
         }
         drawModel(&model->model);
     }
@@ -332,14 +330,7 @@ int main() {
     ecsWorld.componentAllocator.dirLightComponents[ecsWorld.entities[light].components[COMPONENT_DIR_LIGHT]].diffuseColor = (struct vec3) { 1, 1, 1 };
     ecsWorld.componentAllocator.dirLightComponents[ecsWorld.entities[light].components[COMPONENT_DIR_LIGHT]].specularColor = (struct vec3) { 1, 1, 1 };
 
-    struct model mc = loadModel("app0:assets/chest.obj", "app0:assets/chest.qoi", "app0:assets/chest_normal.qoi", "app0:assets/chest_specular.qoi");
-    for (int i = 0; i < mc.meshesLength; i++) {
-        char buff[50000];
-        int len, format;
-        glGetProgramBinaryOES(mc.meshes[i].material.shader.program, 50000, &len, &format, buff);
-        print("%d %d\n", len, format);
-    }
-    ecsWorld.componentAllocator.modelComponents[ecsWorld.entities[chest].components[COMPONENT_MODEL]].model = mc;
+    ecsWorld.componentAllocator.modelComponents[ecsWorld.entities[chest].components[COMPONENT_MODEL]].model = loadModel("app0:assets/chest.obj", "app0:assets/chest.qoi", "app0:assets/chest_normal.qoi", "app0:assets/chest_specular.qoi");
 
     while (1) {
         ecsWorld.componentAllocator.transformComponents[ecsWorld.entities[chest].components[COMPONENT_TRANSFORM]].rotation = quatMult(ecsWorld.componentAllocator.transformComponents[ecsWorld.entities[chest].components[COMPONENT_TRANSFORM]].rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
