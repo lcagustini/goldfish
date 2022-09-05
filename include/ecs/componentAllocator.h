@@ -48,6 +48,8 @@ struct componentAllocator {
     bool validSpotLightComponents[MAX_COMPONENT_COUNT];
 };
 
+void *getComponent(struct world *world, unsigned int id, enum componentType component);
+
 unsigned int *getEntitiesWithComponents(struct world *world, enum componentType components[], unsigned int componentsLength);
 
 #endif

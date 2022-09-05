@@ -29,23 +29,14 @@ int _newlib_heap_size_user = 200 * 1024 * 1024;
 unsigned int sceLibcHeapSize = 32 * 1024 * 1024;
 
 void setupTransform(struct world *world, unsigned int id) {
-    unsigned int transformId = world->entities[id].components[COMPONENT_TRANSFORM];
-
-    if (transformId == INVALID_COMPONENT_ID) return;
-
-    struct transformComponent *transform = &world->componentAllocator.transformComponents[transformId];
-
+    struct transformComponent *transform = getComponent(world, id, COMPONENT_TRANSFORM);
     transform->position = (struct vec3) {0};
     transform->rotation = (struct quat) {0, 0, 0, 1};
     transform->scale = (struct vec3) {1, 1, 1};
 }
 
 void setupCamera(struct world *world, unsigned int id) {
-    unsigned int cameraId = world->entities[id].components[COMPONENT_CAMERA];
-
-    if (cameraId == INVALID_COMPONENT_ID) return;
-
-    struct cameraComponent *camera = &world->componentAllocator.cameraComponents[cameraId];
+    struct cameraComponent *camera = getComponent(world, id, COMPONENT_CAMERA);
 
     createProjectionMatrix(&camera->projectionMat, 75, (float)globalState.surfaceWidth/(float)globalState.surfaceHeight);
 }
@@ -55,11 +46,9 @@ void updateCameraView(struct world *world, unsigned int id) {
     unsigned int *entities = getEntitiesWithComponents(world, types, 2);
 
     for (int i = 1; i < entities[0]; i++) {
-        unsigned int cameraId = world->entities[entities[i]].components[COMPONENT_CAMERA];
-        struct cameraComponent *camera = &world->componentAllocator.cameraComponents[cameraId];
+        struct cameraComponent *camera = getComponent(world, entities[i], COMPONENT_CAMERA);
 
-        unsigned int transformId = world->entities[entities[i]].components[COMPONENT_TRANSFORM];
-        struct transformComponent *transform = &world->componentAllocator.transformComponents[transformId];
+        struct transformComponent *transform = getComponent(world, entities[i], COMPONENT_TRANSFORM);
 
         struct vec3 dir = vectorRotate((struct vec3) { 0, 0, -1 }, transform->rotation);
         lookAt(&camera->viewMat, transform->position, vectorAdd(transform->position, dir), (struct vec3) { 0, 1, 0 });
@@ -72,15 +61,13 @@ void updateFirstPersonTransform(struct world *world, unsigned int id) {
     enum componentType controllerType[] = { COMPONENT_CONTROLLER_DATA };
     unsigned int *controllerEntity = getEntitiesWithComponents(world, controllerType, 1);
 
-    unsigned int controllerDataId = world->entities[controllerEntity[1]].components[COMPONENT_CONTROLLER_DATA];
-    struct controllerDataComponent *controllerData = &world->componentAllocator.controllerDataComponents[controllerDataId];
+    struct controllerDataComponent *controllerData = getComponent(world, controllerEntity[1], COMPONENT_CONTROLLER_DATA);
 
     enum componentType types[] = { COMPONENT_TRANSFORM, COMPONENT_FIRST_PERSON };
     unsigned int *entities = getEntitiesWithComponents(world, types, 2);
 
     for (int i = 1; i < entities[0]; i++) {
-        unsigned int transformId = world->entities[entities[i]].components[COMPONENT_TRANSFORM];
-        struct transformComponent *transform = &world->componentAllocator.transformComponents[transformId];
+        struct transformComponent *transform = getComponent(world, entities[i], COMPONENT_TRANSFORM);
 
         SceCtrlData ctrl = controllerData->data;
 
@@ -113,8 +100,7 @@ void updateControllerData(struct world *world, unsigned int id) {
     unsigned int *entities = getEntitiesWithComponents(world, types, 1);
 
     for (int i = 1; i < entities[0]; i++) {
-        unsigned int controllerDataId = world->entities[entities[i]].components[COMPONENT_CONTROLLER_DATA];
-        struct controllerDataComponent *controllerData = &world->componentAllocator.controllerDataComponents[controllerDataId];
+        struct controllerDataComponent *controllerData = getComponent(world, entities[i], COMPONENT_CONTROLLER_DATA);
 
         sceCtrlPeekBufferPositive(0, &controllerData->data, 1);
     }
@@ -139,11 +125,9 @@ void renderModel(struct world *world, unsigned int id) {
     unsigned int *pointLightEntities = getEntitiesWithComponents(world, pointLightType, 2);
 
     for (int i = 1; i < entities[0]; i++) {
-        unsigned int transformId = world->entities[entities[i]].components[COMPONENT_TRANSFORM];
-        struct transformComponent *transform = &world->componentAllocator.transformComponents[transformId];
+        struct transformComponent *transform = getComponent(world, entities[i], COMPONENT_TRANSFORM);
 
-        unsigned int modelId = world->entities[entities[i]].components[COMPONENT_MODEL];
-        struct modelComponent *model = &world->componentAllocator.modelComponents[modelId];
+        struct modelComponent *model = getComponent(world, entities[i], COMPONENT_MODEL);
 
         for (int j = 0; j < model->model.meshesLength; j++) {
             glUniformMatrix4fv(model->model.meshes[j].material.shader.modelLoc, 1, false, &transform->modelMatrix.mat[0][0]);
@@ -159,12 +143,15 @@ void renderModel(struct world *world, unsigned int id) {
                 struct vec3 specular = {0};
 
                 if (k < dirLightEntities[0]) {
-                    direction = (struct vec3) { 0, 0, -1 };
-                    vectorRotate(direction, world->componentAllocator.transformComponents[world->entities[dirLightEntities[k]].components[COMPONENT_TRANSFORM]].rotation);
+                    struct transformComponent *lightTransform = getComponent(world, dirLightEntities[k], COMPONENT_TRANSFORM);
+                    struct dirLightComponent *light = getComponent(world, dirLightEntities[k], COMPONENT_DIR_LIGHT);
 
-                    ambient = world->componentAllocator.dirLightComponents[world->entities[dirLightEntities[k]].components[COMPONENT_DIR_LIGHT]].ambientColor;
-                    diffuse = world->componentAllocator.dirLightComponents[world->entities[dirLightEntities[k]].components[COMPONENT_DIR_LIGHT]].diffuseColor;
-                    specular = world->componentAllocator.dirLightComponents[world->entities[dirLightEntities[k]].components[COMPONENT_DIR_LIGHT]].specularColor;
+                    direction = (struct vec3) { 0, 0, -1 };
+                    vectorRotate(direction, lightTransform->rotation);
+
+                    ambient = light->ambientColor;
+                    diffuse = light->diffuseColor;
+                    specular = light->specularColor;
                 }
 
                 char directionString[] = "dirLights[0].direction";
@@ -192,32 +179,35 @@ void renderModel(struct world *world, unsigned int id) {
                 struct vec3 specular = {0};
 
                 if (k < pointLightEntities[0]) {
-                    position = world->componentAllocator.transformComponents[world->entities[pointLightEntities[k]].components[COMPONENT_TRANSFORM]].position;
+                    struct transformComponent *lightTransform = getComponent(world, pointLightEntities[k], COMPONENT_TRANSFORM);
+                    struct pointLightComponent *light = getComponent(world, pointLightEntities[k], COMPONENT_POINT_LIGHT);
 
-                    attenuation = world->componentAllocator.pointLightComponents[world->entities[pointLightEntities[k]].components[COMPONENT_POINT_LIGHT]].attenuation;
-                    ambient = world->componentAllocator.pointLightComponents[world->entities[pointLightEntities[k]].components[COMPONENT_POINT_LIGHT]].ambientColor;
-                    diffuse = world->componentAllocator.pointLightComponents[world->entities[pointLightEntities[k]].components[COMPONENT_POINT_LIGHT]].diffuseColor;
-                    specular = world->componentAllocator.pointLightComponents[world->entities[pointLightEntities[k]].components[COMPONENT_POINT_LIGHT]].specularColor;
+                    position = lightTransform->position;
+
+                    attenuation = light->attenuation;
+                    ambient = light->ambientColor;
+                    diffuse = light->diffuseColor;
+                    specular = light->specularColor;
                 }
 
                 char positionString[] = "pointLights[0].position";
-                positionString[10] = '0' + (k - 1);
+                positionString[12] = '0' + (k - 1);
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, positionString), 1, &position.x);
 
                 char attenuationString[] = "pointLights[0].attenuation";
-                attenuationString[10] = '0' + (k - 1);
+                attenuationString[12] = '0' + (k - 1);
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, attenuationString), 1, &attenuation.x);
 
                 char ambientString[] = "pointLights[0].ambientColor";
-                ambientString[10] = '0' + (k - 1);
+                ambientString[12] = '0' + (k - 1);
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, ambientString), 1, &ambient.x);
 
                 char diffuseString[] = "pointLights[0].diffuseColor";
-                diffuseString[10] = '0' + (k - 1);
+                diffuseString[12] = '0' + (k - 1);
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, diffuseString), 1, &diffuse.x);
 
                 char specularString[] = "pointLights[0].specularColor";
-                specularString[10] = '0' + (k - 1);
+                specularString[12] = '0' + (k - 1);
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, specularString), 1, &specular.x);
             }
 
@@ -230,39 +220,42 @@ void renderModel(struct world *world, unsigned int id) {
                 struct vec3 specular = {0};
 
                 if (k < pointLightEntities[0]) {
-                    position = world->componentAllocator.transformComponents[world->entities[spotLightEntities[k]].components[COMPONENT_TRANSFORM]].position;
+                    struct transformComponent *lightTransform = getComponent(world, spotLightEntities[k], COMPONENT_TRANSFORM);
+                    struct spotLightComponent *light = getComponent(world, spotLightEntities[k], COMPONENT_SPOT_LIGHT);
+
+                    position = lightTransform->position;
 
                     direction = (struct vec3) { 0, 0, -1 };
-                    vectorRotate(direction, world->componentAllocator.transformComponents[world->entities[spotLightEntities[k]].components[COMPONENT_TRANSFORM]].rotation);
+                    vectorRotate(direction, lightTransform->rotation);
 
-                    cutOff = world->componentAllocator.spotLightComponents[world->entities[spotLightEntities[k]].components[COMPONENT_SPOT_LIGHT]].cutOff;
-                    ambient = world->componentAllocator.spotLightComponents[world->entities[spotLightEntities[k]].components[COMPONENT_SPOT_LIGHT]].ambientColor;
-                    diffuse = world->componentAllocator.spotLightComponents[world->entities[spotLightEntities[k]].components[COMPONENT_SPOT_LIGHT]].diffuseColor;
-                    specular = world->componentAllocator.spotLightComponents[world->entities[spotLightEntities[k]].components[COMPONENT_SPOT_LIGHT]].specularColor;
+                    cutOff = light->cutOff;
+                    ambient = light->ambientColor;
+                    diffuse = light->diffuseColor;
+                    specular = light->specularColor;
                 }
 
-                char positionString[] = "pointLights[0].position";
-                positionString[10] = '0' + (k - 1);
+                char positionString[] = "spotLights[0].position";
+                positionString[11] = '0' + (k - 1);
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, positionString), 1, &position.x);
 
                 char directionString[] = "spotLights[0].direction";
-                directionString[10] = '0' + (k - 1);
+                directionString[11] = '0' + (k - 1);
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, directionString), 1, &direction.x);
 
                 char cutOffString[] = "spotLights[0].cutOff";
-                cutOffString[10] = '0' + (k - 1);
+                cutOffString[11] = '0' + (k - 1);
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, cutOffString), 1, &cutOff.x);
 
                 char ambientString[] = "spotLights[0].ambientColor";
-                ambientString[10] = '0' + (k - 1);
+                ambientString[11] = '0' + (k - 1);
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, ambientString), 1, &ambient.x);
 
                 char diffuseString[] = "spotLights[0].diffuseColor";
-                diffuseString[10] = '0' + (k - 1);
+                diffuseString[11] = '0' + (k - 1);
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, diffuseString), 1, &diffuse.x);
 
                 char specularString[] = "spotLights[0].specularColor";
-                specularString[10] = '0' + (k - 1);
+                specularString[11] = '0' + (k - 1);
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, specularString), 1, &specular.x);
             }
         }
@@ -326,14 +319,17 @@ int main() {
     unsigned int light = createEntity(&ecsWorld);
     addComponent(&ecsWorld, light, COMPONENT_TRANSFORM);
     addComponent(&ecsWorld, light, COMPONENT_DIR_LIGHT);
-    ecsWorld.componentAllocator.dirLightComponents[ecsWorld.entities[light].components[COMPONENT_DIR_LIGHT]].ambientColor = (struct vec3) { 1, 1, 1 };
-    ecsWorld.componentAllocator.dirLightComponents[ecsWorld.entities[light].components[COMPONENT_DIR_LIGHT]].diffuseColor = (struct vec3) { 1, 1, 1 };
-    ecsWorld.componentAllocator.dirLightComponents[ecsWorld.entities[light].components[COMPONENT_DIR_LIGHT]].specularColor = (struct vec3) { 1, 1, 1 };
+    struct dirLightComponent *dirLight = getComponent(&ecsWorld, light, COMPONENT_DIR_LIGHT);
+    dirLight->ambientColor = (struct vec3) { 1, 1, 1 };
+    dirLight->diffuseColor = (struct vec3) { 1, 1, 1 };
+    dirLight->specularColor = (struct vec3) { 1, 1, 1 };
 
-    ecsWorld.componentAllocator.modelComponents[ecsWorld.entities[chest].components[COMPONENT_MODEL]].model = loadModel("app0:assets/chest.obj", "app0:assets/chest.qoi", "app0:assets/chest_normal.qoi", "app0:assets/chest_specular.qoi");
+    struct modelComponent *model = getComponent(&ecsWorld, chest, COMPONENT_MODEL);
+    model->model = loadModel("app0:assets/chest.obj", "app0:assets/chest.qoi", "app0:assets/chest_normal.qoi", "app0:assets/chest_specular.qoi");
 
     while (1) {
-        ecsWorld.componentAllocator.transformComponents[ecsWorld.entities[chest].components[COMPONENT_TRANSFORM]].rotation = quatMult(ecsWorld.componentAllocator.transformComponents[ecsWorld.entities[chest].components[COMPONENT_TRANSFORM]].rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
+        struct transformComponent *transform = getComponent(&ecsWorld, chest, COMPONENT_TRANSFORM);
+        transform->rotation = quatMult(transform->rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE);
 
