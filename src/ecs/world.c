@@ -97,6 +97,25 @@ componentId getComponentId(struct world *world, const char *component) {
     return INVALID_POSITION;
 }
 
+static unsigned int getAllTablesWithComponents(struct world *world, componentId *components, unsigned int componentsLength, unsigned int *tables) {
+    int l = 0;
+    for (int j = 0; j < world->tablesLength; j++) {
+        if (world->tables[j].recordsLength < componentsLength) continue;
+
+        int hits = 0;
+        for (int k = 0; k < componentsLength; k++) {
+            for (int i = 0; i < world->tables[j].recordsLength; i++) {
+                hits += world->tables[j].records[i].componentType == components[k];
+            }
+        }
+        if (hits == componentsLength) {
+            tables[l] = j;
+            j++;
+        }
+    }
+    return l;
+}
+
 static unsigned int getTableForComponents(struct world *world, componentId *components, unsigned int componentsLength) {
     for (int j = 0; j < world->tablesLength; j++) {
         if (world->tables[j].recordsLength != componentsLength) continue;
@@ -208,6 +227,14 @@ void *getComponent(struct world *world, entityId entity, componentId component) 
     return NULL;
 }
 
+void *getComponentFromTable(struct table *table, componentId component) {
+    for (int i = 0; i < table->recordsLength; i++) {
+        if (table->records[i].componentType == component) return table->records[i].components;
+    }
+
+    return NULL;
+}
+
 void removeComponent(struct world *world, entityId entity, componentId component) {
     if (world->entities[entity].table == INVALID_POSITION) {
         return;
@@ -263,4 +290,20 @@ void addSystem(struct world *world, struct system system) {
 }
 
 void runWorldPhase(struct world *world, enum systemPhase phase) {
+    for (int i = 0; i < world->systemsLength; i++) {
+        if (world->systems[i].phase != phase) continue;
+
+        unsigned int tables[MAX_ARCHETYPE_COUNT];
+        unsigned int tablesLength = getAllTablesWithComponents(world, world->systems[i].components, world->systems[i].componentsLength, tables);
+
+        for (int j = 0; j < tablesLength; j++) {
+            struct systemRunData data = {
+                world,
+                &world->tables[tables[j]],
+                &world->systems[i]
+            };
+
+            world->systems[i].callback(data);
+        }
+    }
 }

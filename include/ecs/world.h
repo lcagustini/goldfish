@@ -34,9 +34,10 @@ struct system {
     int priority;
     enum systemPhase phase;
 
-    void (*callback)(struct systemRunData *);
-
     componentId components[MAX_COMPONENT_COUNT];
+    unsigned int componentsLength;
+
+    void (*callback)(struct systemRunData);
 };
 
 struct entity {
@@ -77,17 +78,20 @@ struct world {
 
 #define STRINGIFY(c) #c
 #define COMPONENT_SIZE(w, c) (w->components[c].size)
+#define VARIADIC_COUNT(...) ((int)(sizeof((int[]){ __VA_ARGS__ })/sizeof(int)))
 
 #define CREATE_COMPONENT(w, c) createComponent(w, STRINGIFY(c), sizeof(c))
 #define GET_COMPONENT_ID(w, c) getComponentId(w, STRINGIFY(c))
+#define GET_SYSTEM_COMPONENT(d, i) getComponentFromTable(d.table, d.system->components[i])
 
 #define ADD_SYSTEM(w, pr, ph, callback, ...) do { \
     struct system s = { \
         STRINGIFY(callback), \
         pr, \
         ph, \
-        callback, \
-        { __VA_ARGS__ } \
+        { __VA_ARGS__ }, \
+        VARIADIC_COUNT(__VA_ARGS__), \
+        callback \
     }; \
     addSystem(w, s); \
 } while (0); \
@@ -97,12 +101,13 @@ componentId getComponentId(struct world *world, const char *component);
 
 void addComponent(struct world *world, entityId entity, componentId component);
 void *getComponent(struct world *world, entityId entity, componentId component);
+void *getComponentFromTable(struct table *table, componentId component);
 void removeComponent(struct world *world, entityId entity, componentId component);
 
 entityId createEntity(struct world *world);
 void deleteEntity(struct world *world, entityId id);
-
 void addSystem(struct world *world, struct system system);
+
 void runWorldPhase(struct world *world, enum systemPhase phase);
 
 #endif
