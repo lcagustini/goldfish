@@ -28,6 +28,7 @@
 int _newlib_heap_size_user = 200 * 1024 * 1024;
 unsigned int sceLibcHeapSize = 32 * 1024 * 1024;
 
+/*
 void setupTransform(struct world *world, unsigned int id) {
     struct transformComponent *transform = getComponent(world, id, COMPONENT_TRANSFORM);
     transform->position = (struct vec3) {0};
@@ -285,6 +286,7 @@ void updateTransformMatrix(struct world *world, unsigned int id) {
 
     free(entities);
 }
+*/
 
 int main() {
     resetPrint();
@@ -294,6 +296,7 @@ int main() {
     print("All init OK.\n");
 
     struct world ecsWorld = {0};
+    /*
     addSystem(&ecsWorld, (struct system) { "setupTransform", 0, SYSTEM_ON_CREATE, setupTransform });
     addSystem(&ecsWorld, (struct system) { "setupCamera", 0, SYSTEM_ON_CREATE, setupCamera });
 
@@ -326,10 +329,11 @@ int main() {
 
     struct modelComponent *model = getComponent(&ecsWorld, chest, COMPONENT_MODEL);
     model->model = loadModel("app0:assets/chest.obj", "app0:assets/chest.qoi", "app0:assets/chest_normal.qoi", "app0:assets/chest_specular.qoi");
+    */
 
     while (1) {
-        struct transformComponent *transform = getComponent(&ecsWorld, chest, COMPONENT_TRANSFORM);
-        transform->rotation = quatMult(transform->rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
+        //struct transformComponent *transform = getComponent(&ecsWorld, chest, COMPONENT_TRANSFORM);
+        //transform->rotation = quatMult(transform->rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE);
 
