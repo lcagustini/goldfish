@@ -144,9 +144,31 @@ static void removeEntityFromTable(struct world *world, struct entity entity) {
     t->componentsLength--;
 }
 
-static void copyEntityBetweenTables(struct world *world, struct entity entity, unsigned int tableFrom, unsigned int tableTo) {
+static struct entity copyEntityBetweenTables(struct world *world, struct entity entity, unsigned int tableTo) {
+    unsigned int tableFrom = entity.table;
     struct table *tFrom = &world->tables[tableFrom];
     struct table *tTo = &world->tables[tableTo];
+
+    unsigned int len = tTo->componentsLength;
+
+    for (int j = 0; j < tFrom->recordsLength; j++) {
+        for (int i = 0; i < tTo->recordsLength; i++) {
+            if (tFrom->records[j].componentType == tTo->records[i].componentType) {
+                unsigned int size = COMPONENT_SIZE(world, tTo->records[i].componentType);
+                memcpy(tTo->records[i].components + (entity.position * size), tFrom->records[j].components + (len * size), size);
+                break;
+            }
+        }
+    }
+
+    struct entity e = {
+        tableTo,
+        len
+    };
+
+    tTo->componentsLength++;
+
+    return e;
 }
 
 void addComponent(struct world *world, entityId entity, componentId component) {
@@ -155,6 +177,15 @@ void addComponent(struct world *world, entityId entity, componentId component) {
         world->entities[entity] = addEntityToTable(world, t);
     }
     else {
+        componentId components[MAX_COMPONENT_COUNT];
+        for (int i = 0; i < world->tables[world->entities[entity].table].recordsLength; i++) {
+            components[i] = world->tables[world->entities[entity].table].records[i].componentType;
+        }
+        components[world->tables[world->entities[entity].table].recordsLength] = component;
+        unsigned int t = getTableForComponents(world, components, world->tables[world->entities[entity].table].recordsLength + 1);
+        struct entity e = copyEntityBetweenTables(world, world->entities[entity], t);
+        removeEntityFromTable(world, world->entities[entity]);
+        world->entities[entity] = e;
     }
 }
 
@@ -170,7 +201,21 @@ void *getComponent(struct world *world, entityId entity, componentId component) 
     return NULL;
 }
 
-void removeComponent(struct world *world, entityId entityId, componentId component) {
+void removeComponent(struct world *world, entityId entity, componentId component) {
+    if (world->entities[entity].table == INVALID_POSITION) {
+        return;
+    }
+    else {
+        componentId components[MAX_COMPONENT_COUNT];
+        for (int i = 0; i < world->tables[world->entities[entity].table].recordsLength; i++) {
+            if (world->tables[world->entities[entity].table].records[i].componentType == component) continue;
+            components[i] = world->tables[world->entities[entity].table].records[i].componentType;
+        }
+        unsigned int t = getTableForComponents(world, components, world->tables[world->entities[entity].table].recordsLength - 1);
+        struct entity e = copyEntityBetweenTables(world, world->entities[entity], t);
+        removeEntityFromTable(world, world->entities[entity]);
+        world->entities[entity] = e;
+    }
 }
 
 entityId createEntity(struct world *world) {
@@ -188,6 +233,9 @@ entityId createEntity(struct world *world) {
 }
 
 void deleteEntity(struct world *world, entityId id) {
+    world->entities[id].table = INVALID_POSITION;
+    world->entities[id].position = INVALID_POSITION;
+    world->validEntities[id] = false;
 }
 
 void addSystem(struct world *world, struct system system) {

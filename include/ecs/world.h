@@ -55,7 +55,7 @@ struct world {
 componentId createComponent(struct world *world, const char *component, unsigned int componentSize);
 void addComponent(struct world *world, entityId entity, componentId component);
 void *getComponent(struct world *world, entityId entity, componentId component);
-void removeComponent(struct world *world, entityId entityId, componentId component);
+void removeComponent(struct world *world, entityId entity, componentId component);
 
 entityId createEntity(struct world *world);
 void deleteEntity(struct world *world, entityId id);
