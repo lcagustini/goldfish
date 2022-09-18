@@ -8,7 +8,7 @@
 
 #define membersize(type, member) sizeof(((type *)0)->member)
 
-uint32_t hash(const char *name, uint32_t len) {
+uint32_t hashString(const char *name, uint32_t len) {
     // murmurhash3
     uint32_t c1 = 0xcc9e2d51;
     uint32_t c2 = 0x1b873593;
@@ -70,13 +70,10 @@ uint32_t hash(const char *name, uint32_t len) {
     return h;
 }
 
-#define COMPONENT_NAME(c) #c
-
-#define CREATE_COMPONENT(w, c) createComponent(w, COMPONENT_NAME(c), sizeof(c))
 componentId createComponent(struct world *world, const char *component, unsigned int componentSize) {
     for (int i = 0; i < MAX_COMPONENT_COUNT; i++) {
         if (!world->validComponents[i]) {
-            world->components[i].hash = hash(component, strlen(component));
+            world->components[i].hash = hashString(component, strlen(component));
             world->components[i].name = component;
             world->components[i].size = componentSize;
             world->validComponents[i] = true;
@@ -88,7 +85,17 @@ componentId createComponent(struct world *world, const char *component, unsigned
     return INVALID_POSITION;
 }
 
-#define COMPONENT_SIZE(w, c) (w->components[c].size)
+componentId getComponentId(struct world *world, const char *component) {
+    uint32_t hash = hashString(component, strlen(component));
+
+    for (int i = 0; i < MAX_COMPONENT_COUNT; i++) {
+        if (!world->validComponents[i]) continue;
+
+        if (world->components[i].hash == hash) return i;
+    }
+
+    return INVALID_POSITION;
+}
 
 static unsigned int getTableForComponents(struct world *world, componentId *components, unsigned int componentsLength) {
     for (int j = 0; j < world->tablesLength; j++) {
@@ -256,9 +263,4 @@ void addSystem(struct world *world, struct system system) {
 }
 
 void runWorldPhase(struct world *world, enum systemPhase phase) {
-    for (int i = 0; i < world->systemsLength; i++) {
-        if (world->systems[i].phase == phase) {
-            world->systems[i].callback(world, 0);
-        }
-    }
 }

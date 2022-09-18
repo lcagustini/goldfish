@@ -28,14 +28,14 @@
 int _newlib_heap_size_user = 200 * 1024 * 1024;
 unsigned int sceLibcHeapSize = 32 * 1024 * 1024;
 
-/*
-void setupTransform(struct world *world, unsigned int id) {
-    struct transformComponent *transform = getComponent(world, id, COMPONENT_TRANSFORM);
-    transform->position = (struct vec3) {0};
-    transform->rotation = (struct quat) {0, 0, 0, 1};
-    transform->scale = (struct vec3) {1, 1, 1};
+void setupTransform(struct systemRunData *data) {
+    //struct transformComponent *transform = getComponent(world, id, COMPONENT_TRANSFORM);
+    //transform->position = (struct vec3) {0};
+    //transform->rotation = (struct quat) {0, 0, 0, 1};
+    //transform->scale = (struct vec3) {1, 1, 1};
 }
 
+/*
 void setupCamera(struct world *world, unsigned int id) {
     struct cameraComponent *camera = getComponent(world, id, COMPONENT_CAMERA);
 
@@ -296,8 +296,19 @@ int main() {
     print("All init OK.\n");
 
     struct world ecsWorld = {0};
+
+    componentId transformId = CREATE_COMPONENT(&ecsWorld, struct transformComponent);
+    componentId cameraId = CREATE_COMPONENT(&ecsWorld, struct cameraComponent);
+    componentId firstPersonId = CREATE_COMPONENT(&ecsWorld, struct firstPersonComponent);
+
+    entityId camera = createEntity(&ecsWorld);
+    addComponent(&ecsWorld, camera, transformId);
+    addComponent(&ecsWorld, camera, cameraId);
+    addComponent(&ecsWorld, camera, firstPersonId);
+
+    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_CREATE, setupTransform, transformId);
+
     /*
-    addSystem(&ecsWorld, (struct system) { "setupTransform", 0, SYSTEM_ON_CREATE, setupTransform });
     addSystem(&ecsWorld, (struct system) { "setupCamera", 0, SYSTEM_ON_CREATE, setupCamera });
 
     addSystem(&ecsWorld, (struct system) { "updateControllerData", 0, SYSTEM_ON_UPDATE, updateControllerData });
@@ -306,11 +317,6 @@ int main() {
     addSystem(&ecsWorld, (struct system) { "updateTransformMatrix", 10, SYSTEM_ON_UPDATE, updateTransformMatrix });
 
     addSystem(&ecsWorld, (struct system) { "renderModel", 0, SYSTEM_ON_RENDER, renderModel });
-
-    unsigned int camera = createEntity(&ecsWorld);
-    addComponent(&ecsWorld, camera, COMPONENT_TRANSFORM);
-    addComponent(&ecsWorld, camera, COMPONENT_CAMERA);
-    addComponent(&ecsWorld, camera, COMPONENT_FIRST_PERSON);
 
     unsigned int input = createEntity(&ecsWorld);
     addComponent(&ecsWorld, input, COMPONENT_CONTROLLER_DATA);
@@ -335,11 +341,11 @@ int main() {
         //struct transformComponent *transform = getComponent(&ecsWorld, chest, COMPONENT_TRANSFORM);
         //transform->rotation = quatMult(transform->rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
 
-        runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE);
+        //runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER);
+        //runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER);
 
         eglSwapBuffers(globalState.display, globalState.surface);
     }
