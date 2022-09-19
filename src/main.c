@@ -32,7 +32,7 @@ void updateCameraView(struct systemRunData data) {
     struct transformComponent *transforms = GET_SYSTEM_COMPONENT(data, 0);
     struct cameraComponent *cameras = GET_SYSTEM_COMPONENT(data, 1);
 
-    for (int i = 0; i < data.table->componentsLength; i++) {
+    for (int i = 0; i < GET_SYSTEM_COMPONENT_LENGTH(data); i++) {
         struct transformComponent *transform = &transforms[i];
         struct cameraComponent *camera = &cameras[i];
 
@@ -44,7 +44,7 @@ void updateCameraView(struct systemRunData data) {
 void updateControllerData(struct systemRunData data) {
     struct controllerDataComponent *controllers = GET_SYSTEM_COMPONENT(data, 0);
 
-    for (int i = 0; i < data.table->componentsLength; i++) {
+    for (int i = 0; i < GET_SYSTEM_COMPONENT_LENGTH(data); i++) {
         struct controllerDataComponent *controllerData = &controllers[i];
 
         sceCtrlPeekBufferPositive(0, &controllerData->data, 1);
@@ -54,7 +54,7 @@ void updateControllerData(struct systemRunData data) {
 void updateTransformMatrix(struct systemRunData data) {
     struct transformComponent *transforms = GET_SYSTEM_COMPONENT(data, 0);
 
-    for (int i = 0; i < data.table->componentsLength; i++) {
+    for (int i = 0; i < GET_SYSTEM_COMPONENT_LENGTH(data); i++) {
         struct transformComponent *transform = &transforms[i];
 
         loadIdentity(&transform->modelMatrix);
@@ -63,31 +63,31 @@ void updateTransformMatrix(struct systemRunData data) {
         translationMatrix(&transform->modelMatrix, transform->position);
     }
 }
-/*
+
 void setupTransform(struct systemRunData data) {
-    struct transformComponent *transform = getComponent(world, id, COMPONENT_TRANSFORM);
+    struct transformComponent *transform =  getComponent(data.world, data.entity, data.system->components[0]);
     transform->position = (struct vec3) {0};
     transform->rotation = (struct quat) {0, 0, 0, 1};
     transform->scale = (struct vec3) {1, 1, 1};
 }
 
-void setupCamera(struct world *world, unsigned int id) {
-    struct cameraComponent *camera = getComponent(world, id, COMPONENT_CAMERA);
+void setupCamera(struct systemRunData data) {
+    struct cameraComponent *camera = getComponent(data.world, data.entity, data.system->components[0]);
 
     createProjectionMatrix(&camera->projectionMat, 75, (float)globalState.surfaceWidth/(float)globalState.surfaceHeight);
 }
 
-void updateFirstPersonTransform(struct world *world, unsigned int id) {
-    enum componentType controllerType[] = { COMPONENT_CONTROLLER_DATA };
-    unsigned int *controllerEntity = getEntitiesWithComponents(world, controllerType, 1);
+void updateFirstPersonTransform(struct systemRunData data) {
+    componentId controllerType[] = { GET_COMPONENT_ID(data.world, struct controllerData) };
+    tableId controllerTable;
+    getAllTablesWithComponents(data.world, controllerType, 1, &controllerTable, 1);
 
-    struct controllerDataComponent *controllerData = getComponent(world, controllerEntity[1], COMPONENT_CONTROLLER_DATA);
+    struct controllerDataComponent *controllerData = getComponentFromTable(data.world, controllerTable, controllerType[0]);
 
-    enum componentType types[] = { COMPONENT_TRANSFORM, COMPONENT_FIRST_PERSON };
-    unsigned int *entities = getEntitiesWithComponents(world, types, 2);
+    struct transformComponent *transforms = GET_SYSTEM_COMPONENT(data, 0);
 
-    for (int i = 1; i < entities[0]; i++) {
-        struct transformComponent *transform = getComponent(world, entities[i], COMPONENT_TRANSFORM);
+    for (int i = 0; i < GET_SYSTEM_COMPONENT_LENGTH(data); i++) {
+        struct transformComponent *transform = &transforms[i];
 
         SceCtrlData ctrl = controllerData->data;
 
@@ -110,12 +110,10 @@ void updateFirstPersonTransform(struct world *world, unsigned int id) {
         struct vec3 right = vectorRotate((struct vec3) { 1, 0, 0 }, transform->rotation);
         transform->position = vectorAdd(transform->position, vectorScale(leftAnalog.x, right));
     }
-
-    free(controllerEntity);
-    free(entities);
 }
 
-void renderModel(struct world *world, unsigned int id) {
+void renderModel(struct systemRunData data) {
+/*
     enum componentType types[] = { COMPONENT_TRANSFORM, COMPONENT_MODEL };
     unsigned int *entities = getEntitiesWithComponents(world, types, 2);
 
@@ -274,9 +272,8 @@ void renderModel(struct world *world, unsigned int id) {
     free(dirLightEntities);
     free(spotLightEntities);
     free(pointLightEntities);
-}
-
 */
+}
 
 int main() {
     resetPrint();
@@ -293,13 +290,18 @@ int main() {
     componentId controllerDataId = CREATE_COMPONENT(&ecsWorld, struct controllerDataComponent);
     componentId modelId = CREATE_COMPONENT(&ecsWorld, struct modelComponent);
     componentId dirLightId = CREATE_COMPONENT(&ecsWorld, struct dirLightComponent);
+    componentId spotLightId = CREATE_COMPONENT(&ecsWorld, struct spotLightComponent);
+    componentId pointLightId = CREATE_COMPONENT(&ecsWorld, struct pointLightComponent);
+
+    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_CREATE, setupTransform, transformId);
+    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_CREATE, setupCamera, cameraId);
 
     ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_UPDATE, updateControllerData, controllerDataId);
-    //ADD_SYSTEM(&ecsWorld, 1, SYSTEM_ON_UPDATE, updateFirstPersonTransform, );
+    ADD_SYSTEM(&ecsWorld, 1, SYSTEM_ON_UPDATE, updateFirstPersonTransform, transformId, firstPersonId);
     ADD_SYSTEM(&ecsWorld, 2, SYSTEM_ON_UPDATE, updateCameraView, transformId, cameraId);
     ADD_SYSTEM(&ecsWorld, 10, SYSTEM_ON_UPDATE, updateTransformMatrix, transformId);
 
-    //ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_RENDER, renderModel, );
+    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_RENDER, renderModel, transformId, modelId);
 
     entityId camera = createEntity(&ecsWorld);
     addComponent(&ecsWorld, camera, transformId);
@@ -322,11 +324,6 @@ int main() {
     dirLight->ambientColor = (struct vec3) { 1, 1, 1 };
     dirLight->diffuseColor = (struct vec3) { 1, 1, 1 };
     dirLight->specularColor = (struct vec3) { 1, 1, 1 };
-
-    /*
-    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_CREATE, setupTransform, transformId);
-    addSystem(&ecsWorld, (struct system) { "setupCamera", 0, SYSTEM_ON_CREATE, setupCamera });
-    */
 
     while (1) {
         struct transformComponent *transform = getComponent(&ecsWorld, chest, transformId);

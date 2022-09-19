@@ -97,7 +97,7 @@ componentId getComponentId(struct world *world, const char *component) {
     return INVALID_POSITION;
 }
 
-static unsigned int getAllTablesWithComponents(struct world *world, componentId *components, unsigned int componentsLength, unsigned int *tables) {
+unsigned int getAllTablesWithComponents(struct world *world, componentId *components, unsigned int componentsLength, tableId *tables, unsigned int tablesLength) {
     int l = 0;
     for (int j = 0; j < world->tablesLength; j++) {
         if (world->tables[j].recordsLength < componentsLength) continue;
@@ -110,13 +110,14 @@ static unsigned int getAllTablesWithComponents(struct world *world, componentId 
         }
         if (hits == componentsLength) {
             tables[l] = j;
-            j++;
+            l++;
+            if (l == tablesLength) return l;
         }
     }
     return l;
 }
 
-static unsigned int getTableForComponents(struct world *world, componentId *components, unsigned int componentsLength) {
+static tableId getTableForComponents(struct world *world, componentId *components, unsigned int componentsLength) {
     for (int j = 0; j < world->tablesLength; j++) {
         if (world->tables[j].recordsLength != componentsLength) continue;
 
@@ -129,7 +130,7 @@ static unsigned int getTableForComponents(struct world *world, componentId *comp
         if (hits == componentsLength) return j;
     }
 
-    unsigned int len = world->tablesLength;
+    tableId len = world->tablesLength;
     world->tables[len].records = malloc(componentsLength * sizeof(struct record));
     world->tables[len].recordsLength = componentsLength;
     world->tables[len].componentsLength = 0;
@@ -144,7 +145,7 @@ static unsigned int getTableForComponents(struct world *world, componentId *comp
     return len;
 }
 
-static struct entity addEntityToTable(struct world *world, unsigned int table) {
+static struct entity addEntityToTable(struct world *world, tableId table) {
     struct table *t = &world->tables[table];
 
     struct entity e = {
@@ -170,8 +171,8 @@ static void removeEntityFromTable(struct world *world, struct entity entity) {
     t->componentsLength--;
 }
 
-static struct entity copyEntityBetweenTables(struct world *world, struct entity entity, unsigned int tableTo) {
-    unsigned int tableFrom = entity.table;
+static struct entity copyEntityBetweenTables(struct world *world, struct entity entity, tableId tableTo) {
+    tableId tableFrom = entity.table;
     struct table *tFrom = &world->tables[tableFrom];
     struct table *tTo = &world->tables[tableTo];
 
@@ -199,7 +200,7 @@ static struct entity copyEntityBetweenTables(struct world *world, struct entity 
 
 void addComponent(struct world *world, entityId entity, componentId component) {
     if (world->entities[entity].table == INVALID_POSITION) {
-        unsigned int t = getTableForComponents(world, &component, 1);
+        tableId t = getTableForComponents(world, &component, 1);
         world->entities[entity] = addEntityToTable(world, t);
     }
     else {
@@ -208,10 +209,23 @@ void addComponent(struct world *world, entityId entity, componentId component) {
             components[i] = world->tables[world->entities[entity].table].records[i].componentType;
         }
         components[world->tables[world->entities[entity].table].recordsLength] = component;
-        unsigned int t = getTableForComponents(world, components, world->tables[world->entities[entity].table].recordsLength + 1);
+        tableId t = getTableForComponents(world, components, world->tables[world->entities[entity].table].recordsLength + 1);
         struct entity e = copyEntityBetweenTables(world, world->entities[entity], t);
         removeEntityFromTable(world, world->entities[entity]);
         world->entities[entity] = e;
+    }
+
+    for (int i = 0; i < world->systemsLength; i++) {
+        if (world->systems[i].phase != SYSTEM_ON_CREATE) continue;
+        if (world->systems[i].components[0] != component) continue;
+
+        struct systemRunData data = {
+            world,
+            { .entity = entity },
+            &world->systems[i]
+        };
+
+        world->systems[i].callback(data);
     }
 }
 
@@ -227,9 +241,11 @@ void *getComponent(struct world *world, entityId entity, componentId component) 
     return NULL;
 }
 
-void *getComponentFromTable(struct table *table, componentId component) {
-    for (int i = 0; i < table->recordsLength; i++) {
-        if (table->records[i].componentType == component) return table->records[i].components;
+void *getComponentFromTable(struct world *world, tableId table, componentId component) {
+    struct table t = world->tables[table];
+
+    for (int i = 0; i < t.recordsLength; i++) {
+        if (t.records[i].componentType == component) return t.records[i].components;
     }
 
     return NULL;
@@ -245,10 +261,23 @@ void removeComponent(struct world *world, entityId entity, componentId component
             if (world->tables[world->entities[entity].table].records[i].componentType == component) continue;
             components[i] = world->tables[world->entities[entity].table].records[i].componentType;
         }
-        unsigned int t = getTableForComponents(world, components, world->tables[world->entities[entity].table].recordsLength - 1);
+        tableId t = getTableForComponents(world, components, world->tables[world->entities[entity].table].recordsLength - 1);
         struct entity e = copyEntityBetweenTables(world, world->entities[entity], t);
         removeEntityFromTable(world, world->entities[entity]);
         world->entities[entity] = e;
+    }
+
+    for (int i = 0; i < world->systemsLength; i++) {
+        if (world->systems[i].phase != SYSTEM_ON_DELETE) continue;
+        if (world->systems[i].components[0] != component) continue;
+
+        struct systemRunData data = {
+            world,
+            { .entity = entity },
+            &world->systems[i]
+        };
+
+        world->systems[i].callback(data);
     }
 }
 
@@ -267,6 +296,25 @@ entityId createEntity(struct world *world) {
 }
 
 void deleteEntity(struct world *world, entityId id) {
+    struct table *t = &world->tables[world->entities[id].table];
+
+    for (int j = 0; j < t->recordsLength; j++) {
+        componentId component = t->records[j].componentType;
+
+        for (int i = 0; i < world->systemsLength; i++) {
+            if (world->systems[i].phase != SYSTEM_ON_DELETE) continue;
+            if (world->systems[i].components[0] != component) continue;
+
+            struct systemRunData data = {
+                world,
+                { .entity = id },
+                &world->systems[i]
+            };
+
+            world->systems[i].callback(data);
+        }
+    }
+
     world->entities[id].table = INVALID_POSITION;
     world->entities[id].position = INVALID_POSITION;
     world->validEntities[id] = false;
@@ -293,13 +341,13 @@ void runWorldPhase(struct world *world, enum systemPhase phase) {
     for (int i = 0; i < world->systemsLength; i++) {
         if (world->systems[i].phase != phase) continue;
 
-        unsigned int tables[MAX_ARCHETYPE_COUNT];
-        unsigned int tablesLength = getAllTablesWithComponents(world, world->systems[i].components, world->systems[i].componentsLength, tables);
+        tableId tables[MAX_ARCHETYPE_COUNT];
+        unsigned int tablesLength = getAllTablesWithComponents(world, world->systems[i].components, world->systems[i].componentsLength, tables, MAX_ARCHETYPE_COUNT);
 
         for (int j = 0; j < tablesLength; j++) {
             struct systemRunData data = {
                 world,
-                &world->tables[tables[j]],
+                { .table = tables[j] },
                 &world->systems[i]
             };
 

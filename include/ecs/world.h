@@ -14,6 +14,7 @@
 
 typedef unsigned int componentId;
 typedef unsigned int entityId;
+typedef unsigned int tableId;
 
 enum systemPhase {
     SYSTEM_ON_CREATE,
@@ -24,7 +25,12 @@ enum systemPhase {
 
 struct systemRunData {
     struct world *world;
-    struct table *table;
+
+    union {
+        tableId table;
+        entityId entity;
+    };
+
     struct system *system;
 };
 
@@ -77,12 +83,18 @@ struct world {
 };
 
 #define STRINGIFY(c) #c
+#define VARIADIC_COUNT(...) ((int)(sizeof((int[]){__VA_ARGS__})/sizeof(int)))
+#define UNPARENTHESES(...) __VA_ARGS__
+
 #define COMPONENT_SIZE(w, c) (w->components[c].size)
-#define VARIADIC_COUNT(...) ((int)(sizeof((int[]){ __VA_ARGS__ })/sizeof(int)))
 
 #define CREATE_COMPONENT(w, c) createComponent(w, STRINGIFY(c), sizeof(c))
 #define GET_COMPONENT_ID(w, c) getComponentId(w, STRINGIFY(c))
-#define GET_SYSTEM_COMPONENT(d, i) getComponentFromTable(d.table, d.system->components[i])
+#define GET_SYSTEM_COMPONENT(d, i) getComponentFromTable(d.world, d.table, d.system->components[i])
+#define GET_SYSTEM_COMPONENT_LENGTH(d) (d.world->tables[d.table].componentsLength)
+
+//#define COMPONENT_PACKAGE(...) ({ __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__)})
+//#define COMPONENT_LIST(...) { __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__) }
 
 #define ADD_SYSTEM(w, pr, ph, callback, ...) do { \
     struct system s = { \
@@ -101,7 +113,8 @@ componentId getComponentId(struct world *world, const char *component);
 
 void addComponent(struct world *world, entityId entity, componentId component);
 void *getComponent(struct world *world, entityId entity, componentId component);
-void *getComponentFromTable(struct table *table, componentId component);
+void *getComponentFromTable(struct world *world, tableId table, componentId component);
+unsigned int getAllTablesWithComponents(struct world *world, componentId *components, unsigned int componentsLength, tableId *tables, unsigned int tablesLength);
 void removeComponent(struct world *world, entityId entity, componentId component);
 
 entityId createEntity(struct world *world);
