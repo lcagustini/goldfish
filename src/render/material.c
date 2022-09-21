@@ -21,7 +21,7 @@ GLuint loadShader(const GLchar *shaderSrc, GLenum type, GLint *size) {
 
     glShaderSource(shader, 1, &shaderSrc, size);
 
-    print("Compiling Shader: %s...\n", shaderSrc);
+    print("Compiling Shader...\n");
     glCompileShader(shader);
 
     GLint compiled;

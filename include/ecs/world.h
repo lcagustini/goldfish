@@ -64,8 +64,8 @@ struct record {
 
 struct table {
     struct record *records;
-    unsigned int componentsLength;
     unsigned int recordsLength;
+    unsigned int componentsLength;
 };
 
 struct world {
@@ -90,8 +90,9 @@ struct world {
 
 #define CREATE_COMPONENT(w, c) createComponent(w, STRINGIFY(c), sizeof(c))
 #define GET_COMPONENT_ID(w, c) getComponentId(w, STRINGIFY(c))
-#define GET_SYSTEM_COMPONENT(d, i) getComponentFromTable(d.world, d.table, d.system->components[i])
-#define GET_SYSTEM_COMPONENT_LENGTH(d) (d.world->tables[d.table].componentsLength)
+#define GET_SYSTEM_COMPONENT(d) getComponent(d.world, d.entity, d.system->components[0])
+#define GET_SYSTEM_COMPONENTS(d, i) getComponentFromTable(d.world, d.table, d.system->components[i])
+#define GET_SYSTEM_COMPONENTS_LENGTH(d) (d.world->tables[d.table].componentsLength)
 
 //#define COMPONENT_PACKAGE(...) ({ __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__)})
 //#define COMPONENT_LIST(...) { __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__) }
@@ -122,5 +123,6 @@ void deleteEntity(struct world *world, entityId id);
 void addSystem(struct world *world, struct system system);
 
 void runWorldPhase(struct world *world, enum systemPhase phase);
+void printWorld(struct world *world);
 
 #endif

@@ -2,6 +2,8 @@
 #include <string.h>
 #include <math.h>
 
+#include <print.h>
+
 void multMatrix(union mat4 *result, union mat4 *srcA, union mat4 *srcB) {
     union mat4 tmp;
 
@@ -83,8 +85,7 @@ void rotationMatrix(union mat4 *result, struct quat quat) {
     multMatrix(result, &m1, result);
 }
 
-void lookAt(union mat4 *result, struct vec3 position, struct vec3 target, struct vec3 worldUp) {
-    struct vec3 dir = vectorNormalize(vectorSubtract(target, position));
+void lookAt(union mat4 *result, struct vec3 position, struct vec3 dir, struct vec3 worldUp) {
     struct vec3 right = vectorNormalize(vectorCross(dir, worldUp));
     struct vec3 up = vectorCross(right, dir);
 

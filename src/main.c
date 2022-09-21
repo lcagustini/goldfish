@@ -29,22 +29,24 @@ int _newlib_heap_size_user = 200 * 1024 * 1024;
 unsigned int sceLibcHeapSize = 32 * 1024 * 1024;
 
 void updateCameraView(struct systemRunData data) {
-    struct transformComponent *transforms = GET_SYSTEM_COMPONENT(data, 0);
-    struct cameraComponent *cameras = GET_SYSTEM_COMPONENT(data, 1);
+    struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0);
+    struct cameraComponent *cameras = GET_SYSTEM_COMPONENTS(data, 1);
 
-    for (int i = 0; i < GET_SYSTEM_COMPONENT_LENGTH(data); i++) {
+    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
         struct transformComponent *transform = &transforms[i];
         struct cameraComponent *camera = &cameras[i];
 
         struct vec3 dir = vectorRotate((struct vec3) { 0, 0, -1 }, transform->rotation);
-        lookAt(&camera->viewMat, transform->position, vectorAdd(transform->position, dir), (struct vec3) { 0, 1, 0 });
+        struct vec3 worldUp = { 0, 1, 0 };
+
+        lookAt(&camera->viewMat, transform->position, dir, worldUp);
     }
 }
 
 void updateControllerData(struct systemRunData data) {
-    struct controllerDataComponent *controllers = GET_SYSTEM_COMPONENT(data, 0);
+    struct controllerDataComponent *controllers = GET_SYSTEM_COMPONENTS(data, 0);
 
-    for (int i = 0; i < GET_SYSTEM_COMPONENT_LENGTH(data); i++) {
+    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
         struct controllerDataComponent *controllerData = &controllers[i];
 
         sceCtrlPeekBufferPositive(0, &controllerData->data, 1);
@@ -52,9 +54,9 @@ void updateControllerData(struct systemRunData data) {
 }
 
 void updateTransformMatrix(struct systemRunData data) {
-    struct transformComponent *transforms = GET_SYSTEM_COMPONENT(data, 0);
+    struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0);
 
-    for (int i = 0; i < GET_SYSTEM_COMPONENT_LENGTH(data); i++) {
+    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
         struct transformComponent *transform = &transforms[i];
 
         loadIdentity(&transform->modelMatrix);
@@ -65,28 +67,28 @@ void updateTransformMatrix(struct systemRunData data) {
 }
 
 void setupTransform(struct systemRunData data) {
-    struct transformComponent *transform =  getComponent(data.world, data.entity, data.system->components[0]);
+    struct transformComponent *transform = GET_SYSTEM_COMPONENT(data);
     transform->position = (struct vec3) {0};
     transform->rotation = (struct quat) {0, 0, 0, 1};
     transform->scale = (struct vec3) {1, 1, 1};
 }
 
 void setupCamera(struct systemRunData data) {
-    struct cameraComponent *camera = getComponent(data.world, data.entity, data.system->components[0]);
+    struct cameraComponent *camera = GET_SYSTEM_COMPONENT(data);
 
     createProjectionMatrix(&camera->projectionMat, 75, (float)globalState.surfaceWidth/(float)globalState.surfaceHeight);
 }
 
 void updateFirstPersonTransform(struct systemRunData data) {
-    componentId controllerType[] = { GET_COMPONENT_ID(data.world, struct controllerData) };
-    tableId controllerTable;
-    getAllTablesWithComponents(data.world, controllerType, 1, &controllerTable, 1);
+    componentId controllerType[] = { GET_COMPONENT_ID(data.world, struct controllerDataComponent) };
+    tableId controllerTable[1];
+    getAllTablesWithComponents(data.world, controllerType, 1, controllerTable, 1);
 
-    struct controllerDataComponent *controllerData = getComponentFromTable(data.world, controllerTable, controllerType[0]);
+    struct controllerDataComponent *controllerData = getComponentFromTable(data.world, controllerTable[0], controllerType[0]);
 
-    struct transformComponent *transforms = GET_SYSTEM_COMPONENT(data, 0);
+    struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0);
 
-    for (int i = 0; i < GET_SYSTEM_COMPONENT_LENGTH(data); i++) {
+    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
         struct transformComponent *transform = &transforms[i];
 
         SceCtrlData ctrl = controllerData->data;
@@ -113,34 +115,39 @@ void updateFirstPersonTransform(struct systemRunData data) {
 }
 
 void renderModel(struct systemRunData data) {
-/*
-    enum componentType types[] = { COMPONENT_TRANSFORM, COMPONENT_MODEL };
-    unsigned int *entities = getEntitiesWithComponents(world, types, 2);
+    struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0);
+    struct modelComponent *models = GET_SYSTEM_COMPONENTS(data, 1);
 
-    enum componentType cameraType[] = { COMPONENT_TRANSFORM, COMPONENT_CAMERA };
-    unsigned int *cameraEntity = getEntitiesWithComponents(world, cameraType, 2);
+    componentId cameraTypes[] = { GET_COMPONENT_ID(data.world, struct transformComponent), GET_COMPONENT_ID(data.world, struct cameraComponent) };
+    tableId cameraTable;
+    getAllTablesWithComponents(data.world, cameraTypes, 2, &cameraTable, 1);
+    struct transformComponent *cameraTransform = getComponentFromTable(data.world, cameraTable, cameraTypes[0]);
+    struct cameraComponent *camera = getComponentFromTable(data.world, cameraTable, cameraTypes[1]);
 
-    enum componentType dirLightType[] = { COMPONENT_TRANSFORM, COMPONENT_DIR_LIGHT };
-    unsigned int *dirLightEntities = getEntitiesWithComponents(world, dirLightType, 2);
+    componentId dirLightTypes[] = { GET_COMPONENT_ID(data.world, struct transformComponent), GET_COMPONENT_ID(data.world, struct dirLightComponent) };
+    tableId dirLightTables[10];
+    getAllTablesWithComponents(data.world, dirLightTypes, 2, dirLightTables, 10);
 
-    enum componentType spotLightType[] = { COMPONENT_TRANSFORM, COMPONENT_SPOT_LIGHT };
-    unsigned int *spotLightEntities = getEntitiesWithComponents(world, spotLightType, 2);
+    componentId spotLightTypes[] = { GET_COMPONENT_ID(data.world, struct transformComponent), GET_COMPONENT_ID(data.world, struct spotLightComponent) };
+    tableId spotLightTables[10];
+    getAllTablesWithComponents(data.world, spotLightTypes, 2, spotLightTables, 10);
 
-    enum componentType pointLightType[] = { COMPONENT_TRANSFORM, COMPONENT_POINT_LIGHT };
-    unsigned int *pointLightEntities = getEntitiesWithComponents(world, pointLightType, 2);
+    componentId pointLightTypes[] = { GET_COMPONENT_ID(data.world, struct transformComponent), GET_COMPONENT_ID(data.world, struct pointLightComponent) };
+    tableId pointLightTables[10];
+    getAllTablesWithComponents(data.world, pointLightTypes, 2, pointLightTables, 10);
 
-    for (int i = 1; i < entities[0]; i++) {
-        struct transformComponent *transform = getComponent(world, entities[i], COMPONENT_TRANSFORM);
-
-        struct modelComponent *model = getComponent(world, entities[i], COMPONENT_MODEL);
+    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
+        struct transformComponent *transform = &transforms[i];
+        struct modelComponent *model = &models[i];
 
         for (int j = 0; j < model->model.meshesLength; j++) {
             glUniformMatrix4fv(model->model.meshes[j].material.shader.modelLoc, 1, false, &transform->modelMatrix.mat[0][0]);
-            glUniformMatrix4fv(model->model.meshes[j].material.shader.viewLoc, 1, false, &world->componentAllocator.cameraComponents[world->entities[cameraEntity[1]].components[COMPONENT_CAMERA]].viewMat.mat[0][0]);
-            glUniformMatrix4fv(model->model.meshes[j].material.shader.projectionLoc, 1, false, &world->componentAllocator.cameraComponents[world->entities[cameraEntity[1]].components[COMPONENT_CAMERA]].projectionMat.mat[0][0]);
+            glUniformMatrix4fv(model->model.meshes[j].material.shader.viewLoc, 1, false, &camera->viewMat.mat[0][0]);
+            glUniformMatrix4fv(model->model.meshes[j].material.shader.projectionLoc, 1, false, &camera->projectionMat.mat[0][0]);
 
-            glUniform3fv(model->model.meshes[j].material.shader.cameraPosLoc, 1, &world->componentAllocator.transformComponents[world->entities[cameraEntity[1]].components[COMPONENT_TRANSFORM]].position.x);
+            glUniform3fv(model->model.meshes[j].material.shader.cameraPosLoc, 1, &cameraTransform->position.x);
 
+            /*
             for (int k = 1; k <= 1; k++) {
                 struct vec3 direction = {0};
                 struct vec3 ambient = {0};
@@ -263,16 +270,10 @@ void renderModel(struct systemRunData data) {
                 specularString[11] = '0' + (k - 1);
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, specularString), 1, &specular.x);
             }
+            */
         }
         drawModel(&model->model);
     }
-
-    free(entities);
-    free(cameraEntity);
-    free(dirLightEntities);
-    free(spotLightEntities);
-    free(pointLightEntities);
-*/
 }
 
 int main() {
@@ -324,6 +325,8 @@ int main() {
     dirLight->ambientColor = (struct vec3) { 1, 1, 1 };
     dirLight->diffuseColor = (struct vec3) { 1, 1, 1 };
     dirLight->specularColor = (struct vec3) { 1, 1, 1 };
+
+    printWorld(&ecsWorld);
 
     while (1) {
         struct transformComponent *transform = getComponent(&ecsWorld, chest, transformId);

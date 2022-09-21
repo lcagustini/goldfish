@@ -101,6 +101,7 @@ unsigned int getAllTablesWithComponents(struct world *world, componentId *compon
     int l = 0;
     for (int j = 0; j < world->tablesLength; j++) {
         if (world->tables[j].recordsLength < componentsLength) continue;
+        if (world->tables[j].componentsLength == 0) continue;
 
         int hits = 0;
         for (int k = 0; k < componentsLength; k++) {
@@ -353,5 +354,44 @@ void runWorldPhase(struct world *world, enum systemPhase phase) {
 
             world->systems[i].callback(data);
         }
+    }
+}
+
+void printWorld(struct world *world) {
+    print("[ECS World]\n");
+
+    print("[ECS Systems]\n");
+    for (int i = 0; i < world->systemsLength; i++) {
+        print("%s (priority: %d) (phase: %d) (components:", world->systems[i].name, world->systems[i].priority, world->systems[i].phase);
+        for (int j = 0; j < world->systems[i].componentsLength; j++) {
+            print(" %u", world->systems[i].components[j]);
+        }
+        print(")\n");
+    }
+    print("\n");
+
+    print("[ECS Entities]\n");
+    for (int i = 0; i < MAX_ENTITY_COUNT; i++) {
+        if (!world->validEntities[i]) continue;
+
+        print("%d (table: %u) (row: %u)\n", i, world->entities[i].table, world->entities[i].position);
+    }
+    print("\n");
+
+    print("[ECS Components]\n");
+    for (int i = 0; i < MAX_COMPONENT_COUNT; i++) {
+        if (!world->validComponents[i]) continue;
+
+        print("%d %s (hash: %u) (size: %u)\n", i, world->components[i].name, world->components[i].hash, world->components[i].size);
+    }
+    print("\n");
+
+    print("[ECS Tables]\n");
+    for (int i = 0; i < world->tablesLength; i++) {
+        print("%d (records: %u) (rows: %u)\n", world->tables[i].recordsLength, world->tables[i].componentsLength);
+        for (int j = 0; j < world->tables[i].recordsLength; j++) {
+            print("(component: %u -> %p)\n", world->tables[i].records[j].componentType, world->tables[i].records[j].components);
+        }
+        print("\n");
     }
 }

@@ -29,7 +29,7 @@ void translationMatrix(union mat4 *result, struct vec3 vec);
 void scalingMatrix(union mat4 *result, struct vec3 vec);
 void rotationMatrix(union mat4 *result, struct quat quat);
 
-void lookAt(union mat4 *result, struct vec3 position, struct vec3 target, struct vec3 worldUp);
+void lookAt(union mat4 *result, struct vec3 position, struct vec3 dir, struct vec3 worldUp);
 void createProjectionMatrix(union mat4 *result, int yFOV, float aspect);
 
 #endif
