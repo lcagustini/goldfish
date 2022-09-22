@@ -12,7 +12,7 @@
 
 #include <stdbool.h>
 
-typedef unsigned int componentId;
+typedef uint32_t componentId;
 typedef unsigned int entityId;
 typedef unsigned int tableId;
 
@@ -52,6 +52,7 @@ struct entity {
 };
 
 struct component {
+    bool valid;
     uint32_t hash;
     const char *name;
     unsigned int size;
@@ -72,8 +73,8 @@ struct world {
     struct table tables[MAX_ARCHETYPE_COUNT];
     unsigned int tablesLength;
 
-    struct component components[MAX_COMPONENT_COUNT];
-    bool validComponents[MAX_COMPONENT_COUNT];
+    struct component *components;
+    unsigned int componentsLength;
 
     struct entity entities[MAX_ENTITY_COUNT];
     bool validEntities[MAX_ENTITY_COUNT];
@@ -86,10 +87,10 @@ struct world {
 #define VARIADIC_COUNT(...) ((int)(sizeof((int[]){__VA_ARGS__})/sizeof(int)))
 #define UNPARENTHESES(...) __VA_ARGS__
 
-#define COMPONENT_SIZE(w, c) (w->components[c].size)
+#define COMPONENT_SIZE(w, c) (w->components[c % w->componentsLength].size)
 
-#define CREATE_COMPONENT(w, c) createComponent(w, STRINGIFY(c), sizeof(c))
-#define GET_COMPONENT_ID(w, c) getComponentId(w, STRINGIFY(c))
+#define CREATE_COMPONENT(w, c) createComponent(w, STRINGIFY(c), sizeof(STRINGIFY(c)), sizeof(c))
+#define GET_COMPONENT_ID(w, c) getComponentId(w, STRINGIFY(c), sizeof(STRINGIFY(c)))
 #define GET_SYSTEM_COMPONENT(d) getComponent(d.world, d.entity, d.system->components[0])
 #define GET_SYSTEM_COMPONENTS(d, i) getComponentFromTable(d.world, d.table, d.system->components[i])
 #define GET_SYSTEM_COMPONENTS_LENGTH(d) (d.world->tables[d.table].componentsLength)
@@ -109,8 +110,10 @@ struct world {
     addSystem(w, s); \
 } while (0); \
 
-componentId createComponent(struct world *world, const char *component, unsigned int componentSize);
-componentId getComponentId(struct world *world, const char *component);
+struct world createWorld();
+
+componentId createComponent(struct world *world, const char *component, unsigned int componentLength, unsigned int componentSize);
+componentId getComponentId(struct world *world, const char *component, unsigned int componentLength);
 
 void addComponent(struct world *world, entityId entity, componentId component);
 void *getComponent(struct world *world, entityId entity, componentId component);

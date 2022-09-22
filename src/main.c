@@ -283,7 +283,7 @@ int main() {
 
     print("All init OK.\n");
 
-    struct world ecsWorld = {0};
+    struct world ecsWorld = createWorld();
 
     componentId transformId = CREATE_COMPONENT(&ecsWorld, struct transformComponent);
     componentId cameraId = CREATE_COMPONENT(&ecsWorld, struct cameraComponent);

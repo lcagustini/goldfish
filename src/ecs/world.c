@@ -70,31 +70,49 @@ uint32_t hashString(const char *name, uint32_t len) {
     return h;
 }
 
-componentId createComponent(struct world *world, const char *component, unsigned int componentSize) {
-    for (int i = 0; i < MAX_COMPONENT_COUNT; i++) {
-        if (!world->validComponents[i]) {
-            world->components[i].hash = hashString(component, strlen(component));
-            world->components[i].name = component;
-            world->components[i].size = componentSize;
-            world->validComponents[i] = true;
-
-            return i;
-        }
-    }
-
-    return INVALID_POSITION;
+struct world createWorld() {
+    struct world world = {0};
+    world.components = malloc(MAX_COMPONENT_COUNT * sizeof(struct component));
+    world.componentsLength = MAX_COMPONENT_COUNT;
+    memset(world.components, 0, world.componentsLength * sizeof(struct component));
+    return world;
 }
 
-componentId getComponentId(struct world *world, const char *component) {
-    uint32_t hash = hashString(component, strlen(component));
+componentId createComponent(struct world *world, const char *component, unsigned int componentLength, unsigned int componentSize) {
+    uint32_t hash = hashString(component, componentLength);
+    unsigned int position = hash % world->componentsLength;
 
-    for (int i = 0; i < MAX_COMPONENT_COUNT; i++) {
-        if (!world->validComponents[i]) continue;
+    if (world->components[position].valid) {
+        struct component *oldBuffer = world->components;
+        unsigned int oldLength = world->componentsLength;
 
-        if (world->components[i].hash == hash) return i;
+        unsigned int newLength = (unsigned int)(1.5f * world->componentsLength);
+        print("new length: %u\n", newLength);
+        world->components = malloc(newLength * sizeof(struct component));
+        world->componentsLength = newLength;
+        memset(world->components, 0, world->componentsLength * sizeof(struct component));
+
+        for (int i = 0; i < oldLength; i++) {
+            if (oldBuffer[i].valid) {
+                createComponent(world, oldBuffer[i].name, strlen(oldBuffer[i].name) + 1, oldBuffer[i].size);
+            }
+        }
+
+        free(oldBuffer);
+
+        return createComponent(world, component, componentLength, componentSize);
     }
 
-    return INVALID_POSITION;
+    world->components[position].valid = true;
+    world->components[position].hash = hash;
+    world->components[position].name = component;
+    world->components[position].size = componentSize;
+
+    return hash;
+}
+
+componentId getComponentId(struct world *world, const char *component, unsigned int componentLength) {
+    return hashString(component, componentLength);
 }
 
 unsigned int getAllTablesWithComponents(struct world *world, componentId *components, unsigned int componentsLength, tableId *tables, unsigned int tablesLength) {
@@ -362,7 +380,7 @@ void printWorld(struct world *world) {
 
     print("[ECS Systems]\n");
     for (int i = 0; i < world->systemsLength; i++) {
-        print("%s (priority: %d) (phase: %d) (components:", world->systems[i].name, world->systems[i].priority, world->systems[i].phase);
+        print("(name: %s) (priority: %d) (phase: %d) (components:", world->systems[i].name, world->systems[i].priority, world->systems[i].phase);
         for (int j = 0; j < world->systems[i].componentsLength; j++) {
             print(" %u", world->systems[i].components[j]);
         }
@@ -374,21 +392,21 @@ void printWorld(struct world *world) {
     for (int i = 0; i < MAX_ENTITY_COUNT; i++) {
         if (!world->validEntities[i]) continue;
 
-        print("%d (table: %u) (row: %u)\n", i, world->entities[i].table, world->entities[i].position);
+        print("(id: %d) (table: %u) (row: %u)\n", i, world->entities[i].table, world->entities[i].position);
     }
     print("\n");
 
-    print("[ECS Components]\n");
-    for (int i = 0; i < MAX_COMPONENT_COUNT; i++) {
-        if (!world->validComponents[i]) continue;
+    print("[ECS Components (%d)]\n", world->componentsLength);
+    for (int i = 0; i < world->componentsLength; i++) {
+        if (!world->components[i].valid) continue;
 
-        print("%d %s (hash: %u) (size: %u)\n", i, world->components[i].name, world->components[i].hash, world->components[i].size);
+        print("(name: %s) (hash: %u) (size: %u)\n", world->components[i].name, world->components[i].hash, world->components[i].size);
     }
     print("\n");
 
     print("[ECS Tables]\n");
     for (int i = 0; i < world->tablesLength; i++) {
-        print("%d (records: %u) (rows: %u)\n", world->tables[i].recordsLength, world->tables[i].componentsLength);
+        print("(id: %d) (records: %u) (rows: %u)\n", i, world->tables[i].recordsLength, world->tables[i].componentsLength);
         for (int j = 0; j < world->tables[i].recordsLength; j++) {
             print("(component: %u -> %p)\n", world->tables[i].records[j].componentType, world->tables[i].records[j].components);
         }
