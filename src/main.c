@@ -80,11 +80,7 @@ void setupCamera(struct systemRunData data) {
 }
 
 void updateFirstPersonTransform(struct systemRunData data) {
-    componentId controllerType[] = { GET_COMPONENT_ID(data.world, struct controllerDataComponent) };
-    tableId controllerTable[1];
-    getAllTablesWithComponents(data.world, controllerType, 1, controllerTable, 1);
-
-    struct controllerDataComponent *controllerData = getComponentFromTable(data.world, controllerTable[0], controllerType[0]);
+    struct controllerDataComponent *controllerData = getSingletonComponent(data.world, GET_COMPONENT_ID(struct controllerDataComponent));
 
     struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0);
 
@@ -118,23 +114,23 @@ void renderModel(struct systemRunData data) {
     struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0);
     struct modelComponent *models = GET_SYSTEM_COMPONENTS(data, 1);
 
-    componentId cameraTypes[] = { GET_COMPONENT_ID(data.world, struct transformComponent), GET_COMPONENT_ID(data.world, struct cameraComponent) };
+    componentId cameraTypes[] = { GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent) };
     tableId cameraTable;
     getAllTablesWithComponents(data.world, cameraTypes, 2, &cameraTable, 1);
     struct transformComponent *cameraTransform = getComponentFromTable(data.world, cameraTable, cameraTypes[0]);
     struct cameraComponent *camera = getComponentFromTable(data.world, cameraTable, cameraTypes[1]);
 
-    componentId dirLightTypes[] = { GET_COMPONENT_ID(data.world, struct transformComponent), GET_COMPONENT_ID(data.world, struct dirLightComponent) };
+    componentId dirLightTypes[] = { GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct dirLightComponent) };
     tableId dirLightTables[10];
-    getAllTablesWithComponents(data.world, dirLightTypes, 2, dirLightTables, 10);
+    unsigned int dirLightTablesLength = getAllTablesWithComponents(data.world, dirLightTypes, 2, dirLightTables, 10);
 
-    componentId spotLightTypes[] = { GET_COMPONENT_ID(data.world, struct transformComponent), GET_COMPONENT_ID(data.world, struct spotLightComponent) };
+    componentId spotLightTypes[] = { GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct spotLightComponent) };
     tableId spotLightTables[10];
-    getAllTablesWithComponents(data.world, spotLightTypes, 2, spotLightTables, 10);
+    unsigned int spotLightTablesLength = getAllTablesWithComponents(data.world, spotLightTypes, 2, spotLightTables, 10);
 
-    componentId pointLightTypes[] = { GET_COMPONENT_ID(data.world, struct transformComponent), GET_COMPONENT_ID(data.world, struct pointLightComponent) };
+    componentId pointLightTypes[] = { GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct pointLightComponent) };
     tableId pointLightTables[10];
-    getAllTablesWithComponents(data.world, pointLightTypes, 2, pointLightTables, 10);
+    unsigned int pointLightTablesLength = getAllTablesWithComponents(data.world, pointLightTypes, 2, pointLightTables, 10);
 
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
         struct transformComponent *transform = &transforms[i];
@@ -147,42 +143,35 @@ void renderModel(struct systemRunData data) {
 
             glUniform3fv(model->model.meshes[j].material.shader.cameraPosLoc, 1, &cameraTransform->position.x);
 
-            /*
-            for (int k = 1; k <= 1; k++) {
-                struct vec3 direction = {0};
-                struct vec3 ambient = {0};
-                struct vec3 diffuse = {0};
-                struct vec3 specular = {0};
+            for (int k = 0; k < dirLightTablesLength; k++) {
+                struct transformComponent *lightTransform = getComponentFromTable(data.world, dirLightTables[k], dirLightTypes[0]);
+                struct dirLightComponent *light = getComponentFromTable(data.world, dirLightTables[k], dirLightTypes[1]);
 
-                if (k < dirLightEntities[0]) {
-                    struct transformComponent *lightTransform = getComponent(world, dirLightEntities[k], COMPONENT_TRANSFORM);
-                    struct dirLightComponent *light = getComponent(world, dirLightEntities[k], COMPONENT_DIR_LIGHT);
+                struct vec3 direction = (struct vec3) { 0, 0, -1 };
+                vectorRotate(direction, lightTransform->rotation);
 
-                    direction = (struct vec3) { 0, 0, -1 };
-                    vectorRotate(direction, lightTransform->rotation);
-
-                    ambient = light->ambientColor;
-                    diffuse = light->diffuseColor;
-                    specular = light->specularColor;
-                }
+                struct vec3 ambient = light->ambientColor;
+                struct vec3 diffuse = light->diffuseColor;
+                struct vec3 specular = light->specularColor;
 
                 char directionString[] = "dirLights[0].direction";
-                directionString[10] = '0' + (k - 1);
+                directionString[10] = '0' + k;
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, directionString), 1, &direction.x);
 
                 char ambientString[] = "dirLights[0].ambientColor";
-                ambientString[10] = '0' + (k - 1);
+                ambientString[10] = '0' + k;
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, ambientString), 1, &ambient.x);
 
                 char diffuseString[] = "dirLights[0].diffuseColor";
-                diffuseString[10] = '0' + (k - 1);
+                diffuseString[10] = '0' + k;
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, diffuseString), 1, &diffuse.x);
 
                 char specularString[] = "dirLights[0].specularColor";
-                specularString[10] = '0' + (k - 1);
+                specularString[10] = '0' + k;
                 glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, specularString), 1, &specular.x);
             }
 
+            /*
             for (int k = 1; k <= 0; k++) {
                 struct vec3 position = {0};
                 struct vec3 attenuation = {0};
@@ -309,8 +298,7 @@ int main() {
     addComponent(&ecsWorld, camera, cameraId);
     addComponent(&ecsWorld, camera, firstPersonId);
 
-    entityId input = createEntity(&ecsWorld);
-    addComponent(&ecsWorld, input, controllerDataId);
+    addSingletonComponent(&ecsWorld, controllerDataId);
 
     entityId chest = createEntity(&ecsWorld);
     addComponent(&ecsWorld, chest, transformId);

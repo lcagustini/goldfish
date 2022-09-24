@@ -70,11 +70,17 @@ uint32_t hashString(const char *name, uint32_t len) {
     return h;
 }
 
+entityId singletonEntity;
+
 struct world createWorld() {
     struct world world = {0};
+
     world.components = malloc(MAX_COMPONENT_COUNT * sizeof(struct component));
     world.componentsLength = MAX_COMPONENT_COUNT;
     memset(world.components, 0, world.componentsLength * sizeof(struct component));
+
+    singletonEntity = createEntity(&world);
+
     return world;
 }
 
@@ -111,7 +117,7 @@ componentId createComponent(struct world *world, const char *component, unsigned
     return hash;
 }
 
-componentId getComponentId(struct world *world, const char *component, unsigned int componentLength) {
+componentId getComponentId(const char *component, unsigned int componentLength) {
     return hashString(component, componentLength);
 }
 
@@ -298,6 +304,18 @@ void removeComponent(struct world *world, entityId entity, componentId component
 
         world->systems[i].callback(data);
     }
+}
+
+void addSingletonComponent(struct world *world, componentId component) {
+    addComponent(world, singletonEntity, component);
+}
+
+void *getSingletonComponent(struct world *world, componentId component) {
+    return getComponent(world, singletonEntity, component);
+}
+
+void removeSingletonComponent(struct world *world, componentId component) {
+    removeComponent(world, singletonEntity, component);
 }
 
 entityId createEntity(struct world *world) {
