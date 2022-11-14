@@ -1,8 +1,8 @@
 #include <stdlib.h>
 
-#include <render/model.h>
+#include <GL/glew.h>
 
-#include <PVR_PSP2/GLES2/gl2.h>
+#include <render/model.h>
 
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>

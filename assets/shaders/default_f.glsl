@@ -1,10 +1,9 @@
-precision mediump float;
-
 #define MAX_LIGHTS 8
-
 #define DIR_LIGHTS_LENGTH 1
 #define POINT_LIGHTS_LENGTH 0
 #define SPOT_LIGHTS_LENGTH 0
+
+precision mediump float;
 
 struct dirLight {
     vec3 direction;

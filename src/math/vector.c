@@ -1,4 +1,6 @@
 #include <math/vector.h>
+
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 float vectorLenSquared2D(struct vec2 v) {

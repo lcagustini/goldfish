@@ -1,15 +1,17 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-#include <PVR_PSP2/EGL/eglplatform.h>
-#include <PVR_PSP2/EGL/egl.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 struct globalState {
-    EGLDisplay display;
-    EGLSurface surface;
-    EGLContext context;
+    //EGLDisplay display;
+    //EGLSurface surface;
+    //EGLContext context;
 
-    EGLint surfaceWidth, surfaceHeight;
+    //EGLint surfaceWidth, surfaceHeight;
+
+    GLFWwindow *window;
 };
 
 extern struct globalState globalState;

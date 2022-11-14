@@ -1,9 +1,7 @@
 #include <render/material.h>
 
-#include <psp2/io/fcntl.h>
-#include <psp2/io/stat.h>
-
 #include <stdlib.h>
+#include <stdio.h>
 
 #define QOI_IMPLEMENTATION
 #include <qoi.h>
@@ -46,17 +44,18 @@ GLuint loadShader(const GLchar *shaderSrc, GLenum type, GLint *size) {
 }
 
 GLuint loadShaderFromFile(const char *shaderFile, GLenum type) {
-    SceUID file = sceIoOpen(shaderFile, SCE_O_RDONLY, 0777);
+    FILE *file = fopen(shaderFile, "r");
 
-    SceIoStat stat;
-    sceIoGetstatByFd(file, &stat);
+    fseek(file, 0, SEEK_END);
+    unsigned long len = (unsigned long)ftell(file);
 
-    GLchar *shaderStr = malloc(stat.st_size + 1);
-    sceIoRead(file, shaderStr, stat.st_size);
-    shaderStr[stat.st_size] = '\0';
+    GLchar *shaderStr = malloc(len + 1);
+    fseek(file, 0, SEEK_SET);
+    fread(shaderStr, len, 1, file);
+    shaderStr[len] = '\0';
 
     GLuint shader = loadShader(shaderStr, type, NULL);
-    sceIoClose(file);
+    fclose(file);
     free(shaderStr);
 
     return shader;
@@ -97,6 +96,48 @@ int createShader(struct shader *shader, const char *vertexPath, const char *frag
         shader->tangentLoc = glGetAttribLocation(shader->program, "aTangent");
 
         shader->cameraPosLoc = glGetUniformLocation(shader->program, "viewPos");
+
+        for (int i = 0; i < MAX_LIGHTS; i++) {
+            char loc[100];
+            sprintf(loc, "dirLights[%d].direction", i);
+            shader->dirLightLocs[i].direction = glGetUniformLocation(shader->program, loc);
+            sprintf(loc, "dirLights[%d].ambientColor", i);
+            shader->dirLightLocs[i].ambientColor = glGetUniformLocation(shader->program, loc);
+            sprintf(loc, "dirLights[%d].diffuseColor", i);
+            shader->dirLightLocs[i].diffuseColor = glGetUniformLocation(shader->program, loc);
+            sprintf(loc, "dirLights[%d].specularColor", i);
+            shader->dirLightLocs[i].specularColor = glGetUniformLocation(shader->program, loc);
+        }
+
+        for (int i = 0; i < MAX_LIGHTS; i++) {
+            char loc[100];
+            sprintf(loc, "pointLights[%d].position", i);
+            shader->pointLightLocs[i].position = glGetUniformLocation(shader->program, loc);
+            sprintf(loc, "pointLights[%d].attenuation", i);
+            shader->pointLightLocs[i].attenuation = glGetUniformLocation(shader->program, loc);
+            sprintf(loc, "pointLights[%d].ambientColor", i);
+            shader->pointLightLocs[i].ambientColor = glGetUniformLocation(shader->program, loc);
+            sprintf(loc, "pointLights[%d].diffuseColor", i);
+            shader->pointLightLocs[i].diffuseColor = glGetUniformLocation(shader->program, loc);
+            sprintf(loc, "pointLights[%d].specularColor", i);
+            shader->pointLightLocs[i].specularColor = glGetUniformLocation(shader->program, loc);
+        }
+
+        for (int i = 0; i < MAX_LIGHTS; i++) {
+            char loc[100];
+            sprintf(loc, "spotLights[%d].position", i);
+            shader->spotLightLocs[i].position = glGetUniformLocation(shader->program, loc);
+            sprintf(loc, "spotLights[%d].direction", i);
+            shader->spotLightLocs[i].direction = glGetUniformLocation(shader->program, loc);
+            sprintf(loc, "spotLights[%d].cutOff", i);
+            shader->spotLightLocs[i].cutOff = glGetUniformLocation(shader->program, loc);
+            sprintf(loc, "spotLights[%d].ambientColor", i);
+            shader->spotLightLocs[i].ambientColor = glGetUniformLocation(shader->program, loc);
+            sprintf(loc, "spotLights[%d].diffuseColor", i);
+            shader->spotLightLocs[i].diffuseColor = glGetUniformLocation(shader->program, loc);
+            sprintf(loc, "spotLights[%d].specularColor", i);
+            shader->spotLightLocs[i].specularColor = glGetUniformLocation(shader->program, loc);
+        }
 
         shader->shininessLoc = glGetUniformLocation(shader->program, "shininess");
 
@@ -139,7 +180,7 @@ void loadTexture(struct texture *texture, const char *path, enum textureType tex
 }
 
 void createMaterial(struct material *material, const char *diffusePath, const char *normalPath, const char *specularPath) {
-    createShader(&material->shader, "app0:assets/shaders/default_v.glsl", "app0:assets/shaders/default_f.glsl");
+    createShader(&material->shader, "assets/shaders/default_v.glsl", "assets/shaders/default_f.glsl");
 
     if (diffusePath) {
         loadTexture(&material->textures[material->texturesLength], diffusePath, TEXTURE_DIFFUSE);

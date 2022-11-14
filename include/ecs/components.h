@@ -1,12 +1,12 @@
 #ifndef COMPONENTS_H
 #define COMPONENTS_H
 
+#include <stdbool.h>
+
 #include <math/vector.h>
 #include <math/matrix.h>
 
 #include <render/model.h>
-
-#include <psp2/ctrl.h>
 
 struct transformComponent {
     struct vec3 position;
@@ -22,7 +22,27 @@ struct cameraComponent {
 };
 
 struct controllerDataComponent {
-    SceCtrlData data;
+    unsigned char lx;
+    unsigned char ly;
+
+    unsigned char rx;
+    unsigned char ry;
+
+    bool up;
+    bool right;
+    bool down;
+    bool left;
+
+    bool lt;
+    bool rt;
+
+    bool lb;
+    bool rb;
+
+    bool A;
+    bool B;
+    bool X;
+    bool Y;
 };
 
 struct firstPersonComponent {

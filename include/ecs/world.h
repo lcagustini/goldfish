@@ -11,6 +11,7 @@
 #include <ecs/components.h>
 
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef uint32_t componentId;
 typedef unsigned int entityId;
