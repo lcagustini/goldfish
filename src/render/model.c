@@ -11,32 +11,17 @@
 #include <print.h>
 
 static void setupMesh(struct mesh *mesh) {
+    glGenVertexArrays(1, &mesh->VAO);
     glGenBuffers(1, &mesh->VBO);
     glGenBuffers(1, &mesh->EBO);
+
+    glBindVertexArray(mesh->VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
     glBufferData(GL_ARRAY_BUFFER, mesh->verticesLength * sizeof(struct vertex), mesh->vertices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indicesLength * sizeof(unsigned int), mesh->indices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-static void drawMesh(struct mesh *mesh) {
-    glUseProgram(mesh->material.shader.program);
-
-    // draw mesh
-    glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->EBO);
-
-    for (int i = 0; i < mesh->material.texturesLength; i++) {
-        glActiveTexture(GL_TEXTURE0 + mesh->material.textures[i].type);
-        glBindTexture(GL_TEXTURE_2D, mesh->material.textures[i].textureBuffer);
-    }
-
-    glUniform1f(mesh->material.shader.shininessLoc, mesh->material.shininess);
 
     // vertex positions
     glEnableVertexAttribArray(mesh->material.shader.positionLoc);
@@ -51,13 +36,31 @@ static void drawMesh(struct mesh *mesh) {
     glEnableVertexAttribArray(mesh->material.shader.tangentLoc);
     glVertexAttribPointer(mesh->material.shader.tangentLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, tangent));
 
-    glDrawElements(GL_TRIANGLES, mesh->indicesLength, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-static struct mesh *processMesh(struct mesh *mesh, struct aiMesh *aiMesh, const struct aiScene *scene) {
+static void drawMesh(struct mesh *mesh) {
+    glUseProgram(mesh->material.shader.program);
+
+    // draw mesh
+    glBindVertexArray(mesh->VAO);
+
+    for (int i = 0; i < mesh->material.texturesLength; i++) {
+        glActiveTexture(GL_TEXTURE0 + mesh->material.textures[i].type);
+        glBindTexture(GL_TEXTURE_2D, mesh->material.textures[i].textureBuffer);
+    }
+
+    glUniform1f(mesh->material.shader.shininessLoc, mesh->material.shininess);
+
+    glDrawElements(GL_TRIANGLES, mesh->indicesLength, GL_UNSIGNED_INT, 0);
+
+    glBindVertexArray(0);
+}
+
+static struct mesh *processMesh(struct mesh *mesh, struct aiMesh *aiMesh, const struct aiScene *scene, struct material material) {
     print("--Processing Mesh (%d vertices, ", aiMesh->mNumVertices);
 
     mesh->vertices = malloc(aiMesh->mNumVertices * sizeof(struct vertex));
@@ -106,21 +109,23 @@ static struct mesh *processMesh(struct mesh *mesh, struct aiMesh *aiMesh, const 
         }
     }
 
+    mesh->material = material;
+
     setupMesh(mesh);
 
     return mesh;
 }
 
-static void processNode(struct model *model, struct aiNode *node, const struct aiScene *scene) {
+static void processNode(struct model *model, struct aiNode *node, const struct aiScene *scene, struct material material) {
     print("- Processing Node (%d meshes, %d children)\n", node->mNumMeshes, node->mNumChildren);
     for (int i = 0; i < node->mNumMeshes; i++) {
         struct aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-        processMesh(&model->meshes[model->meshesLength], mesh, scene);
+        processMesh(&model->meshes[model->meshesLength], mesh, scene, material);
         model->meshesLength++;
     }
 
     for (int i = 0; i < node->mNumChildren; i++) {
-        processNode(model, node->mChildren[i], scene);
+        processNode(model, node->mChildren[i], scene, material);
     }
 }
 
@@ -147,14 +152,11 @@ struct model loadModel(const char *modelPath, const char *diffusePath, const cha
     model.meshes = malloc(scene->mNumMeshes * sizeof(struct mesh));
     memset(model.meshes, 0, sizeof(struct mesh));
 
-    print("File has %d meshes\n", scene->mNumMeshes);
-    processNode(&model, scene->mRootNode, scene);
-
     struct material material = {0};
     createMaterial(&material, diffusePath, normalPath, specularPath);
-    for (int i = 0; i < model.meshesLength; i++) {
-        model.meshes[i].material = material;
-    }
+
+    print("File has %d meshes\n", scene->mNumMeshes);
+    processNode(&model, scene->mRootNode, scene, material);
 
     aiReleaseImport(scene);
 

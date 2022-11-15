@@ -1,9 +1,9 @@
+#version 460
+
 #define MAX_LIGHTS 8
 #define DIR_LIGHTS_LENGTH 1
 #define POINT_LIGHTS_LENGTH 0
 #define SPOT_LIGHTS_LENGTH 0
-
-precision mediump float;
 
 struct dirLight {
     vec3 direction;
@@ -44,13 +44,15 @@ uniform sampler2D textureMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
 
-varying vec3 position;
-varying vec3 normal;
-varying vec2 textCoord;
+in vec3 position;
+in vec3 normal;
+in vec2 textCoord;
 
-varying vec3 tangentPosition;
-varying vec3 tangentViewPosition;
-varying mat3 TBN;
+in vec3 tangentPosition;
+in vec3 tangentViewPosition;
+in mat3 TBN;
+
+out vec4 FragColor;
 
 vec3 dirLightning() {
     vec3 color = vec3(0.0);
@@ -58,12 +60,12 @@ vec3 dirLightning() {
     for (int i = 0; i < DIR_LIGHTS_LENGTH; i++) {
         dirLight dl = dirLights[i];
 
-        vec3 norm = texture2D(normalMap, textCoord).rgb;
+        vec3 norm = texture(normalMap, textCoord).rgb;
         norm = normalize(2.0 * norm - 1.0);
 
         vec3 lightDir = TBN * normalize(dl.direction);
 
-        vec3 fragColor = texture2D(textureMap, textCoord).rgb;
+        vec3 fragColor = texture(textureMap, textCoord).rgb;
 
         float ambientStrength = 0.1;
         vec3 ambient = ambientStrength * dl.ambientColor;
@@ -71,7 +73,7 @@ vec3 dirLightning() {
         float diffuseStrength = max(dot(norm, lightDir), 0.0);
         vec3 diffuse = diffuseStrength * dl.diffuseColor;
 
-        float specularStrength = texture2D(specularMap, textCoord).r;
+        float specularStrength = texture(specularMap, textCoord).r;
         vec3 viewDir = normalize(tangentViewPosition - tangentPosition);
         vec3 halfwayDir = normalize(lightDir + viewDir);
 
@@ -90,14 +92,14 @@ vec3 pointLightning() {
     for (int i = 0; i < POINT_LIGHTS_LENGTH; i++) {
         pointLight pl = pointLights[i];
 
-        vec3 norm = texture2D(normalMap, textCoord).rgb;
+        vec3 norm = texture(normalMap, textCoord).rgb;
         norm = normalize(2.0 * norm - 1.0);
 
         vec3 lightDir = (TBN * pl.position) - tangentPosition;
         float lightDistance = length(lightDir);
         lightDir = normalize(lightDir);
 
-        vec3 fragColor = texture2D(textureMap, textCoord).rgb;
+        vec3 fragColor = texture(textureMap, textCoord).rgb;
 
         float ambientStrength = 0.1;
         vec3 ambient = ambientStrength * pl.ambientColor;
@@ -105,7 +107,7 @@ vec3 pointLightning() {
         float diffuseStrength = max(dot(norm, lightDir), 0.0);
         vec3 diffuse = diffuseStrength * pl.diffuseColor;
 
-        float specularStrength = texture2D(specularMap, textCoord).r;
+        float specularStrength = texture(specularMap, textCoord).r;
         vec3 viewDir = normalize(tangentViewPosition - tangentPosition);
         vec3 halfwayDir = normalize(lightDir + viewDir);
 
@@ -135,15 +137,15 @@ vec3 spotLightning() {
         float ambientStrength = 0.1;
         vec3 ambient = ambientStrength * sl.ambientColor;
 
-        vec3 fragColor = texture2D(textureMap, textCoord).rgb;
+        vec3 fragColor = texture(textureMap, textCoord).rgb;
 
-        vec3 norm = texture2D(normalMap, textCoord).rgb;
+        vec3 norm = texture(normalMap, textCoord).rgb;
         norm = normalize(2.0 * norm - 1.0);
 
         float diffuseStrength = max(dot(norm, lightDir), 0.0);
         vec3 diffuse = intensity * diffuseStrength * sl.diffuseColor;
 
-        float specularStrength = texture2D(specularMap, textCoord).r;
+        float specularStrength = texture(specularMap, textCoord).r;
         vec3 viewDir = normalize(tangentViewPosition - tangentPosition);
         vec3 halfwayDir = normalize(lightDir + viewDir);
 
@@ -163,5 +165,5 @@ void main() {
     color += pointLightning();
     color += spotLightning();
 
-    gl_FragColor = vec4(color, 1.0);
+    FragColor = vec4(color, 1.0);
 }

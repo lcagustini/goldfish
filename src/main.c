@@ -79,8 +79,6 @@ void updateControllerData(struct systemRunData data) {
         else {
             controllerData->rx = 128;
         }
-
-        print("%u %u\n", controllerData->lx, controllerData->ly);
     }
 }
 
