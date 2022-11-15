@@ -188,96 +188,49 @@ void renderModel(struct systemRunData data) {
                 glUniform3fv(model->model.meshes[j].material.shader.dirLightLocs[k].diffuseColor, 1, &diffuse.x);
                 glUniform3fv(model->model.meshes[j].material.shader.dirLightLocs[k].specularColor, 1, &specular.x);
             }
+            glUniform1i(model->model.meshes[j].material.shader.dirLightsLengthLoc, dirLightTablesLength);
 
-            /*
-               for (int k = 1; k <= 0; k++) {
-               struct vec3 position = {0};
-               struct vec3 attenuation = {0};
-               struct vec3 ambient = {0};
-               struct vec3 diffuse = {0};
-               struct vec3 specular = {0};
+            for (int k = 0; k < spotLightTablesLength; k++) {
+                struct transformComponent *lightTransform = getComponentFromTable(data.world, spotLightTables[k], spotLightTypes[0]);
+                struct spotLightComponent *light = getComponentFromTable(data.world, spotLightTables[k], spotLightTypes[1]);
 
-               if (k < pointLightEntities[0]) {
-               struct transformComponent *lightTransform = getComponent(world, pointLightEntities[k], COMPONENT_TRANSFORM);
-               struct pointLightComponent *light = getComponent(world, pointLightEntities[k], COMPONENT_POINT_LIGHT);
+                struct vec3 position = lightTransform->position;
+                struct vec3 direction = (struct vec3) { 0, 0, -1 };
+                vectorRotate(direction, lightTransform->rotation);
 
-               position = lightTransform->position;
+                struct vec2 cutOff = light->cutOff;
 
-               attenuation = light->attenuation;
-               ambient = light->ambientColor;
-               diffuse = light->diffuseColor;
-               specular = light->specularColor;
-               }
+                struct vec3 ambient = light->ambientColor;
+                struct vec3 diffuse = light->diffuseColor;
+                struct vec3 specular = light->specularColor;
 
-               char positionString[] = "pointLights[0].position";
-               positionString[12] = '0' + (k - 1);
-               glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, positionString), 1, &position.x);
+                glUniform3fv(model->model.meshes[j].material.shader.spotLightLocs[k].position, 1, &position.x);
+                glUniform3fv(model->model.meshes[j].material.shader.spotLightLocs[k].direction, 1, &direction.x);
+                glUniform2fv(model->model.meshes[j].material.shader.spotLightLocs[k].cutOff, 1, &cutOff.x);
+                glUniform3fv(model->model.meshes[j].material.shader.spotLightLocs[k].ambientColor, 1, &ambient.x);
+                glUniform3fv(model->model.meshes[j].material.shader.spotLightLocs[k].diffuseColor, 1, &diffuse.x);
+                glUniform3fv(model->model.meshes[j].material.shader.spotLightLocs[k].specularColor, 1, &specular.x);
+            }
+            glUniform1i(model->model.meshes[j].material.shader.spotLightsLengthLoc, spotLightTablesLength);
 
-               char attenuationString[] = "pointLights[0].attenuation";
-               attenuationString[12] = '0' + (k - 1);
-               glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, attenuationString), 1, &attenuation.x);
+            for (int k = 0; k < pointLightTablesLength; k++) {
+                struct transformComponent *lightTransform = getComponentFromTable(data.world, pointLightTables[k], pointLightTypes[0]);
+                struct pointLightComponent *light = getComponentFromTable(data.world, pointLightTables[k], pointLightTypes[1]);
 
-               char ambientString[] = "pointLights[0].ambientColor";
-               ambientString[12] = '0' + (k - 1);
-               glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, ambientString), 1, &ambient.x);
+                struct vec3 position = lightTransform->position;
 
-               char diffuseString[] = "pointLights[0].diffuseColor";
-               diffuseString[12] = '0' + (k - 1);
-               glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, diffuseString), 1, &diffuse.x);
+                struct vec3 attenuation = light->attenuation;
+                struct vec3 ambient = light->ambientColor;
+                struct vec3 diffuse = light->diffuseColor;
+                struct vec3 specular = light->specularColor;
 
-               char specularString[] = "pointLights[0].specularColor";
-               specularString[12] = '0' + (k - 1);
-               glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, specularString), 1, &specular.x);
-               }
-
-               for (int k = 1; k <= 0; k++) {
-               struct vec3 position = {0};
-               struct vec3 direction = {0};
-               struct vec2 cutOff = {0};
-               struct vec3 ambient = {0};
-               struct vec3 diffuse = {0};
-               struct vec3 specular = {0};
-
-               if (k < pointLightEntities[0]) {
-               struct transformComponent *lightTransform = getComponent(world, spotLightEntities[k], COMPONENT_TRANSFORM);
-               struct spotLightComponent *light = getComponent(world, spotLightEntities[k], COMPONENT_SPOT_LIGHT);
-
-               position = lightTransform->position;
-
-               direction = (struct vec3) { 0, 0, -1 };
-               vectorRotate(direction, lightTransform->rotation);
-
-               cutOff = light->cutOff;
-               ambient = light->ambientColor;
-               diffuse = light->diffuseColor;
-               specular = light->specularColor;
-               }
-
-               char positionString[] = "spotLights[0].position";
-               positionString[11] = '0' + (k - 1);
-               glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, positionString), 1, &position.x);
-
-               char directionString[] = "spotLights[0].direction";
-               directionString[11] = '0' + (k - 1);
-               glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, directionString), 1, &direction.x);
-
-            char cutOffString[] = "spotLights[0].cutOff";
-            cutOffString[11] = '0' + (k - 1);
-            glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, cutOffString), 1, &cutOff.x);
-
-            char ambientString[] = "spotLights[0].ambientColor";
-            ambientString[11] = '0' + (k - 1);
-            glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, ambientString), 1, &ambient.x);
-
-            char diffuseString[] = "spotLights[0].diffuseColor";
-            diffuseString[11] = '0' + (k - 1);
-            glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, diffuseString), 1, &diffuse.x);
-
-            char specularString[] = "spotLights[0].specularColor";
-            specularString[11] = '0' + (k - 1);
-            glUniform3fv(glGetUniformLocation(model->model.meshes[j].material.shader.program, specularString), 1, &specular.x);
-        }
-        */
+                glUniform3fv(model->model.meshes[j].material.shader.pointLightLocs[k].position, 1, &position.x);
+                glUniform3fv(model->model.meshes[j].material.shader.pointLightLocs[k].attenuation, 1, &attenuation.x);
+                glUniform3fv(model->model.meshes[j].material.shader.pointLightLocs[k].ambientColor, 1, &ambient.x);
+                glUniform3fv(model->model.meshes[j].material.shader.pointLightLocs[k].diffuseColor, 1, &diffuse.x);
+                glUniform3fv(model->model.meshes[j].material.shader.pointLightLocs[k].specularColor, 1, &specular.x);
+            }
+            glUniform1i(model->model.meshes[j].material.shader.pointLightsLengthLoc, pointLightTablesLength);
         }
         drawModel(&model->model);
     }
@@ -326,8 +279,9 @@ int main() {
 
     entityId light = createEntity(&ecsWorld);
     addComponent(&ecsWorld, light, transformId);
-    addComponent(&ecsWorld, light, dirLightId);
-    struct dirLightComponent *dirLight = getComponent(&ecsWorld, light, dirLightId);
+    addComponent(&ecsWorld, light, pointLightId);
+    struct pointLightComponent *dirLight = getComponent(&ecsWorld, light, pointLightId);
+    dirLight->attenuation = (struct vec3) { 1, .7, 1.8 };
     dirLight->ambientColor = (struct vec3) { 1, 1, 1 };
     dirLight->diffuseColor = (struct vec3) { 1, 1, 1 };
     dirLight->specularColor = (struct vec3) { 1, 1, 1 };
@@ -338,7 +292,7 @@ int main() {
         glfwPollEvents();
 
         struct transformComponent *transform = getComponent(&ecsWorld, chest, transformId);
-        transform->position = (struct vec3) { 0, -0.5, -2 };
+        transform->position = (struct vec3) { 0, -0.5, -1 };
         transform->rotation = quatMult(transform->rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE);

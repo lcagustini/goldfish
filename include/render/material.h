@@ -48,8 +48,13 @@ struct shader {
     GLuint cameraPosLoc;
 
     struct dirLight dirLightLocs[MAX_LIGHTS];
+    GLuint dirLightsLengthLoc;
+
     struct pointLight pointLightLocs[MAX_LIGHTS];
+    GLuint pointLightsLengthLoc;
+
     struct spotLight spotLightLocs[MAX_LIGHTS];
+    GLuint spotLightsLengthLoc;
 
     GLuint shininessLoc;
 

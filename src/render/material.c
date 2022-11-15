@@ -108,6 +108,7 @@ int createShader(struct shader *shader, const char *vertexPath, const char *frag
             sprintf(loc, "dirLights[%d].specularColor", i);
             shader->dirLightLocs[i].specularColor = glGetUniformLocation(shader->program, loc);
         }
+        shader->dirLightsLengthLoc = glGetUniformLocation(shader->program, "dirLightsLength");
 
         for (int i = 0; i < MAX_LIGHTS; i++) {
             char loc[100];
@@ -122,6 +123,7 @@ int createShader(struct shader *shader, const char *vertexPath, const char *frag
             sprintf(loc, "pointLights[%d].specularColor", i);
             shader->pointLightLocs[i].specularColor = glGetUniformLocation(shader->program, loc);
         }
+        shader->pointLightsLengthLoc = glGetUniformLocation(shader->program, "pointLightsLength");
 
         for (int i = 0; i < MAX_LIGHTS; i++) {
             char loc[100];
@@ -138,6 +140,7 @@ int createShader(struct shader *shader, const char *vertexPath, const char *frag
             sprintf(loc, "spotLights[%d].specularColor", i);
             shader->spotLightLocs[i].specularColor = glGetUniformLocation(shader->program, loc);
         }
+        shader->spotLightsLengthLoc = glGetUniformLocation(shader->program, "spotLightsLength");
 
         shader->shininessLoc = glGetUniformLocation(shader->program, "shininess");
 

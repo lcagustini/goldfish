@@ -1,9 +1,6 @@
 #version 460
 
 #define MAX_LIGHTS 8
-#define DIR_LIGHTS_LENGTH 1
-#define POINT_LIGHTS_LENGTH 0
-#define SPOT_LIGHTS_LENGTH 0
 
 struct dirLight {
     vec3 direction;
@@ -35,8 +32,13 @@ struct spotLight {
 };
 
 uniform dirLight dirLights[MAX_LIGHTS];
+uniform int dirLightsLength;
+
 uniform pointLight pointLights[MAX_LIGHTS];
+uniform int pointLightsLength;
+
 uniform spotLight spotLights[MAX_LIGHTS];
+uniform int spotLightsLength;
 
 uniform float shininess;
 
@@ -57,7 +59,7 @@ out vec4 FragColor;
 vec3 dirLightning() {
     vec3 color = vec3(0.0);
 
-    for (int i = 0; i < DIR_LIGHTS_LENGTH; i++) {
+    for (int i = 0; i < dirLightsLength; i++) {
         dirLight dl = dirLights[i];
 
         vec3 norm = texture(normalMap, textCoord).rgb;
@@ -89,7 +91,7 @@ vec3 dirLightning() {
 vec3 pointLightning() {
     vec3 color = vec3(0.0);
 
-    for (int i = 0; i < POINT_LIGHTS_LENGTH; i++) {
+    for (int i = 0; i < pointLightsLength; i++) {
         pointLight pl = pointLights[i];
 
         vec3 norm = texture(normalMap, textCoord).rgb;
@@ -125,7 +127,7 @@ vec3 pointLightning() {
 vec3 spotLightning() {
     vec3 color = vec3(0.0);
 
-    for (int i = 0; i < SPOT_LIGHTS_LENGTH; i++) {
+    for (int i = 0; i < spotLightsLength; i++) {
         spotLight sl = spotLights[i];
 
         vec3 lightDir = normalize((TBN * sl.position) - tangentPosition);
