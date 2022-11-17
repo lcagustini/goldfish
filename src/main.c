@@ -231,8 +231,22 @@ void renderModel(struct systemRunData data) {
                 glUniform3fv(model->model.meshes[j].material.shader.pointLightLocs[k].specularColor, 1, &specular.x);
             }
             glUniform1i(model->model.meshes[j].material.shader.pointLightsLengthLoc, pointLightTablesLength);
+
+            glUseProgram(model->model.meshes[j].material.shader.program);
+
+            glBindVertexArray(model->model.meshes[j].VAO);
+
+            for (int i = 0; i < model->model.meshes[j].material.texturesLength; i++) {
+                glActiveTexture(GL_TEXTURE0 + model->model.meshes[j].material.textures[i].type);
+                glBindTexture(GL_TEXTURE_2D, model->model.meshes[j].material.textures[i].textureBuffer);
+            }
+
+            glUniform1f(model->model.meshes[j].material.shader.shininessLoc, model->model.meshes[j].material.shininess);
+
+            glDrawElements(GL_TRIANGLES, model->model.meshes[j].indicesLength, GL_UNSIGNED_INT, 0);
+
+            glBindVertexArray(0);
         }
-        drawModel(&model->model);
     }
 }
 
@@ -281,7 +295,7 @@ int main() {
     addComponent(&ecsWorld, light, transformId);
     addComponent(&ecsWorld, light, pointLightId);
     struct pointLightComponent *dirLight = getComponent(&ecsWorld, light, pointLightId);
-    dirLight->attenuation = (struct vec3) { 1, .7, 1.8 };
+    dirLight->attenuation = (struct vec3) { 1, 0.7, 1.8 };
     dirLight->ambientColor = (struct vec3) { 1, 1, 1 };
     dirLight->diffuseColor = (struct vec3) { 1, 1, 1 };
     dirLight->specularColor = (struct vec3) { 1, 1, 1 };

@@ -43,21 +43,6 @@ static void setupMesh(struct mesh *mesh) {
 }
 
 static void drawMesh(struct mesh *mesh) {
-    glUseProgram(mesh->material.shader.program);
-
-    // draw mesh
-    glBindVertexArray(mesh->VAO);
-
-    for (int i = 0; i < mesh->material.texturesLength; i++) {
-        glActiveTexture(GL_TEXTURE0 + mesh->material.textures[i].type);
-        glBindTexture(GL_TEXTURE_2D, mesh->material.textures[i].textureBuffer);
-    }
-
-    glUniform1f(mesh->material.shader.shininessLoc, mesh->material.shininess);
-
-    glDrawElements(GL_TRIANGLES, mesh->indicesLength, GL_UNSIGNED_INT, 0);
-
-    glBindVertexArray(0);
 }
 
 static struct mesh *processMesh(struct mesh *mesh, struct aiMesh *aiMesh, const struct aiScene *scene, struct material material) {
@@ -163,12 +148,6 @@ struct model loadModel(const char *modelPath, const char *diffusePath, const cha
     print("[Model load end]\n\n");
 
     return model;
-}
-
-void drawModel(struct model *model) {
-    for (int i = 0; i < model->meshesLength; i++) {
-        drawMesh(&model->meshes[i]);
-    }
 }
 
 void printModel(struct model *model) {

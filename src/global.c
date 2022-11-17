@@ -44,7 +44,7 @@ void globalInit() {
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-#if 1
+#if 0
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(errorCallback, 0);
 #endif

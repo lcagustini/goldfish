@@ -32,8 +32,6 @@ struct model {
 
 struct model loadModel(const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath);
 
-void drawModel(struct model *model);
-
 void printModel(struct model *model);
 
 #endif

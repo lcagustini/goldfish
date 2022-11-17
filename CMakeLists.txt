@@ -36,7 +36,6 @@ add_executable(${PROJECT_NAME}
 
     src/print.c
     src/global.c
-    src/cJSON.c
 
     src/main.c
 )
