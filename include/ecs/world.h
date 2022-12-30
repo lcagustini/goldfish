@@ -12,6 +12,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <limits.h>
 
 typedef uint32_t componentId;
 typedef unsigned int entityId;

@@ -46,7 +46,17 @@ target_link_libraries(${PROJECT_NAME}
     ${ASSIMP_LIBRARIES}
 
     glfw
-    opengl32
 
     m
 )
+
+if (WIN32)
+target_link_libraries(${PROJECT_NAME}
+    opengl32
+)
+else ()
+target_link_libraries(${PROJECT_NAME}
+    GL
+)
+endif (WIN32)
+
