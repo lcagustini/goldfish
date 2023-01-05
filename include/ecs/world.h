@@ -85,9 +85,7 @@ struct world {
     unsigned int systemsLength;
 };
 
-#define STRINGIFY(c) #c
-#define VARIADIC_COUNT(...) ((int)(sizeof((int[]){__VA_ARGS__})/sizeof(int)))
-#define UNPARENTHESES(...) __VA_ARGS__
+#include <macros.h>
 
 #define COMPONENT_SIZE(w, c) (w->components[c % w->componentsLength].size)
 

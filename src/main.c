@@ -285,11 +285,21 @@ int main() {
 
     addSingletonComponent(&ecsWorld, controllerDataId);
 
-    entityId chest = createEntity(&ecsWorld);
-    addComponent(&ecsWorld, chest, transformId);
-    addComponent(&ecsWorld, chest, modelId);
-    struct modelComponent *model = getComponent(&ecsWorld, chest, modelId);
+    entityId chest1 = createEntity(&ecsWorld);
+    addComponent(&ecsWorld, chest1, transformId);
+    addComponent(&ecsWorld, chest1, modelId);
+    struct modelComponent *model = getComponent(&ecsWorld, chest1, modelId);
     model->model = loadModel("assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
+    struct transformComponent *transform = getComponent(&ecsWorld, chest1, transformId);
+    transform->position = (struct vec3) { 0, -0.5, -1 };
+
+    entityId chest2 = createEntity(&ecsWorld);
+    addComponent(&ecsWorld, chest2, transformId);
+    addComponent(&ecsWorld, chest2, modelId);
+    model = getComponent(&ecsWorld, chest2, modelId);
+    model->model = loadModel("assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
+    transform = getComponent(&ecsWorld, chest2, transformId);
+    transform->position = (struct vec3) { 0, -0.5, -1 };
 
     entityId light = createEntity(&ecsWorld);
     addComponent(&ecsWorld, light, transformId);
@@ -304,10 +314,6 @@ int main() {
 
     while (!glfwWindowShouldClose(globalState.window)) {
         glfwPollEvents();
-
-        struct transformComponent *transform = getComponent(&ecsWorld, chest, transformId);
-        transform->position = (struct vec3) { 0, -0.5, -1 };
-        transform->rotation = quatMult(transform->rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE);
 
