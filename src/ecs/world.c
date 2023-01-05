@@ -49,14 +49,16 @@ uint32_t hashString(const char *name, uint32_t len) {
 
     // remainder
     switch (len & 3) { // `len % 4'
-        case 3: k ^= (tail[2] << 16);
-        case 2: k ^= (tail[1] << 8);
+        case 3:
+            k ^= (tail[2] << 16);
+        case 2:
+            k ^= (tail[1] << 8);
         case 1:
-                k ^= tail[0];
-                k *= c1;
-                k = (k << r1) | (k >> (32 - r1));
-                k *= c2;
-                h ^= k;
+            k ^= tail[0];
+            k *= c1;
+            k = (k << r1) | (k >> (32 - r1));
+            k *= c2;
+            h ^= k;
     }
 
     h ^= len;
@@ -183,6 +185,16 @@ static struct entity addEntityToTable(struct world *world, tableId table) {
     return e;
 }
 
+static entityId getIdOfEntity(struct world *world, struct entity entity) {
+    for (int i = 0; i < MAX_ENTITY_COUNT; i++) {
+        if (world->validEntities[i] && world->entities[i].table == entity.table && world->entities[i].position == entity.position) {
+            return i;
+        }
+    }
+
+    return INVALID_POSITION;
+}
+
 static void removeEntityFromTable(struct world *world, struct entity entity) {
     struct table *t = &world->tables[entity.table];
 
@@ -196,6 +208,7 @@ static void removeEntityFromTable(struct world *world, struct entity entity) {
     t->componentsLength--;
 }
 
+// Assumes tableTo exists already
 static struct entity copyEntityBetweenTables(struct world *world, struct entity entity, tableId tableTo) {
     tableId tableFrom = entity.table;
     struct table *tFrom = &world->tables[tableFrom];
@@ -266,7 +279,7 @@ void *getComponent(struct world *world, entityId entity, componentId component) 
     return NULL;
 }
 
-void *getComponentFromTable(struct world *world, tableId table, componentId component) {
+void *getComponentsFromTable(struct world *world, tableId table, componentId component) {
     struct table t = world->tables[table];
 
     for (int i = 0; i < t.recordsLength; i++) {

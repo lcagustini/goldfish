@@ -6,7 +6,7 @@ find_package(assimp REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glfw3 REQUIRED)
 
-#add_definitions("-marm -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -ftree-vectorize -ffast-math -fsigned-char -fno-optimize-sibling-calls")
+#add_definitions("-march=native -ftree-vectorize -ffast-math -fsigned-char -fno-optimize-sibling-calls")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Og -g")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Og -std=c++11 -g")

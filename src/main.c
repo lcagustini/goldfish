@@ -146,8 +146,8 @@ void renderModel(struct systemRunData data) {
     componentId cameraTypes[] = { GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent) };
     tableId cameraTable;
     getAllTablesWithComponents(data.world, cameraTypes, 2, &cameraTable, 1);
-    struct transformComponent *cameraTransform = getComponentFromTable(data.world, cameraTable, cameraTypes[0]);
-    struct cameraComponent *camera = getComponentFromTable(data.world, cameraTable, cameraTypes[1]);
+    struct transformComponent *cameraTransform = getComponentsFromTable(data.world, cameraTable, cameraTypes[0]);
+    struct cameraComponent *camera = getComponentsFromTable(data.world, cameraTable, cameraTypes[1]);
 
     componentId dirLightTypes[] = { GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct dirLightComponent) };
     tableId dirLightTables[MAX_LIGHTS];
@@ -166,6 +166,8 @@ void renderModel(struct systemRunData data) {
         struct modelComponent *model = &models[i];
 
         for (int j = 0; j < model->model.meshesLength; j++) {
+            glUseProgram(model->model.meshes[j].material.shader.program);
+
             glUniformMatrix4fv(model->model.meshes[j].material.shader.modelLoc, 1, false, &transform->modelMatrix.mat[0][0]);
             glUniformMatrix4fv(model->model.meshes[j].material.shader.viewLoc, 1, false, &camera->viewMat.mat[0][0]);
             glUniformMatrix4fv(model->model.meshes[j].material.shader.projectionLoc, 1, false, &camera->projectionMat.mat[0][0]);
@@ -173,8 +175,8 @@ void renderModel(struct systemRunData data) {
             glUniform3fv(model->model.meshes[j].material.shader.cameraPosLoc, 1, &cameraTransform->position.x);
 
             for (int k = 0; k < dirLightTablesLength; k++) {
-                struct transformComponent *lightTransform = getComponentFromTable(data.world, dirLightTables[k], dirLightTypes[0]);
-                struct dirLightComponent *light = getComponentFromTable(data.world, dirLightTables[k], dirLightTypes[1]);
+                struct transformComponent *lightTransform = getComponentsFromTable(data.world, dirLightTables[k], dirLightTypes[0]);
+                struct dirLightComponent *light = getComponentsFromTable(data.world, dirLightTables[k], dirLightTypes[1]);
 
                 struct vec3 direction = (struct vec3) { 0, 0, -1 };
                 vectorRotate(direction, lightTransform->rotation);
@@ -191,8 +193,8 @@ void renderModel(struct systemRunData data) {
             glUniform1i(model->model.meshes[j].material.shader.dirLightsLengthLoc, dirLightTablesLength);
 
             for (int k = 0; k < spotLightTablesLength; k++) {
-                struct transformComponent *lightTransform = getComponentFromTable(data.world, spotLightTables[k], spotLightTypes[0]);
-                struct spotLightComponent *light = getComponentFromTable(data.world, spotLightTables[k], spotLightTypes[1]);
+                struct transformComponent *lightTransform = getComponentsFromTable(data.world, spotLightTables[k], spotLightTypes[0]);
+                struct spotLightComponent *light = getComponentsFromTable(data.world, spotLightTables[k], spotLightTypes[1]);
 
                 struct vec3 position = lightTransform->position;
                 struct vec3 direction = (struct vec3) { 0, 0, -1 };
@@ -214,8 +216,8 @@ void renderModel(struct systemRunData data) {
             glUniform1i(model->model.meshes[j].material.shader.spotLightsLengthLoc, spotLightTablesLength);
 
             for (int k = 0; k < pointLightTablesLength; k++) {
-                struct transformComponent *lightTransform = getComponentFromTable(data.world, pointLightTables[k], pointLightTypes[0]);
-                struct pointLightComponent *light = getComponentFromTable(data.world, pointLightTables[k], pointLightTypes[1]);
+                struct transformComponent *lightTransform = getComponentsFromTable(data.world, pointLightTables[k], pointLightTypes[0]);
+                struct pointLightComponent *light = getComponentsFromTable(data.world, pointLightTables[k], pointLightTypes[1]);
 
                 struct vec3 position = lightTransform->position;
 
@@ -232,7 +234,7 @@ void renderModel(struct systemRunData data) {
             }
             glUniform1i(model->model.meshes[j].material.shader.pointLightsLengthLoc, pointLightTablesLength);
 
-            glUseProgram(model->model.meshes[j].material.shader.program);
+            glUniform1f(model->model.meshes[j].material.shader.shininessLoc, model->model.meshes[j].material.shininess);
 
             glBindVertexArray(model->model.meshes[j].VAO);
 
@@ -240,8 +242,6 @@ void renderModel(struct systemRunData data) {
                 glActiveTexture(GL_TEXTURE0 + model->model.meshes[j].material.textures[i].type);
                 glBindTexture(GL_TEXTURE_2D, model->model.meshes[j].material.textures[i].textureBuffer);
             }
-
-            glUniform1f(model->model.meshes[j].material.shader.shininessLoc, model->model.meshes[j].material.shininess);
 
             glDrawElements(GL_TRIANGLES, model->model.meshes[j].indicesLength, GL_UNSIGNED_INT, 0);
 

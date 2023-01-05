@@ -94,7 +94,7 @@ struct world {
 #define CREATE_COMPONENT(w, c) createComponent(w, STRINGIFY(c), sizeof(STRINGIFY(c)), sizeof(c))
 #define GET_COMPONENT_ID(c) getComponentId(STRINGIFY(c), sizeof(STRINGIFY(c)))
 #define GET_SYSTEM_COMPONENT(d) getComponent(d.world, d.entity, d.system->components[0])
-#define GET_SYSTEM_COMPONENTS(d, i) getComponentFromTable(d.world, d.table, d.system->components[i])
+#define GET_SYSTEM_COMPONENTS(d, i) getComponentsFromTable(d.world, d.table, d.system->components[i])
 #define GET_SYSTEM_COMPONENTS_LENGTH(d) (d.world->tables[d.table].componentsLength)
 
 //#define COMPONENT_PACKAGE(...) ({ __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__)})
@@ -119,7 +119,7 @@ componentId getComponentId(const char *component, unsigned int componentLength);
 
 void addComponent(struct world *world, entityId entity, componentId component);
 void *getComponent(struct world *world, entityId entity, componentId component);
-void *getComponentFromTable(struct world *world, tableId table, componentId component);
+void *getComponentsFromTable(struct world *world, tableId table, componentId component);
 unsigned int getAllTablesWithComponents(struct world *world, componentId *components, unsigned int componentsLength, tableId *tables, unsigned int tablesLength);
 void removeComponent(struct world *world, entityId entity, componentId component);
 
