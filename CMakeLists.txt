@@ -34,6 +34,8 @@ add_executable(${PROJECT_NAME}
 
     src/ecs/world.c
 
+    src/structure/hashtable.c
+
     src/print.c
     src/global.c
 
