@@ -285,21 +285,27 @@ int main() {
 
     addSingletonComponent(&ecsWorld, controllerDataId);
 
+    struct transformComponent *transform;
+    struct modelComponent *model;
+#if 1
     entityId chest1 = createEntity(&ecsWorld);
     addComponent(&ecsWorld, chest1, transformId);
     addComponent(&ecsWorld, chest1, modelId);
-    struct modelComponent *model = getComponent(&ecsWorld, chest1, modelId);
+    model = getComponent(&ecsWorld, chest1, modelId);
     model->model = loadModel("assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
-    struct transformComponent *transform = getComponent(&ecsWorld, chest1, transformId);
+    transform = getComponent(&ecsWorld, chest1, transformId);
     transform->position = (struct vec3) { 0, -0.5, -1 };
+#endif
 
+#if 1
     entityId chest2 = createEntity(&ecsWorld);
     addComponent(&ecsWorld, chest2, transformId);
     addComponent(&ecsWorld, chest2, modelId);
     model = getComponent(&ecsWorld, chest2, modelId);
     model->model = loadModel("assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
     transform = getComponent(&ecsWorld, chest2, transformId);
-    transform->position = (struct vec3) { 0, -0.5, -1 };
+    transform->position = (struct vec3) { 0, -1, -2 };
+#endif
 
     entityId light = createEntity(&ecsWorld);
     addComponent(&ecsWorld, light, transformId);

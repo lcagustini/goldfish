@@ -10,6 +10,8 @@
 
 #include <ecs/components.h>
 
+#include <structure/hashtable.h>
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <limits.h>
@@ -54,8 +56,6 @@ struct entity {
 };
 
 struct component {
-    bool valid;
-    uint32_t hash;
     const char *name;
     unsigned int size;
 };
@@ -75,11 +75,12 @@ struct world {
     struct table tables[MAX_ARCHETYPE_COUNT];
     unsigned int tablesLength;
 
-    struct component *components;
-    unsigned int componentsLength;
+    struct hashtable components;
 
-    struct entity entities[MAX_ENTITY_COUNT];
-    bool validEntities[MAX_ENTITY_COUNT];
+    struct hashtable entities;
+    entityId singletonEntity;
+
+    int counter;
 
     struct system systems[MAX_SYSTEM_COUNT];
     unsigned int systemsLength;
@@ -87,13 +88,14 @@ struct world {
 
 #include <macros.h>
 
-#define COMPONENT_SIZE(w, c) (w->components[c % w->componentsLength].size)
+#define COMPONENT_SIZE(w, c) ((struct component*)hashtableGet(&(w)->components, STRINGIFY(c)))->size
+#define COMPONENT_SIZE_BY_ID(w, c) ((struct component*)hashtableGetById(&(w)->components, c))->size
 
-#define CREATE_COMPONENT(w, c) createComponent(w, STRINGIFY(c), sizeof(STRINGIFY(c)), sizeof(c))
-#define GET_COMPONENT_ID(c) getComponentId(STRINGIFY(c), sizeof(STRINGIFY(c)))
-#define GET_SYSTEM_COMPONENT(d) getComponent(d.world, d.entity, d.system->components[0])
-#define GET_SYSTEM_COMPONENTS(d, i) getComponentsFromTable(d.world, d.table, d.system->components[i])
-#define GET_SYSTEM_COMPONENTS_LENGTH(d) (d.world->tables[d.table].componentsLength)
+#define CREATE_COMPONENT(w, c) createComponent((w), STRINGIFY(c), sizeof(c))
+#define GET_COMPONENT_ID(c) getComponentId(STRINGIFY(c))
+#define GET_SYSTEM_COMPONENT(d) getComponent((d).world, (d).entity, (d).system->components[0])
+#define GET_SYSTEM_COMPONENTS(d, i) getComponentsFromTable((d).world, (d).table, (d).system->components[i])
+#define GET_SYSTEM_COMPONENTS_LENGTH(d) ((d).world->tables[(d).table].componentsLength)
 
 //#define COMPONENT_PACKAGE(...) ({ __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__)})
 //#define COMPONENT_LIST(...) { __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__) }
@@ -112,8 +114,8 @@ struct world {
 
 struct world createWorld();
 
-componentId createComponent(struct world *world, const char *component, unsigned int componentLength, unsigned int componentSize);
-componentId getComponentId(const char *component, unsigned int componentLength);
+componentId createComponent(struct world *world, const char *component, unsigned int componentSize);
+componentId getComponentId(const char *component);
 
 void addComponent(struct world *world, entityId entity, componentId component);
 void *getComponent(struct world *world, entityId entity, componentId component);

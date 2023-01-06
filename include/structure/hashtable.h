@@ -22,7 +22,12 @@ struct hashtable hashtableCreate(unsigned int capacity, unsigned int size);
 void hashtableDestroy(struct hashtable *hashtable);
 
 hashtableId hashtableSet(struct hashtable *hashtable, const char *key, void *data);
+void hashtableSetById(struct hashtable *hashtable, uint32_t hash, void *data);
+
+bool hashtableRemoveById(struct hashtable *hashtable, uint32_t hash);
 bool hashtableRemove(struct hashtable *hashtable, const char *key);
+
+void *hashtableGetById(struct hashtable *hashtable, uint32_t hash);
 void *hashtableGet(struct hashtable *hashtable, const char *key);
 
 #endif

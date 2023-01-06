@@ -71,9 +71,9 @@ uint32_t hashString(const char *name, uint32_t len) {
 
 struct hashtable hashtableCreate(unsigned int capacity, unsigned int size) {
     struct hashtable table = {
-        malloc(capacity * size),
-        malloc(capacity * sizeof(uint32_t)),
-        malloc(capacity * sizeof(bool)),
+        calloc(capacity, size),
+        calloc(capacity, sizeof(uint32_t)),
+        calloc(capacity, sizeof(bool)),
         capacity,
         size
     };
@@ -87,7 +87,7 @@ void hashtableDestroy(struct hashtable *hashtable) {
     free(hashtable->valids);
 }
 
-static void hashtableSetById(struct hashtable *hashtable, uint32_t hash, void *data) {
+void hashtableSetById(struct hashtable *hashtable, uint32_t hash, void *data) {
     unsigned int position = hash % hashtable->bufferCount;
 
     if (hashtable->valids[position] && hashtable->hashes[position] != hash) {
@@ -130,8 +130,7 @@ hashtableId hashtableSet(struct hashtable *hashtable, const char *key, void *dat
     return hash;
 }
 
-bool hashtableRemove(struct hashtable *hashtable, const char *key) {
-    uint32_t hash = hashString(key, strlen(key));
+bool hashtableRemoveById(struct hashtable *hashtable, uint32_t hash) {
     unsigned int position = hash % hashtable->bufferCount;
 
     if (hashtable->valids[position]) {
@@ -144,11 +143,22 @@ bool hashtableRemove(struct hashtable *hashtable, const char *key) {
     }
 }
 
-void *hashtableGet(struct hashtable *hashtable, const char *key) {
+bool hashtableRemove(struct hashtable *hashtable, const char *key) {
     uint32_t hash = hashString(key, strlen(key));
+
+    return hashtableRemoveById(hashtable, hash);
+}
+
+void *hashtableGetById(struct hashtable *hashtable, uint32_t hash) {
     unsigned int position = hash % hashtable->bufferCount;
 
     if (!hashtable->valids[position]) return NULL;
 
     return hashtable->buffer + position * hashtable->typeSize;
+}
+
+void *hashtableGet(struct hashtable *hashtable, const char *key) {
+    uint32_t hash = hashString(key, strlen(key));
+
+    return hashtableGetById(hashtable, hash);
 }
