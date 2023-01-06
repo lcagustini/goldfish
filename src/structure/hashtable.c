@@ -71,12 +71,16 @@ uint32_t hashString(const char *name, uint32_t len) {
 
 struct hashtable hashtableCreate(unsigned int capacity, unsigned int size) {
     struct hashtable table = {
-        calloc(capacity, size),
-        calloc(capacity, sizeof(uint32_t)),
-        calloc(capacity, sizeof(bool)),
+        malloc(capacity * size),
+        malloc(capacity * sizeof(uint32_t)),
+        malloc(capacity * sizeof(bool)),
         capacity,
         size
     };
+
+    memset(table.buffer, 0, capacity * size);
+    memset(table.hashes, 0, capacity * sizeof(uint32_t));
+    memset(table.valids, 0, capacity * sizeof(bool));
 
     return table;
 }

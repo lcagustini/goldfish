@@ -31,6 +31,7 @@ struct model {
 };
 
 struct model loadModel(const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath);
+void destroyModel(struct model);
 
 void printModel(struct model *model);
 

@@ -70,7 +70,7 @@ enum textureType {
 };
 
 struct texture {
-    unsigned int textureBuffer;
+    GLuint textureBuffer;
     enum textureType type;
     const char *path;
 };

@@ -330,6 +330,13 @@ int main() {
         glfwSwapBuffers(globalState.window);
     }
 
+    model = getComponent(&ecsWorld, chest1, modelId);
+    destroyModel(model->model);
+    model = getComponent(&ecsWorld, chest2, modelId);
+    destroyModel(model->model);
+
+    destroyWorld(&ecsWorld);
+
     globalEnd();
 
     return 0;

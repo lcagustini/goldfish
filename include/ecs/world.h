@@ -113,6 +113,7 @@ struct world {
 } while (0); \
 
 struct world createWorld();
+void destroyWorld(struct world *world);
 
 componentId createComponent(struct world *world, const char *component, unsigned int componentSize);
 componentId getComponentId(const char *component);

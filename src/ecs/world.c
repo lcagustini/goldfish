@@ -17,6 +17,18 @@ struct world createWorld() {
     return world;
 }
 
+void destroyWorld(struct world *world) {
+    for (int i = 0; i < world->tablesLength; i++) {
+        for (int j = 0; j < world->tables[i].recordsLength; j++) {
+            free(world->tables[i].records[j].components);
+        }
+        free(world->tables[i].records);
+    }
+
+    hashtableDestroy(&world->components);
+    hashtableDestroy(&world->entities);
+}
+
 componentId createComponent(struct world *world, const char *component, unsigned int componentSize) {
     struct component newComponent = {
         component,
@@ -102,6 +114,15 @@ static void removeEntityFromTable(struct world *world, struct entity entity) {
         }
     }
 
+    struct entity *entities = world->entities.buffer;
+    for (int i = 0; i < world->entities.bufferCount; i++) {
+        if (!world->entities.valids[i]) continue;
+
+        if (entities[i].table == entity.table && entities[i].position > entity.position) {
+            entities[i].position--;
+        }
+    }
+
     t->componentsLength--;
 }
 
@@ -117,7 +138,7 @@ static struct entity copyEntityBetweenTables(struct world *world, struct entity 
         for (int i = 0; i < tTo->recordsLength; i++) {
             if (tFrom->records[j].componentType == tTo->records[i].componentType) {
                 unsigned int size = COMPONENT_SIZE_BY_ID(world, tTo->records[i].componentType);
-                memcpy(tTo->records[i].components + (entity.position * size), tFrom->records[j].components + (len * size), size);
+                memcpy(tTo->records[i].components + (len * size), tFrom->records[j].components + (entity.position * size), size);
                 break;
             }
         }

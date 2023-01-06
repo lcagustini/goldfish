@@ -42,9 +42,6 @@ static void setupMesh(struct mesh *mesh) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-static void drawMesh(struct mesh *mesh) {
-}
-
 static struct mesh *processMesh(struct mesh *mesh, struct aiMesh *aiMesh, const struct aiScene *scene, struct material material) {
     print("--Processing Mesh (%d vertices, ", aiMesh->mNumVertices);
 
@@ -148,6 +145,26 @@ struct model loadModel(const char *modelPath, const char *diffusePath, const cha
     print("[Model load end]\n\n");
 
     return model;
+}
+
+void destroyModel(struct model model) {
+    for (int i = 0; i < model.meshesLength; i++) {
+        struct mesh *mesh = &model.meshes[i];
+
+        free(mesh->vertices);
+        free(mesh->indices);
+
+        for (int j = 0; j < mesh->material.texturesLength; j++) {
+            glDeleteTextures(1, &mesh->material.textures[j].textureBuffer);
+        }
+
+        glDeleteProgram(mesh->material.shader.program);
+        glDeleteVertexArrays(1, &mesh->VAO);
+        glDeleteBuffers(1, &mesh->VBO);
+        glDeleteBuffers(1, &mesh->EBO);
+    }
+
+    free(model.meshes);
 }
 
 void printModel(struct model *model) {
