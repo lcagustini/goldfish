@@ -34,6 +34,14 @@ add_executable(${PROJECT_NAME}
 
     src/ecs/world.c
 
+    src/ecs/systems/updateCameraView.c
+    src/ecs/systems/updateControllerData.c
+    src/ecs/systems/updateTransformMatrix.c
+    src/ecs/systems/setupCamera.c
+    src/ecs/systems/setupTransform.c
+    src/ecs/systems/renderModel.c
+    src/ecs/systems/updateFirstPersonTransform.c
+
     src/structure/hashtable.c
 
     src/print.c
