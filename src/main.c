@@ -60,7 +60,8 @@ int main() {
     model = getComponent(&ecsWorld, chest1, modelId);
     model->model = loadModel("assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
     transform = getComponent(&ecsWorld, chest1, transformId);
-    transform->position = (struct vec3) { 0, -0.5, -1 };
+    transform->position = (struct vec3) { 0, -1, -1 };
+    transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
 #endif
 
 #if 1
@@ -70,7 +71,21 @@ int main() {
     model = getComponent(&ecsWorld, chest2, modelId);
     model->model = loadModel("assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
     transform = getComponent(&ecsWorld, chest2, transformId);
-    transform->position = (struct vec3) { 0, -1, -2 };
+    transform->position = (struct vec3) { 0, -1, -1 };
+    transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
+    transform->parent = chest1;
+#endif
+
+#if 1
+    entityId chest3 = createEntity(&ecsWorld);
+    addComponent(&ecsWorld, chest3, transformId);
+    addComponent(&ecsWorld, chest3, modelId);
+    model = getComponent(&ecsWorld, chest3, modelId);
+    model->model = loadModel("assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
+    transform = getComponent(&ecsWorld, chest3, transformId);
+    transform->position = (struct vec3) { 0, -1, -1 };
+    transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
+    transform->parent = chest2;
 #endif
 
     entityId light = createEntity(&ecsWorld);
@@ -86,6 +101,11 @@ int main() {
 
     while (!glfwWindowShouldClose(globalState.window)) {
         glfwPollEvents();
+
+        {
+            struct transformComponent *transform = getComponent(&ecsWorld, chest1, transformId);
+            transform->rotation = quatMult(transform->rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
+        }
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE);
 

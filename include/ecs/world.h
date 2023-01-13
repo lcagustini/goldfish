@@ -8,8 +8,6 @@
 
 #define INVALID_POSITION (UINT_MAX)
 
-#include <ecs/components.h>
-
 #include <structure/hashtable.h>
 
 #include <stdbool.h>
@@ -91,8 +89,9 @@ struct world {
 #define COMPONENT_SIZE(w, c) ((struct component*)hashtableGet(&(w)->components, STRINGIFY(c)))->size
 #define COMPONENT_SIZE_BY_ID(w, c) ((struct component*)hashtableGetById(&(w)->components, c))->size
 
-#define CREATE_COMPONENT(w, c) createComponent((w), STRINGIFY(c), sizeof(c))
 #define GET_COMPONENT_ID(c) getComponentId(STRINGIFY(c))
+#define CREATE_COMPONENT(w, c) createComponent((w), STRINGIFY(c), sizeof(c))
+#define GET_COMPONENT(w, e, c) getComponent((w), (e), GET_COMPONENT_ID(c))
 #define GET_SYSTEM_COMPONENT(d) getComponent((d).world, (d).entity, (d).system->components[0])
 #define GET_SYSTEM_COMPONENTS(d, i) getComponentsFromTable((d).world, (d).table, (d).system->components[i])
 #define GET_SYSTEM_COMPONENTS_LENGTH(d) ((d).world->tables[(d).table].componentsLength)

@@ -2,6 +2,7 @@
 #define SYSTEMS_H
 
 #include <ecs/world.h>
+#include <ecs/components.h>
 
 #include <string.h>
 #include <global.h>

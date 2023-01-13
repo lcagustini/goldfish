@@ -8,10 +8,14 @@
 
 #include <render/model.h>
 
+#include <ecs/world.h>
+
 struct transformComponent {
     struct vec3 position;
     struct quat rotation;
     struct vec3 scale;
+
+    entityId parent;
 
     union mat4 modelMatrix;
 };

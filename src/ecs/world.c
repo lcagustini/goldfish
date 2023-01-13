@@ -189,6 +189,8 @@ void addComponent(struct world *world, entityId entity, componentId component) {
 }
 
 void *getComponent(struct world *world, entityId entity, componentId component) {
+    if (entity == INVALID_POSITION) return NULL;
+
     struct entity *e = hashtableGetById(&world->entities, entity);
 
     for (int i = 0; i < world->tables[e->table].recordsLength; i++) {
@@ -363,7 +365,7 @@ void printWorld(struct world *world) {
     for (int i = 0; i < world->tablesLength; i++) {
         print("(id: %d) (records: %u) (rows: %u)\n", i, world->tables[i].recordsLength, world->tables[i].componentsLength);
         for (int j = 0; j < world->tables[i].recordsLength; j++) {
-            print("(component: %u -> %p)\n", world->tables[i].records[j].componentType, world->tables[i].records[j].components);
+            print("(component: 0x%X -> %p)\n", world->tables[i].records[j].componentType, world->tables[i].records[j].components);
         }
         print("\n");
     }
