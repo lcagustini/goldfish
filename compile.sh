@@ -18,3 +18,13 @@ then
     zip -j ./build/standalone.zip $DLLS ./build/psvita-opengl.exe
     zip -r ./build/standalone.zip assets/
 fi
+
+if [[ $* == *--run* ]]
+then
+    ./build/psvita-opengl.exe
+fi
+
+if [[ $* == *--debug* ]]
+then
+    gdb ./build/psvita-opengl.exe
+fi
