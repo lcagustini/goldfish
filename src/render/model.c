@@ -10,7 +10,7 @@
 
 #include <print.h>
 
-static void setupMesh(struct mesh *mesh) {
+static void setupMesh(struct meshComponent *mesh) {
     glGenVertexArrays(1, &mesh->VAO);
     glGenBuffers(1, &mesh->VBO);
     glGenBuffers(1, &mesh->EBO);
@@ -42,7 +42,7 @@ static void setupMesh(struct mesh *mesh) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-static struct mesh *processMesh(struct mesh *mesh, struct aiMesh *aiMesh, const struct aiScene *scene, struct material material) {
+static struct meshComponent *processMesh(struct meshComponent *mesh, struct aiMesh *aiMesh, const struct aiScene *scene, struct material material) {
     print("--Processing Mesh (%d vertices, ", aiMesh->mNumVertices);
 
     mesh->vertices = malloc(aiMesh->mNumVertices * sizeof(struct vertex));
@@ -98,7 +98,7 @@ static struct mesh *processMesh(struct mesh *mesh, struct aiMesh *aiMesh, const 
     return mesh;
 }
 
-static void processNode(struct model *model, struct aiNode *node, const struct aiScene *scene, struct material material) {
+static void processNode(struct modelComponent *model, struct aiNode *node, const struct aiScene *scene, struct material material) {
     print("- Processing Node (%d meshes, %d children)\n", node->mNumMeshes, node->mNumChildren);
     for (int i = 0; i < node->mNumMeshes; i++) {
         struct aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
@@ -111,7 +111,7 @@ static void processNode(struct model *model, struct aiNode *node, const struct a
     }
 }
 
-struct model loadModel(const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath) {
+void loadModel(struct modelComponent *model, const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath) {
     print("[Model load start]\n");
 
     const struct aiScene *scene = aiImportFile(modelPath,
@@ -125,31 +125,29 @@ struct model loadModel(const char *modelPath, const char *diffusePath, const cha
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         print("Error loading model %s: %s\n", modelPath, aiGetErrorString());
-        return (struct model) {0};
+        return;
     }
 
-    struct model model = {0};
+    memset(model, 0, sizeof(struct modelComponent));
 
-    model.path = modelPath;
-    model.meshes = malloc(scene->mNumMeshes * sizeof(struct mesh));
-    memset(model.meshes, 0, sizeof(struct mesh));
+    model->path = modelPath;
+    model->meshes = malloc(scene->mNumMeshes * sizeof(struct meshComponent));
+    memset(model->meshes, 0, sizeof(struct meshComponent));
 
     struct material material = {0};
     createMaterial(&material, diffusePath, normalPath, specularPath);
 
     print("File has %d meshes\n", scene->mNumMeshes);
-    processNode(&model, scene->mRootNode, scene, material);
+    processNode(model, scene->mRootNode, scene, material);
 
     aiReleaseImport(scene);
 
     print("[Model load end]\n\n");
-
-    return model;
 }
 
-void destroyModel(struct model model) {
-    for (int i = 0; i < model.meshesLength; i++) {
-        struct mesh *mesh = &model.meshes[i];
+void destroyModel(struct modelComponent *model) {
+    for (int i = 0; i < model->meshesLength; i++) {
+        struct meshComponent *mesh = &model->meshes[i];
 
         free(mesh->vertices);
         free(mesh->indices);
@@ -164,14 +162,14 @@ void destroyModel(struct model model) {
         glDeleteBuffers(1, &mesh->EBO);
     }
 
-    free(model.meshes);
+    free(model->meshes);
 }
 
-void printModel(struct model *model) {
+void printModel(struct modelComponent *model) {
     print("[Model %s]\n", model->path);
     print("Total meshes: %u\n", model->meshesLength);
     for (int i = 0; i < model->meshesLength; i++) {
-        struct mesh *mesh = &model->meshes[i];
+        struct meshComponent *mesh = &model->meshes[i];
 
         print("-Mesh %d\n", i);
         print("-Vertices %u\n", mesh->verticesLength);

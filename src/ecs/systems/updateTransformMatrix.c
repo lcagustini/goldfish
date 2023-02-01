@@ -19,9 +19,9 @@ void updateTransformMatrix(struct systemRunData data) {
 
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
         struct transformComponent *originalTransform = &transforms[i];
-        struct transformComponent *currentTransform = originalTransform;
-
         loadIdentity(&originalTransform->modelMatrix);
+
+        struct transformComponent *currentTransform = originalTransform;
         while (currentTransform != NULL) {
             union mat4 currentModel = getMatrixForTransform(currentTransform);
             multMatrix(&originalTransform->modelMatrix, &originalTransform->modelMatrix, &currentModel);

@@ -6,9 +6,28 @@
 #include <math/vector.h>
 #include <math/matrix.h>
 
-#include <render/model.h>
+#include <render/material.h>
 
 #include <ecs/world.h>
+
+struct meshComponent {
+    struct vertex *vertices;
+    unsigned int verticesLength;
+
+    unsigned int *indices;
+    unsigned int indicesLength;
+
+    struct material material;
+
+    unsigned int VAO, VBO, EBO;
+};
+
+struct modelComponent {
+    struct meshComponent *meshes;
+    unsigned int meshesLength;
+
+    const char *path;
+};
 
 struct transformComponent {
     struct vec3 position;
@@ -50,10 +69,6 @@ struct controllerDataComponent {
 };
 
 struct firstPersonComponent {
-};
-
-struct modelComponent {
-    struct model model;
 };
 
 struct dirLightComponent {

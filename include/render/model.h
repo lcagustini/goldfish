@@ -1,8 +1,7 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-#include <render/material.h>
-#include <math/vector.h>
+#include <ecs/components.h>
 
 struct vertex {
     struct vec3 position;
@@ -11,28 +10,9 @@ struct vertex {
     struct vec3 tangent;
 };
 
-struct mesh {
-    struct vertex *vertices;
-    unsigned int verticesLength;
+void loadModel(struct modelComponent *model, const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath);
+void destroyModel(struct modelComponent *model);
 
-    unsigned int *indices;
-    unsigned int indicesLength;
-
-    struct material material;
-
-    unsigned int VAO, VBO, EBO;
-};
-
-struct model {
-    struct mesh *meshes;
-    unsigned int meshesLength;
-
-    const char *path;
-};
-
-struct model loadModel(const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath);
-void destroyModel(struct model);
-
-void printModel(struct model *model);
+void printModel(struct modelComponent *model);
 
 #endif

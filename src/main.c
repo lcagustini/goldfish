@@ -58,7 +58,7 @@ int main() {
     addComponent(&ecsWorld, chest1, transformId);
     addComponent(&ecsWorld, chest1, modelId);
     model = getComponent(&ecsWorld, chest1, modelId);
-    model->model = loadModel("assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
+    loadModel(model, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
     transform = getComponent(&ecsWorld, chest1, transformId);
     transform->position = (struct vec3) { 0, -1, -1 };
     transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
@@ -69,7 +69,7 @@ int main() {
     addComponent(&ecsWorld, chest2, transformId);
     addComponent(&ecsWorld, chest2, modelId);
     model = getComponent(&ecsWorld, chest2, modelId);
-    model->model = loadModel("assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
+    loadModel(model, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
     transform = getComponent(&ecsWorld, chest2, transformId);
     transform->position = (struct vec3) { 0, -1, -1 };
     transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
@@ -81,7 +81,7 @@ int main() {
     addComponent(&ecsWorld, chest3, transformId);
     addComponent(&ecsWorld, chest3, modelId);
     model = getComponent(&ecsWorld, chest3, modelId);
-    model->model = loadModel("assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
+    loadModel(model, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
     transform = getComponent(&ecsWorld, chest3, transformId);
     transform->position = (struct vec3) { 0, -1, -1 };
     transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
@@ -117,9 +117,11 @@ int main() {
     }
 
     model = getComponent(&ecsWorld, chest1, modelId);
-    destroyModel(model->model);
+    destroyModel(model);
     model = getComponent(&ecsWorld, chest2, modelId);
-    destroyModel(model->model);
+    destroyModel(model);
+    model = getComponent(&ecsWorld, chest3, modelId);
+    destroyModel(model);
 
     destroyWorld(&ecsWorld);
 

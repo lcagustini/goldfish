@@ -26,14 +26,14 @@ void renderModel(struct systemRunData data) {
         struct transformComponent *transform = &transforms[i];
         struct modelComponent *model = &models[i];
 
-        for (int j = 0; j < model->model.meshesLength; j++) {
-            glUseProgram(model->model.meshes[j].material.shader.program);
+        for (int j = 0; j < model->meshesLength; j++) {
+            glUseProgram(model->meshes[j].material.shader.program);
 
-            glUniformMatrix4fv(model->model.meshes[j].material.shader.modelLoc, 1, false, &transform->modelMatrix.mat[0][0]);
-            glUniformMatrix4fv(model->model.meshes[j].material.shader.viewLoc, 1, false, &camera->viewMat.mat[0][0]);
-            glUniformMatrix4fv(model->model.meshes[j].material.shader.projectionLoc, 1, false, &camera->projectionMat.mat[0][0]);
+            glUniformMatrix4fv(model->meshes[j].material.shader.modelLoc, 1, false, &transform->modelMatrix.mat[0][0]);
+            glUniformMatrix4fv(model->meshes[j].material.shader.viewLoc, 1, false, &camera->viewMat.mat[0][0]);
+            glUniformMatrix4fv(model->meshes[j].material.shader.projectionLoc, 1, false, &camera->projectionMat.mat[0][0]);
 
-            glUniform3fv(model->model.meshes[j].material.shader.cameraPosLoc, 1, &cameraTransform->position.x);
+            glUniform3fv(model->meshes[j].material.shader.cameraPosLoc, 1, &cameraTransform->position.x);
 
             for (int k = 0; k < dirLightTablesLength; k++) {
                 struct transformComponent *lightTransform = getComponentsFromTable(data.world, dirLightTables[k], dirLightTypes[0]);
@@ -46,12 +46,12 @@ void renderModel(struct systemRunData data) {
                 struct vec3 diffuse = light->diffuseColor;
                 struct vec3 specular = light->specularColor;
 
-                glUniform3fv(model->model.meshes[j].material.shader.dirLightLocs[k].direction, 1, &direction.x);
-                glUniform3fv(model->model.meshes[j].material.shader.dirLightLocs[k].ambientColor, 1, &ambient.x);
-                glUniform3fv(model->model.meshes[j].material.shader.dirLightLocs[k].diffuseColor, 1, &diffuse.x);
-                glUniform3fv(model->model.meshes[j].material.shader.dirLightLocs[k].specularColor, 1, &specular.x);
+                glUniform3fv(model->meshes[j].material.shader.dirLightLocs[k].direction, 1, &direction.x);
+                glUniform3fv(model->meshes[j].material.shader.dirLightLocs[k].ambientColor, 1, &ambient.x);
+                glUniform3fv(model->meshes[j].material.shader.dirLightLocs[k].diffuseColor, 1, &diffuse.x);
+                glUniform3fv(model->meshes[j].material.shader.dirLightLocs[k].specularColor, 1, &specular.x);
             }
-            glUniform1i(model->model.meshes[j].material.shader.dirLightsLengthLoc, dirLightTablesLength);
+            glUniform1i(model->meshes[j].material.shader.dirLightsLengthLoc, dirLightTablesLength);
 
             for (int k = 0; k < spotLightTablesLength; k++) {
                 struct transformComponent *lightTransform = getComponentsFromTable(data.world, spotLightTables[k], spotLightTypes[0]);
@@ -67,14 +67,14 @@ void renderModel(struct systemRunData data) {
                 struct vec3 diffuse = light->diffuseColor;
                 struct vec3 specular = light->specularColor;
 
-                glUniform3fv(model->model.meshes[j].material.shader.spotLightLocs[k].position, 1, &position.x);
-                glUniform3fv(model->model.meshes[j].material.shader.spotLightLocs[k].direction, 1, &direction.x);
-                glUniform2fv(model->model.meshes[j].material.shader.spotLightLocs[k].cutOff, 1, &cutOff.x);
-                glUniform3fv(model->model.meshes[j].material.shader.spotLightLocs[k].ambientColor, 1, &ambient.x);
-                glUniform3fv(model->model.meshes[j].material.shader.spotLightLocs[k].diffuseColor, 1, &diffuse.x);
-                glUniform3fv(model->model.meshes[j].material.shader.spotLightLocs[k].specularColor, 1, &specular.x);
+                glUniform3fv(model->meshes[j].material.shader.spotLightLocs[k].position, 1, &position.x);
+                glUniform3fv(model->meshes[j].material.shader.spotLightLocs[k].direction, 1, &direction.x);
+                glUniform2fv(model->meshes[j].material.shader.spotLightLocs[k].cutOff, 1, &cutOff.x);
+                glUniform3fv(model->meshes[j].material.shader.spotLightLocs[k].ambientColor, 1, &ambient.x);
+                glUniform3fv(model->meshes[j].material.shader.spotLightLocs[k].diffuseColor, 1, &diffuse.x);
+                glUniform3fv(model->meshes[j].material.shader.spotLightLocs[k].specularColor, 1, &specular.x);
             }
-            glUniform1i(model->model.meshes[j].material.shader.spotLightsLengthLoc, spotLightTablesLength);
+            glUniform1i(model->meshes[j].material.shader.spotLightsLengthLoc, spotLightTablesLength);
 
             for (int k = 0; k < pointLightTablesLength; k++) {
                 struct transformComponent *lightTransform = getComponentsFromTable(data.world, pointLightTables[k], pointLightTypes[0]);
@@ -87,24 +87,24 @@ void renderModel(struct systemRunData data) {
                 struct vec3 diffuse = light->diffuseColor;
                 struct vec3 specular = light->specularColor;
 
-                glUniform3fv(model->model.meshes[j].material.shader.pointLightLocs[k].position, 1, &position.x);
-                glUniform3fv(model->model.meshes[j].material.shader.pointLightLocs[k].attenuation, 1, &attenuation.x);
-                glUniform3fv(model->model.meshes[j].material.shader.pointLightLocs[k].ambientColor, 1, &ambient.x);
-                glUniform3fv(model->model.meshes[j].material.shader.pointLightLocs[k].diffuseColor, 1, &diffuse.x);
-                glUniform3fv(model->model.meshes[j].material.shader.pointLightLocs[k].specularColor, 1, &specular.x);
+                glUniform3fv(model->meshes[j].material.shader.pointLightLocs[k].position, 1, &position.x);
+                glUniform3fv(model->meshes[j].material.shader.pointLightLocs[k].attenuation, 1, &attenuation.x);
+                glUniform3fv(model->meshes[j].material.shader.pointLightLocs[k].ambientColor, 1, &ambient.x);
+                glUniform3fv(model->meshes[j].material.shader.pointLightLocs[k].diffuseColor, 1, &diffuse.x);
+                glUniform3fv(model->meshes[j].material.shader.pointLightLocs[k].specularColor, 1, &specular.x);
             }
-            glUniform1i(model->model.meshes[j].material.shader.pointLightsLengthLoc, pointLightTablesLength);
+            glUniform1i(model->meshes[j].material.shader.pointLightsLengthLoc, pointLightTablesLength);
 
-            glUniform1f(model->model.meshes[j].material.shader.shininessLoc, model->model.meshes[j].material.shininess);
+            glUniform1f(model->meshes[j].material.shader.shininessLoc, model->meshes[j].material.shininess);
 
-            glBindVertexArray(model->model.meshes[j].VAO);
+            glBindVertexArray(model->meshes[j].VAO);
 
-            for (int i = 0; i < model->model.meshes[j].material.texturesLength; i++) {
-                glActiveTexture(GL_TEXTURE0 + model->model.meshes[j].material.textures[i].type);
-                glBindTexture(GL_TEXTURE_2D, model->model.meshes[j].material.textures[i].textureBuffer);
+            for (int i = 0; i < model->meshes[j].material.texturesLength; i++) {
+                glActiveTexture(GL_TEXTURE0 + model->meshes[j].material.textures[i].type);
+                glBindTexture(GL_TEXTURE_2D, model->meshes[j].material.textures[i].textureBuffer);
             }
 
-            glDrawElements(GL_TRIANGLES, model->model.meshes[j].indicesLength, GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, model->meshes[j].indicesLength, GL_UNSIGNED_INT, 0);
 
             glBindVertexArray(0);
         }
