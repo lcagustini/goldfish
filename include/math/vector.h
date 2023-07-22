@@ -31,7 +31,6 @@ struct vec3 vectorScale(float a, struct vec3 v);
 struct vec3 vectorAdd(struct vec3 a, struct vec3 b);
 struct vec3 vectorSubtract(struct vec3 a, struct vec3 b);
 
-// https://gamedev.stackexchange.com/questions/28395/rotating-vector3-by-a-quaternion
 struct vec3 vectorRotate(struct vec3 v, struct quat q);
 
 struct quat getRotationQuat(struct vec3 from, struct vec3 to);

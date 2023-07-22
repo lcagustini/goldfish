@@ -42,7 +42,7 @@ static void setupMesh(struct meshComponent *mesh) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-static struct meshComponent *processMesh(struct meshComponent *mesh, struct aiMesh *aiMesh, const struct aiScene *scene, struct material material) {
+static void processMesh(struct meshComponent *mesh, struct aiMesh *aiMesh, const struct aiScene *scene, struct material material) {
     print("--Processing Mesh (%d vertices, ", aiMesh->mNumVertices);
 
     mesh->vertices = malloc(aiMesh->mNumVertices * sizeof(struct vertex));
@@ -94,8 +94,6 @@ static struct meshComponent *processMesh(struct meshComponent *mesh, struct aiMe
     mesh->material = material;
 
     setupMesh(mesh);
-
-    return mesh;
 }
 
 static void processNode(struct modelComponent *model, struct aiNode *node, const struct aiScene *scene, struct material material) {

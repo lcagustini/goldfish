@@ -1,4 +1,4 @@
-#include <structure/hashtable.h>
+#include <data/hashtable.h>
 
 #include <string.h>
 #include <stdlib.h>

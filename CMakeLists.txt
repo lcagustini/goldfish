@@ -42,7 +42,7 @@ add_executable(${PROJECT_NAME}
     src/ecs/systems/renderModel.c
     src/ecs/systems/updateFirstPersonTransform.c
 
-    src/structure/hashtable.c
+    src/data/hashtable.c
 
     src/print.c
     src/global.c

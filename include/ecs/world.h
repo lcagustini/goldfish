@@ -8,7 +8,7 @@
 
 #define INVALID_POSITION (UINT_MAX)
 
-#include <structure/hashtable.h>
+#include <data/hashtable.h>
 
 #include <stdbool.h>
 #include <stdint.h>
