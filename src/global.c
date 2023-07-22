@@ -29,6 +29,7 @@ void globalInit() {
     }
 
     glfwMakeContextCurrent(globalState.window);
+    glfwSwapInterval(1);
 
     glewExperimental = 1;
     GLenum err = glewInit();
@@ -49,7 +50,7 @@ void globalInit() {
     glDebugMessageCallback(errorCallback, 0);
 #endif
 
-    print("%s - %s\n\n", glGetString(GL_VERSION), glGetString(GL_RENDERER));
+    print("OpenGL: %s - %s\n\n", glGetString(GL_VERSION), glGetString(GL_RENDERER));
 }
 
 void globalEnd() {
