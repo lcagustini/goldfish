@@ -99,7 +99,13 @@ int main() {
 
     printWorld(&ecsWorld);
 
+    double currentTime = glfwGetTime();
+    double lastTime = currentTime;
     while (!glfwWindowShouldClose(globalState.window)) {
+        currentTime = glfwGetTime();
+        float deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
         glfwPollEvents();
 
         {
@@ -107,11 +113,11 @@ int main() {
             transform->rotation = quatMult(transform->rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
         }
 
-        runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE);
+        runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE, deltaTime);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER);
+        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER, deltaTime);
 
         glfwSwapBuffers(globalState.window);
     }

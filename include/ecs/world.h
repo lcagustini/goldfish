@@ -34,6 +34,7 @@ struct systemRunData {
     };
 
     struct system *system;
+    float dt;
 };
 
 struct system {
@@ -131,7 +132,7 @@ entityId createEntity(struct world *world);
 void deleteEntity(struct world *world, entityId id);
 void addSystem(struct world *world, struct system system);
 
-void runWorldPhase(struct world *world, enum systemPhase phase);
+void runWorldPhase(struct world *world, enum systemPhase phase, float dt);
 void printWorld(struct world *world);
 
 #endif

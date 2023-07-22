@@ -311,7 +311,7 @@ void addSystem(struct world *world, struct system system) {
     }
 }
 
-void runWorldPhase(struct world *world, enum systemPhase phase) {
+void runWorldPhase(struct world *world, enum systemPhase phase, float dt) {
     for (int i = 0; i < world->systemsLength; i++) {
         if (world->systems[i].phase != phase) continue;
 
@@ -322,7 +322,8 @@ void runWorldPhase(struct world *world, enum systemPhase phase) {
             struct systemRunData data = {
                 world,
                 { .table = tables[j] },
-                &world->systems[i]
+                &world->systems[i],
+                dt
             };
 
             world->systems[i].callback(data);
