@@ -52,47 +52,47 @@ int main() {
     addSingletonComponent(&ecsWorld, controllerDataId);
 
     struct transformComponent *transform;
-    struct modelComponent *model;
-#if 1
+#if 0
     entityId chest1 = createEntity(&ecsWorld);
     addComponent(&ecsWorld, chest1, transformId);
-    addComponent(&ecsWorld, chest1, modelId);
-    model = getComponent(&ecsWorld, chest1, modelId);
-    loadModel(model, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
+    loadModel(&ecsWorld, chest1, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
     transform = getComponent(&ecsWorld, chest1, transformId);
     transform->position = (struct vec3) { 0, -1, -1 };
     transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
 #endif
 
-#if 1
+#if 0
     entityId chest2 = createEntity(&ecsWorld);
     addComponent(&ecsWorld, chest2, transformId);
-    addComponent(&ecsWorld, chest2, modelId);
-    model = getComponent(&ecsWorld, chest2, modelId);
-    loadModel(model, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
+    loadModel(&ecsWorld, chest2, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
     transform = getComponent(&ecsWorld, chest2, transformId);
     transform->position = (struct vec3) { 0, -1, -1 };
     transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
     transform->parent = chest1;
 #endif
 
-#if 1
+#if 0
     entityId chest3 = createEntity(&ecsWorld);
     addComponent(&ecsWorld, chest3, transformId);
-    addComponent(&ecsWorld, chest3, modelId);
-    model = getComponent(&ecsWorld, chest3, modelId);
-    loadModel(model, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
+    loadModel(&ecsWorld, chest3, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
     transform = getComponent(&ecsWorld, chest3, transformId);
     transform->position = (struct vec3) { 0, -1, -1 };
     transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
     transform->parent = chest2;
 #endif
 
+#if 1
+    entityId cubes = createEntity(&ecsWorld);
+    addComponent(&ecsWorld, cubes, transformId);
+    loadModel(&ecsWorld, cubes, "assets/parent.fbx", NULL, NULL, NULL);
+    transform = getComponent(&ecsWorld, cubes, transformId);
+    transform->position = (struct vec3) { 0, -1, -1 };
+#endif
+
     entityId light = createEntity(&ecsWorld);
     addComponent(&ecsWorld, light, transformId);
-    addComponent(&ecsWorld, light, pointLightId);
-    struct pointLightComponent *dirLight = getComponent(&ecsWorld, light, pointLightId);
-    dirLight->attenuation = (struct vec3) { 1, 0.7, 1.8 };
+    addComponent(&ecsWorld, light, dirLightId);
+    struct pointLightComponent *dirLight = getComponent(&ecsWorld, light, dirLightId);
     dirLight->ambientColor = (struct vec3) { 1, 1, 1 };
     dirLight->diffuseColor = (struct vec3) { 1, 1, 1 };
     dirLight->specularColor = (struct vec3) { 1, 1, 1 };
@@ -108,10 +108,12 @@ int main() {
 
         glfwPollEvents();
 
+#if 0
         {
             struct transformComponent *transform = getComponent(&ecsWorld, chest1, transformId);
             transform->rotation = quatMult(transform->rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
         }
+#endif
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE, deltaTime);
 
@@ -122,12 +124,14 @@ int main() {
         glfwSwapBuffers(globalState.window);
     }
 
+#if 0
     model = getComponent(&ecsWorld, chest1, modelId);
     destroyModel(model);
     model = getComponent(&ecsWorld, chest2, modelId);
     destroyModel(model);
     model = getComponent(&ecsWorld, chest3, modelId);
     destroyModel(model);
+#endif
 
     destroyWorld(&ecsWorld);
 

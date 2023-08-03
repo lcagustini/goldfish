@@ -109,8 +109,11 @@ static void processNode(struct modelComponent *model, struct aiNode *node, const
     }
 }
 
-void loadModel(struct modelComponent *model, const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath) {
+void loadModel(struct world *world, entityId entity, const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath) {
     print("[Model load start]\n");
+
+    ADD_COMPONENT(world, entity, struct modelComponent);
+    struct modelComponent *model = GET_COMPONENT(world, entity, struct modelComponent);
 
     const struct aiScene *scene = aiImportFile(modelPath,
             aiProcess_CalcTangentSpace |
@@ -130,7 +133,7 @@ void loadModel(struct modelComponent *model, const char *modelPath, const char *
 
     model->path = modelPath;
     model->meshes = malloc(scene->mNumMeshes * sizeof(struct meshComponent));
-    memset(model->meshes, 0, sizeof(struct meshComponent));
+    memset(model->meshes, 0, scene->mNumMeshes * sizeof(struct meshComponent));
 
     struct material material = {0};
     createMaterial(&material, diffusePath, normalPath, specularPath);
