@@ -25,8 +25,6 @@ struct meshComponent {
 struct modelComponent {
     struct meshComponent *meshes;
     unsigned int meshesLength;
-
-    const char *path;
 };
 
 struct transformComponent {

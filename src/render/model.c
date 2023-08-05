@@ -96,8 +96,41 @@ static void processMesh(struct meshComponent *mesh, struct aiMesh *aiMesh, const
     setupMesh(mesh);
 }
 
-static void processNode(struct modelComponent *model, struct aiNode *node, const struct aiScene *scene, struct material material) {
+static entityId processNode(struct world *world, entityId parent, struct aiNode *node, const struct aiScene *scene, struct material material) {
     print("- Processing Node (%d meshes, %d children)\n", node->mNumMeshes, node->mNumChildren);
+
+    entityId entity = createEntity(world);
+    ADD_COMPONENT(world, entity, struct transformComponent);
+    ADD_COMPONENT(world, entity, struct modelComponent);
+
+    struct transformComponent *transform = GET_COMPONENT(world, entity, struct transformComponent);
+    transform->parent = parent;
+    transform->position = (struct vec3) { node->mTransformation.a4, node->mTransformation.b4, node->mTransformation.c4 };
+
+    struct vec3 column1 = (struct vec3) { node->mTransformation.a1, node->mTransformation.b1, node->mTransformation.c1 };
+    struct vec3 column2 = (struct vec3) { node->mTransformation.a2, node->mTransformation.b2, node->mTransformation.c2 };
+    struct vec3 column3 = (struct vec3) { node->mTransformation.a3, node->mTransformation.b3, node->mTransformation.c3 };
+
+    struct vec3 normalizedColumn1 = vectorNormalize(column1);
+    struct vec3 normalizedColumn2 = vectorNormalize(column2);
+    struct vec3 normalizedColumn3 = vectorNormalize(column3);
+    union mat4 rotationMatrix = (union mat4) { .a1 = normalizedColumn1.x, .a2 = normalizedColumn2.x, .a3 = normalizedColumn3.x, 0,
+                                               .b1 = normalizedColumn1.y, .b2 = normalizedColumn2.y, .b3 = normalizedColumn3.y, 0,
+                                               .c1 = normalizedColumn1.z, .c2 = normalizedColumn2.z, .c3 = normalizedColumn3.z, 0,
+                                               0, 0, 0, 1 };
+    transform->rotation = rotationMatrixToQuat(rotationMatrix);
+
+    float scaleX = vectorLen(column1);
+    float scaleY = vectorLen(column2);
+    float scaleZ = vectorLen(column3);
+    transform->scale = (struct vec3) { scaleX, scaleY, scaleZ };
+
+    struct modelComponent *model = GET_COMPONENT(world, entity, struct modelComponent);
+    memset(model, 0, sizeof(struct modelComponent));
+
+    model->meshes = malloc(scene->mNumMeshes * sizeof(struct meshComponent));
+    memset(model->meshes, 0, scene->mNumMeshes * sizeof(struct meshComponent));
+
     for (int i = 0; i < node->mNumMeshes; i++) {
         struct aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
         processMesh(&model->meshes[model->meshesLength], mesh, scene, material);
@@ -105,15 +138,14 @@ static void processNode(struct modelComponent *model, struct aiNode *node, const
     }
 
     for (int i = 0; i < node->mNumChildren; i++) {
-        processNode(model, node->mChildren[i], scene, material);
+        processNode(world, entity, node->mChildren[i], scene, material);
     }
+
+    return entity;
 }
 
-void loadModel(struct world *world, entityId entity, const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath) {
+entityId loadModel(struct world *world, const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath) {
     print("[Model load start]\n");
-
-    ADD_COMPONENT(world, entity, struct modelComponent);
-    struct modelComponent *model = GET_COMPONENT(world, entity, struct modelComponent);
 
     const struct aiScene *scene = aiImportFile(modelPath,
             aiProcess_CalcTangentSpace |
@@ -126,24 +158,20 @@ void loadModel(struct world *world, entityId entity, const char *modelPath, cons
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         print("Error loading model %s: %s\n", modelPath, aiGetErrorString());
-        return;
+        return INVALID_POSITION;
     }
-
-    memset(model, 0, sizeof(struct modelComponent));
-
-    model->path = modelPath;
-    model->meshes = malloc(scene->mNumMeshes * sizeof(struct meshComponent));
-    memset(model->meshes, 0, scene->mNumMeshes * sizeof(struct meshComponent));
 
     struct material material = {0};
     createMaterial(&material, diffusePath, normalPath, specularPath);
 
     print("File has %d meshes\n", scene->mNumMeshes);
-    processNode(model, scene->mRootNode, scene, material);
+    entityId model = processNode(world, INVALID_POSITION, scene->mRootNode, scene, material);
 
     aiReleaseImport(scene);
 
     print("[Model load end]\n\n");
+
+    return model;
 }
 
 void destroyModel(struct modelComponent *model) {
@@ -167,7 +195,7 @@ void destroyModel(struct modelComponent *model) {
 }
 
 void printModel(struct modelComponent *model) {
-    print("[Model %s]\n", model->path);
+    print("[Model]\n");
     print("Total meshes: %u\n", model->meshesLength);
     for (int i = 0; i < model->meshesLength; i++) {
         struct meshComponent *mesh = &model->meshes[i];

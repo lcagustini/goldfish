@@ -87,6 +87,59 @@ void rotationMatrix(union mat4 *result, struct quat quat) {
     multMatrix(result, &m1, result);
 }
 
+// https://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf
+struct quat rotationMatrixToQuat(union mat4 src) {
+    struct quat q;
+    float t;
+
+    if (src.mat[2][2] < 0)
+    {
+        if (src.mat[0][0] > src.mat[1][1])
+        {
+            t = 1 + src.mat[0][0] - src.mat[1][1] - src.mat[2][2];
+            q.x = t;
+            q.y = src.mat[0][1] + src.mat[1][0];
+            q.z = src.mat[2][0] + src.mat[0][2];
+            q.w = src.mat[1][2] - src.mat[2][1];
+        }
+        else
+        {
+            t = 1 - src.mat[0][0] + src.mat[1][1] - src.mat[2][2];
+            q.x = src.mat[0][1] + src.mat[1][0];
+            q.y = t;
+            q.z = src.mat[1][2] + src.mat[2][1];
+            q.w = src.mat[2][0] - src.mat[0][2];
+        }
+    }
+    else
+    {
+        if (src.mat[0][0] < -src.mat[1][1])
+        {
+            t = 1 - src.mat[0][0] - src.mat[1][1] + src.mat[2][2];
+            q.x = src.mat[2][0] + src.mat[0][2];
+            q.y = src.mat[1][2] + src.mat[2][1];
+            q.z = t;
+            q.w = src.mat[0][1] - src.mat[1][0];
+        }
+        else
+        {
+            t = 1 + src.mat[0][0] + src.mat[1][1] + src.mat[2][2];
+            q.x = src.mat[1][2] - src.mat[2][1];
+            q.y = src.mat[2][0] - src.mat[0][2];
+            q.z = src.mat[0][1] - src.mat[1][0];
+            q.w = t;
+        }
+    }
+    t = 0.5f / sqrt(t);
+
+    q.x *= t;
+    q.y *= t;
+    q.z *= t;
+    q.w *= t;
+
+    return q;
+}
+
 void lookAt(union mat4 *result, struct vec3 position, struct vec3 dir, struct vec3 worldUp) {
     struct vec3 right = vectorNormalize(vectorCross(dir, worldUp));
     struct vec3 up = vectorCross(right, dir);

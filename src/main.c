@@ -82,9 +82,7 @@ int main() {
 #endif
 
 #if 1
-    entityId cubes = createEntity(&ecsWorld);
-    addComponent(&ecsWorld, cubes, transformId);
-    loadModel(&ecsWorld, cubes, "assets/parent.fbx", NULL, NULL, NULL);
+    entityId cubes = loadModel(&ecsWorld, "assets/parent.fbx", "assets/chest.qoi", NULL, NULL);
     transform = getComponent(&ecsWorld, cubes, transformId);
     transform->position = (struct vec3) { 0, -1, -1 };
 #endif
