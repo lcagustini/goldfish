@@ -45,7 +45,7 @@ int main() {
 
     ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_RENDER, renderModel, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
 
-    entityId camera = createEntity(&ecsWorld);
+    entityId camera = createEntity(&ecsWorld, "Camera");
     ADD_COMPONENT(&ecsWorld, camera, struct transformComponent);
     ADD_COMPONENT(&ecsWorld, camera, struct cameraComponent);
     ADD_COMPONENT(&ecsWorld, camera, struct firstPersonComponent);
@@ -54,7 +54,7 @@ int main() {
 
     struct transformComponent *transform;
 #if 0
-    entityId chest1 = createEntity(&ecsWorld);
+    entityId chest1 = createEntity(&ecsWorld, "Chest 1");
     addComponent(&ecsWorld, chest1, transformId);
     loadModel(&ecsWorld, chest1, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
     transform = getComponent(&ecsWorld, chest1, transformId);
@@ -63,7 +63,7 @@ int main() {
 #endif
 
 #if 0
-    entityId chest2 = createEntity(&ecsWorld);
+    entityId chest2 = createEntity(&ecsWorld, "Chest 2");
     addComponent(&ecsWorld, chest2, transformId);
     loadModel(&ecsWorld, chest2, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
     transform = getComponent(&ecsWorld, chest2, transformId);
@@ -73,7 +73,7 @@ int main() {
 #endif
 
 #if 0
-    entityId chest3 = createEntity(&ecsWorld);
+    entityId chest3 = createEntity(&ecsWorld, "Chest 3");
     addComponent(&ecsWorld, chest3, transformId);
     loadModel(&ecsWorld, chest3, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
     transform = getComponent(&ecsWorld, chest3, transformId);
@@ -88,7 +88,7 @@ int main() {
     transform->position = (struct vec3) { 0, -1, -1 };
 #endif
 
-    entityId light = createEntity(&ecsWorld);
+    entityId light = createEntity(&ecsWorld, "Light");
     ADD_COMPONENT(&ecsWorld, light, struct transformComponent);
     ADD_COMPONENT(&ecsWorld, light, struct dirLightComponent);
     struct pointLightComponent *dirLight = GET_COMPONENT(&ecsWorld, light, struct dirLightComponent);

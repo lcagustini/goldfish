@@ -50,6 +50,7 @@ struct system {
 };
 
 struct entity {
+    char *name;
     unsigned int table;
     unsigned int position;
 };
@@ -130,7 +131,7 @@ void addSingletonComponent(struct world *world, componentId component);
 void *getSingletonComponent(struct world *world, componentId component);
 void removeSingletonComponent(struct world *world, componentId component);
 
-entityId createEntity(struct world *world);
+entityId createEntity(struct world *world, const char *name);
 void deleteEntity(struct world *world, entityId id);
 void addSystem(struct world *world, struct system system);
 
