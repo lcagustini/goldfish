@@ -72,14 +72,15 @@ uint32_t hashString(const char *name, uint32_t len) {
 struct hashtable hashtableCreate(unsigned int capacity, unsigned int size) {
     struct hashtable table = {
         malloc(capacity * size),
-        malloc(capacity * sizeof(uint32_t)),
+        malloc(capacity * sizeof(char *)),
         malloc(capacity * sizeof(bool)),
+        0,
         capacity,
         size
     };
 
     memset(table.buffer, 0, capacity * size);
-    memset(table.hashes, 0, capacity * sizeof(uint32_t));
+    memset(table.keys, 0, capacity * sizeof(char *));
     memset(table.valids, 0, capacity * sizeof(bool));
 
     return table;
@@ -87,58 +88,71 @@ struct hashtable hashtableCreate(unsigned int capacity, unsigned int size) {
 
 void hashtableDestroy(struct hashtable *hashtable) {
     free(hashtable->buffer);
-    free(hashtable->hashes);
+
+    for (int i = 0; i < hashtable->bufferCount; i++) {
+        if (hashtable->keys[i] != NULL) free(hashtable->keys[i]);
+    }
+    free(hashtable->keys);
+
     free(hashtable->valids);
 }
 
-void hashtableSetById(struct hashtable *hashtable, uint32_t hash, void *data) {
+static void hashtableResize(struct hashtable *hashtable) {
+    struct hashtable oldTable;
+    memcpy(&oldTable, hashtable, sizeof(struct hashtable));
+
+    unsigned int newLength = (unsigned int)(1.5f * hashtable->bufferCount);
+    print("[hashtable] Collision! Increasing capacity from %d to %d\n", hashtable->bufferCount, newLength);
+    hashtable->buffer = malloc(newLength * hashtable->typeSize);
+    hashtable->keys = malloc(newLength * sizeof(char *));
+    hashtable->valids = malloc(newLength * sizeof(bool));
+    hashtable->validCount = 0;
+    hashtable->bufferCount = newLength;
+
+    memset(hashtable->buffer, 0, hashtable->bufferCount * hashtable->typeSize);
+    memset(hashtable->keys, 0, hashtable->bufferCount * sizeof(char *));
+    memset(hashtable->valids, 0, hashtable->bufferCount * sizeof(bool));
+
+    for (int i = 0; i < oldTable.bufferCount; i++) {
+        if (oldTable.valids[i]) {
+            hashtableSet(hashtable, oldTable.keys[i], oldTable.buffer + i * oldTable.typeSize);
+        }
+    }
+
+    hashtableDestroy(&oldTable);
+}
+
+void hashtableSet(struct hashtable *hashtable, const char *key, void *data) {
+    uint32_t hash = hashString(key, strlen(key));
     unsigned int position = hash % hashtable->bufferCount;
 
-    if (hashtable->valids[position] && hashtable->hashes[position] != hash) {
-        struct hashtable oldTable;
-        memcpy(&oldTable, hashtable, sizeof(struct hashtable));
-
-        unsigned int newLength = (unsigned int)(1.5f * hashtable->bufferCount);
-        print("[hashtable] Collision! Increasing capacity from %d to %d\n", hashtable->bufferCount, newLength);
-        hashtable->buffer = malloc(newLength * hashtable->typeSize);
-        hashtable->hashes = malloc(newLength * sizeof(uint32_t));
-        hashtable->valids = malloc(newLength * sizeof(bool));
-        hashtable->bufferCount = newLength;
-
-        memset(hashtable->buffer, 0, hashtable->bufferCount * hashtable->typeSize);
-        memset(hashtable->hashes, 0, hashtable->bufferCount * sizeof(uint32_t));
-        memset(hashtable->valids, 0, hashtable->bufferCount * sizeof(bool));
-
-        for (int i = 0; i < oldTable.bufferCount; i++) {
-            if (oldTable.valids[i]) {
-                hashtableSetById(hashtable, oldTable.hashes[i], oldTable.buffer + i * oldTable.typeSize);
-            }
-        }
-
-        hashtableDestroy(&oldTable);
-
-        hashtableSetById(hashtable, hash, data);
+    while (hashtable->valids[position]) {
+        position++;
+        if (position == hashtable->bufferCount) position = 0;
     }
-    else {
-        hashtable->valids[position] = true;
-        hashtable->hashes[position] = hash;
-        memcpy(hashtable->buffer + position * hashtable->typeSize, data, hashtable->typeSize);
+
+    hashtable->valids[position] = true;
+    hashtable->validCount++;
+
+    hashtable->keys[position] = malloc((strlen(key) + 1) * sizeof(char));
+    strcpy(hashtable->keys[position], key);
+    memcpy(hashtable->buffer + position * hashtable->typeSize, data, hashtable->typeSize);
+
+    if (((float)hashtable->validCount / hashtable->bufferCount) > 0.7f) {
+        hashtableResize(hashtable);
     }
 }
 
-hashtableId hashtableSet(struct hashtable *hashtable, const char *key, void *data) {
+bool hashtableRemove(struct hashtable *hashtable, const char *key) {
     uint32_t hash = hashString(key, strlen(key));
-
-    hashtableSetById(hashtable, hash, data);
-
-    return hash;
-}
-
-bool hashtableRemoveById(struct hashtable *hashtable, uint32_t hash) {
     unsigned int position = hash % hashtable->bufferCount;
 
     if (hashtable->valids[position]) {
         hashtable->valids[position] = false;
+        hashtable->validCount--;
+
+        free(hashtable->keys[position]);
+        hashtable->keys[position] = NULL;
 
         return true;
     }
@@ -147,22 +161,16 @@ bool hashtableRemoveById(struct hashtable *hashtable, uint32_t hash) {
     }
 }
 
-bool hashtableRemove(struct hashtable *hashtable, const char *key) {
+void *hashtableGet(struct hashtable *hashtable, const char *key) {
     uint32_t hash = hashString(key, strlen(key));
-
-    return hashtableRemoveById(hashtable, hash);
-}
-
-void *hashtableGetById(struct hashtable *hashtable, uint32_t hash) {
     unsigned int position = hash % hashtable->bufferCount;
 
     if (!hashtable->valids[position]) return NULL;
 
+    while (strcmp(hashtable->keys[position], key) != 0) {
+        position++;
+        if (position == hashtable->bufferCount) position = 0;
+    }
+
     return hashtable->buffer + position * hashtable->typeSize;
-}
-
-void *hashtableGet(struct hashtable *hashtable, const char *key) {
-    uint32_t hash = hashString(key, strlen(key));
-
-    return hashtableGetById(hashtable, hash);
 }

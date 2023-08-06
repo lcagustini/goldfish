@@ -1,7 +1,7 @@
 #include <ecs/systems.h>
 
 void updateFirstPersonTransform(struct systemRunData data) {
-    struct controllerDataComponent *controllerData = getSingletonComponent(data.world, GET_COMPONENT_ID(struct controllerDataComponent));
+    struct controllerDataComponent *controllerData = GET_SINGLETON_COMPONENT(data.world, struct controllerDataComponent);
 
     struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0);
 

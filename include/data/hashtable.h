@@ -4,13 +4,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef uint32_t hashtableId;
-
 struct hashtable {
     void *buffer;
-    uint32_t *hashes;
+    char **keys;
     bool *valids;
 
+    unsigned int validCount;
     unsigned int bufferCount;
     unsigned int typeSize;
 };
@@ -21,13 +20,8 @@ uint32_t hashString(const char *name, uint32_t len);
 struct hashtable hashtableCreate(unsigned int capacity, unsigned int size);
 void hashtableDestroy(struct hashtable *hashtable);
 
-hashtableId hashtableSet(struct hashtable *hashtable, const char *key, void *data);
-void hashtableSetById(struct hashtable *hashtable, uint32_t hash, void *data);
-
-bool hashtableRemoveById(struct hashtable *hashtable, uint32_t hash);
+void hashtableSet(struct hashtable *hashtable, const char *key, void *data);
 bool hashtableRemove(struct hashtable *hashtable, const char *key);
-
-void *hashtableGetById(struct hashtable *hashtable, uint32_t hash);
 void *hashtableGet(struct hashtable *hashtable, const char *key);
 
 #endif

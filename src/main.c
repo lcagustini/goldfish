@@ -25,31 +25,32 @@ int main() {
 
     struct world ecsWorld = createWorld();
 
-    componentId transformId = CREATE_COMPONENT(&ecsWorld, struct transformComponent);
-    componentId cameraId = CREATE_COMPONENT(&ecsWorld, struct cameraComponent);
-    componentId firstPersonId = CREATE_COMPONENT(&ecsWorld, struct firstPersonComponent);
-    componentId controllerDataId = CREATE_COMPONENT(&ecsWorld, struct controllerDataComponent);
-    componentId modelId = CREATE_COMPONENT(&ecsWorld, struct modelComponent);
-    componentId dirLightId = CREATE_COMPONENT(&ecsWorld, struct dirLightComponent);
-    componentId spotLightId = CREATE_COMPONENT(&ecsWorld, struct spotLightComponent);
-    componentId pointLightId = CREATE_COMPONENT(&ecsWorld, struct pointLightComponent);
+    CREATE_COMPONENT(&ecsWorld, struct transformComponent);
+    CREATE_COMPONENT(&ecsWorld, struct cameraComponent);
+    CREATE_COMPONENT(&ecsWorld, struct firstPersonComponent);
+    CREATE_COMPONENT(&ecsWorld, struct controllerDataComponent);
+    CREATE_COMPONENT(&ecsWorld, struct modelComponent);
+    CREATE_COMPONENT(&ecsWorld, struct dirLightComponent);
+    CREATE_COMPONENT(&ecsWorld, struct spotLightComponent);
+    CREATE_COMPONENT(&ecsWorld, struct pointLightComponent);
 
-    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_CREATE, setupTransform, transformId);
-    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_CREATE, setupCamera, cameraId);
+    // TODO: Apply GET_COMPONENT_ID to variadic arguments
+    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_CREATE, setupTransform, GET_COMPONENT_ID(struct transformComponent));
+    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_CREATE, setupCamera, GET_COMPONENT_ID(struct cameraComponent));
 
-    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_UPDATE, updateControllerData, controllerDataId);
-    ADD_SYSTEM(&ecsWorld, 1, SYSTEM_ON_UPDATE, updateFirstPersonTransform, transformId, firstPersonId);
-    ADD_SYSTEM(&ecsWorld, 2, SYSTEM_ON_UPDATE, updateCameraView, transformId, cameraId);
-    ADD_SYSTEM(&ecsWorld, 10, SYSTEM_ON_UPDATE, updateTransformMatrix, transformId);
+    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_UPDATE, updateControllerData, GET_COMPONENT_ID(struct controllerDataComponent));
+    ADD_SYSTEM(&ecsWorld, 1, SYSTEM_ON_UPDATE, updateFirstPersonTransform, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct firstPersonComponent));
+    ADD_SYSTEM(&ecsWorld, 2, SYSTEM_ON_UPDATE, updateCameraView, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent));
+    ADD_SYSTEM(&ecsWorld, 10, SYSTEM_ON_UPDATE, updateTransformMatrix, GET_COMPONENT_ID(struct transformComponent));
 
-    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_RENDER, renderModel, transformId, modelId);
+    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_RENDER, renderModel, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
 
     entityId camera = createEntity(&ecsWorld);
-    addComponent(&ecsWorld, camera, transformId);
-    addComponent(&ecsWorld, camera, cameraId);
-    addComponent(&ecsWorld, camera, firstPersonId);
+    ADD_COMPONENT(&ecsWorld, camera, struct transformComponent);
+    ADD_COMPONENT(&ecsWorld, camera, struct cameraComponent);
+    ADD_COMPONENT(&ecsWorld, camera, struct firstPersonComponent);
 
-    addSingletonComponent(&ecsWorld, controllerDataId);
+    ADD_SINGLETON_COMPONENT(&ecsWorld, struct controllerDataComponent);
 
     struct transformComponent *transform;
 #if 0
@@ -83,14 +84,14 @@ int main() {
 
 #if 1
     entityId cubes = loadModel(&ecsWorld, "assets/parent.fbx", "assets/chest.qoi", NULL, NULL);
-    transform = getComponent(&ecsWorld, cubes, transformId);
+    transform = GET_COMPONENT(&ecsWorld, cubes, struct transformComponent);
     transform->position = (struct vec3) { 0, -1, -1 };
 #endif
 
     entityId light = createEntity(&ecsWorld);
-    addComponent(&ecsWorld, light, transformId);
-    addComponent(&ecsWorld, light, dirLightId);
-    struct pointLightComponent *dirLight = getComponent(&ecsWorld, light, dirLightId);
+    ADD_COMPONENT(&ecsWorld, light, struct transformComponent);
+    ADD_COMPONENT(&ecsWorld, light, struct dirLightComponent);
+    struct pointLightComponent *dirLight = GET_COMPONENT(&ecsWorld, light, struct dirLightComponent);
     dirLight->ambientColor = (struct vec3) { 1, 1, 1 };
     dirLight->diffuseColor = (struct vec3) { 1, 1, 1 };
     dirLight->specularColor = (struct vec3) { 1, 1, 1 };

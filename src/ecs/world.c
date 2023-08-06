@@ -10,7 +10,6 @@ struct world createWorld() {
     struct world world = {0};
 
     world.components = HASHTABLE_CREATE(MAX_COMPONENT_COUNT, struct component);
-    world.entities = HASHTABLE_CREATE(MAX_ENTITY_COUNT, struct entity);
 
     world.singletonEntity = createEntity(&world);
 
@@ -26,20 +25,15 @@ void destroyWorld(struct world *world) {
     }
 
     hashtableDestroy(&world->components);
-    hashtableDestroy(&world->entities);
 }
 
-componentId createComponent(struct world *world, const char *component, unsigned int componentSize) {
+void createComponent(struct world *world, const char *component, unsigned int componentSize) {
     struct component newComponent = {
         component,
         componentSize
     };
 
     return hashtableSet(&world->components, component, &newComponent);
-}
-
-componentId getComponentId(const char *component) {
-    return hashString(component, strlen(component));
 }
 
 unsigned int getAllTablesWithComponents(struct world *world, componentId *components, unsigned int componentsLength, tableId *tables, unsigned int tablesLength) {
@@ -51,7 +45,7 @@ unsigned int getAllTablesWithComponents(struct world *world, componentId *compon
         int hits = 0;
         for (int k = 0; k < componentsLength; k++) {
             for (int i = 0; i < world->tables[j].recordsLength; i++) {
-                hits += world->tables[j].records[i].componentType == components[k];
+                hits += strcmp(world->tables[j].records[i].componentType, components[k]) == 0;
             }
         }
         if (hits == componentsLength) {
@@ -70,7 +64,7 @@ static tableId getTableForComponents(struct world *world, componentId *component
         int hits = 0;
         for (int k = 0; k < componentsLength; k++) {
             for (int i = 0; i < componentsLength; i++) {
-                hits += world->tables[j].records[i].componentType == components[k];
+                hits += strcmp(world->tables[j].records[i].componentType, components[k]) == 0;
             }
         }
         if (hits == componentsLength) return j;
@@ -83,7 +77,7 @@ static tableId getTableForComponents(struct world *world, componentId *component
 
     for (int i = 0; i < componentsLength; i++) {
         world->tables[len].records[i].componentType = components[i];
-        world->tables[len].records[i].components = malloc(MAX_ENTITY_COUNT * COMPONENT_SIZE_BY_ID(world, components[i]));
+        world->tables[len].records[i].components = malloc(MAX_ENTITY_COUNT * COMPONENT_SIZE(world, components[i]));
     }
 
     world->tablesLength++;
@@ -108,18 +102,15 @@ static void removeEntityFromTable(struct world *world, struct entity entity) {
     struct table *t = &world->tables[entity.table];
 
     for (int j = 0; j < t->recordsLength; j++) {
-        unsigned int size = COMPONENT_SIZE_BY_ID(world, t->records[j].componentType);
+        unsigned int size = COMPONENT_SIZE(world, t->records[j].componentType);
         for (int i = entity.position; i < t->componentsLength - 1; i++) {
             memcpy(t->records[j].components + (i * size), t->records[j].components + ((i + 1) * size), size);
         }
     }
 
-    struct entity *entities = world->entities.buffer;
-    for (int i = 0; i < world->entities.bufferCount; i++) {
-        if (!world->entities.valids[i]) continue;
-
-        if (entities[i].table == entity.table && entities[i].position > entity.position) {
-            entities[i].position--;
+    for (int i = 0; i < world->entitiesLength; i++) {
+        if (world->entities[i].table == entity.table && world->entities[i].position > entity.position) {
+            world->entities[i].position--;
         }
     }
 
@@ -136,8 +127,8 @@ static struct entity copyEntityBetweenTables(struct world *world, struct entity 
 
     for (int j = 0; j < tFrom->recordsLength; j++) {
         for (int i = 0; i < tTo->recordsLength; i++) {
-            if (tFrom->records[j].componentType == tTo->records[i].componentType) {
-                unsigned int size = COMPONENT_SIZE_BY_ID(world, tTo->records[i].componentType);
+            if (strcmp(tFrom->records[j].componentType, tTo->records[i].componentType) == 0) {
+                unsigned int size = COMPONENT_SIZE(world, tTo->records[i].componentType);
                 memcpy(tTo->records[i].components + (len * size), tFrom->records[j].components + (entity.position * size), size);
                 break;
             }
@@ -155,12 +146,12 @@ static struct entity copyEntityBetweenTables(struct world *world, struct entity 
 }
 
 void addComponent(struct world *world, entityId entity, componentId component) {
-    struct entity *e = hashtableGetById(&world->entities, entity);
+    struct entity *e = &world->entities[entity];
 
     if (e->table == INVALID_POSITION) {
         tableId t = getTableForComponents(world, &component, 1);
         struct entity newEntity = addEntityToTable(world, t);
-        hashtableSetById(&world->entities, entity, &newEntity);
+        world->entities[entity] = newEntity;
     }
     else {
         componentId components[MAX_COMPONENT_COUNT];
@@ -171,7 +162,7 @@ void addComponent(struct world *world, entityId entity, componentId component) {
         tableId t = getTableForComponents(world, components, world->tables[e->table].recordsLength + 1);
         struct entity newEntity = copyEntityBetweenTables(world, *e, t);
         removeEntityFromTable(world, *e);
-        hashtableSetById(&world->entities, entity, &newEntity);
+        world->entities[entity] = newEntity;
     }
 
     for (int i = 0; i < world->systemsLength; i++) {
@@ -191,11 +182,11 @@ void addComponent(struct world *world, entityId entity, componentId component) {
 void *getComponent(struct world *world, entityId entity, componentId component) {
     if (entity == INVALID_POSITION) return NULL;
 
-    struct entity *e = hashtableGetById(&world->entities, entity);
+    struct entity *e = &world->entities[entity];
 
     for (int i = 0; i < world->tables[e->table].recordsLength; i++) {
-        if (world->tables[e->table].records[i].componentType == component) {
-            return world->tables[e->table].records[i].components + (e->position * COMPONENT_SIZE_BY_ID(world, component));
+        if (strcmp(world->tables[e->table].records[i].componentType, component) == 0) {
+            return world->tables[e->table].records[i].components + (e->position * COMPONENT_SIZE(world, component));
         }
     }
 
@@ -206,14 +197,14 @@ void *getComponentsFromTable(struct world *world, tableId table, componentId com
     struct table t = world->tables[table];
 
     for (int i = 0; i < t.recordsLength; i++) {
-        if (t.records[i].componentType == component) return t.records[i].components;
+        if (strcmp(t.records[i].componentType, component) == 0) return t.records[i].components;
     }
 
     return NULL;
 }
 
 void removeComponent(struct world *world, entityId entity, componentId component) {
-    struct entity *e = hashtableGetById(&world->entities, entity);
+    struct entity *e = &world->entities[entity];
 
     if (e->table == INVALID_POSITION) {
         return;
@@ -221,13 +212,13 @@ void removeComponent(struct world *world, entityId entity, componentId component
     else {
         componentId components[MAX_COMPONENT_COUNT];
         for (int i = 0; i < world->tables[e->table].recordsLength; i++) {
-            if (world->tables[e->table].records[i].componentType == component) continue;
+            if (strcmp(world->tables[e->table].records[i].componentType, component) == 0) continue;
             components[i] = world->tables[e->table].records[i].componentType;
         }
         tableId t = getTableForComponents(world, components, world->tables[e->table].recordsLength - 1);
         struct entity newEntity = copyEntityBetweenTables(world, *e, t);
         removeEntityFromTable(world, *e);
-        hashtableSetById(&world->entities, entity, &newEntity);
+        world->entities[entity] = newEntity;
     }
 
     for (int i = 0; i < world->systemsLength; i++) {
@@ -257,21 +248,18 @@ void removeSingletonComponent(struct world *world, componentId component) {
 }
 
 entityId createEntity(struct world *world) {
-    world->counter++;
-
-    char key[500];
-    sprintf(key, "%d", world->counter);
-
     struct entity e = {
         INVALID_POSITION,
         INVALID_POSITION
     };
 
-    return hashtableSet(&world->entities, key, &e);
+    world->entities[world->entitiesLength++] = e;
+
+    return world->entitiesLength - 1;
 }
 
 void deleteEntity(struct world *world, entityId id) {
-    struct entity *e = hashtableGetById(&world->entities, id);
+    struct entity *e = &world->entities[id];
     struct table *t = &world->tables[e->table];
 
     for (int j = 0; j < t->recordsLength; j++) {
@@ -291,7 +279,8 @@ void deleteEntity(struct world *world, entityId id) {
         }
     }
 
-    hashtableRemoveById(&world->entities, id);
+    // FIXME
+    //hashtableRemoveById(&world->entities, id);
 }
 
 void addSystem(struct world *world, struct system system) {
@@ -345,11 +334,8 @@ void printWorld(struct world *world) {
     print("\n");
 
     print("[ECS Entities]\n");
-    struct entity *entities = world->entities.buffer;
-    for (int i = 0; i < world->entities.bufferCount; i++) {
-        if (!world->entities.valids[i]) continue;
-
-        print("(id: 0x%X) (table: %u) (row: %u)\n", world->entities.hashes[i], entities[i].table, entities[i].position);
+    for (int i = 0; i < world->entitiesLength; i++) {
+        print("(id: %d) (table: %u) (row: %u)\n", i, world->entities[i].table, world->entities[i].position);
     }
     print("\n");
 
@@ -358,7 +344,7 @@ void printWorld(struct world *world) {
     for (int i = 0; i < world->components.bufferCount; i++) {
         if (!world->components.valids[i]) continue;
 
-        print("(name: %s) (hash: 0x%X) (size: %u)\n", components[i].name, world->components.hashes[i], components[i].size);
+        print("(name: %s) (key: %s) (size: %u)\n", components[i].name, world->components.keys[i], components[i].size);
     }
     print("\n");
 
@@ -366,7 +352,7 @@ void printWorld(struct world *world) {
     for (int i = 0; i < world->tablesLength; i++) {
         print("(id: %d) (records: %u) (rows: %u)\n", i, world->tables[i].recordsLength, world->tables[i].componentsLength);
         for (int j = 0; j < world->tables[i].recordsLength; j++) {
-            print("(component: 0x%X -> %p)\n", world->tables[i].records[j].componentType, world->tables[i].records[j].components);
+            print("(component: %s -> %p)\n", world->tables[i].records[j].componentType, world->tables[i].records[j].components);
         }
         print("\n");
     }
