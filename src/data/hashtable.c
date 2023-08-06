@@ -70,6 +70,11 @@ uint32_t hashString(const char *name, uint32_t len) {
 }
 
 struct hashtable hashtableCreate(unsigned int capacity, unsigned int size) {
+    if (capacity == 0) {
+        print("[hashtable] Capacity can't be zero, creating with a single slot\n");
+        capacity = 1;
+    }
+
     struct hashtable table = {
         malloc(capacity * size),
         malloc(capacity * sizeof(char *)),
@@ -101,8 +106,8 @@ static void hashtableResize(struct hashtable *hashtable) {
     struct hashtable oldTable;
     memcpy(&oldTable, hashtable, sizeof(struct hashtable));
 
-    unsigned int newLength = (unsigned int)(1.5f * hashtable->bufferCount);
-    print("[hashtable] Collision! Increasing capacity from %d to %d\n", hashtable->bufferCount, newLength);
+    unsigned int newLength = (unsigned int)(1.5f * hashtable->bufferCount + 0.5f);
+    print("[hashtable] Increasing capacity from %d to %d\n", hashtable->bufferCount, newLength);
     hashtable->buffer = malloc(newLength * hashtable->typeSize);
     hashtable->keys = malloc(newLength * sizeof(char *));
     hashtable->valids = malloc(newLength * sizeof(bool));
