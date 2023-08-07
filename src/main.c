@@ -83,7 +83,7 @@ int main() {
 #endif
 
 #if 1
-    entityId cubes = loadModel(&ecsWorld, "assets/parent.fbx", "assets/chest.qoi", NULL, NULL);
+    entityId cubes = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
     transform = GET_COMPONENT(&ecsWorld, cubes, struct transformComponent);
     transform->position = (struct vec3) { 0, -1, -1 };
 #endif
@@ -91,7 +91,7 @@ int main() {
     entityId light = createEntity(&ecsWorld, "Light");
     ADD_COMPONENT(&ecsWorld, light, struct transformComponent);
     ADD_COMPONENT(&ecsWorld, light, struct dirLightComponent);
-    struct pointLightComponent *dirLight = GET_COMPONENT(&ecsWorld, light, struct dirLightComponent);
+    struct dirLightComponent *dirLight = GET_COMPONENT(&ecsWorld, light, struct dirLightComponent);
     dirLight->ambientColor = (struct vec3) { 1, 1, 1 };
     dirLight->diffuseColor = (struct vec3) { 1, 1, 1 };
     dirLight->specularColor = (struct vec3) { 1, 1, 1 };
