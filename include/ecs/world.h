@@ -80,8 +80,7 @@ struct world {
     struct hashtable entities;
     entityId singletonEntity;
 
-    struct system systems[MAX_SYSTEM_COUNT];
-    unsigned int systemsLength;
+    struct dynarray systems;
 };
 
 #include <macros.h>

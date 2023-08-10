@@ -16,6 +16,8 @@ struct world createWorld() {
 
     world.singletonEntity = createEntity(&world, "Singleton");
 
+    world.systems = DYNARRAY_CREATE(MAX_SYSTEM_COUNT, struct system);
+
     return world;
 }
 
@@ -180,17 +182,19 @@ void addComponent(struct world *world, entityId entity, componentId component) {
         hashtableSet(&world->entities, entity, &newEntity);
     }
 
-    for (int i = 0; i < world->systemsLength; i++) {
-        if (world->systems[i].phase != SYSTEM_ON_CREATE) continue;
-        if (world->systems[i].components[0] != component) continue;
+    for (int i = 0; i < world->systems.bufferCount; i++) {
+        struct system *system = dynarrayGet(&world->systems, i);
+
+        if (system->phase != SYSTEM_ON_CREATE) continue;
+        if (system->components[0] != component) continue;
 
         struct systemRunData data = {
             world,
             { .entity = entity },
-            &world->systems[i]
+            system
         };
 
-        world->systems[i].callback(data);
+        system->callback(data);
     }
 }
 
@@ -238,17 +242,19 @@ void removeComponent(struct world *world, entityId entity, componentId component
         hashtableSet(&world->entities, entity, &newEntity);
     }
 
-    for (int i = 0; i < world->systemsLength; i++) {
-        if (world->systems[i].phase != SYSTEM_ON_DELETE) continue;
-        if (world->systems[i].components[0] != component) continue;
+    for (int i = 0; i < world->systems.bufferCount; i++) {
+        struct system *system = dynarrayGet(&world->systems, i);
+
+        if (system->phase != SYSTEM_ON_DELETE) continue;
+        if (system->components[0] != component) continue;
 
         struct systemRunData data = {
             world,
             { .entity = entity },
-            &world->systems[i]
+            system
         };
 
-        world->systems[i].callback(data);
+        system->callback(data);
     }
 }
 
@@ -284,17 +290,19 @@ void deleteEntity(struct world *world, entityId id) {
     for (int j = 0; j < t->recordsLength; j++) {
         componentId component = t->records[j].componentType;
 
-        for (int i = 0; i < world->systemsLength; i++) {
-            if (world->systems[i].phase != SYSTEM_ON_DELETE) continue;
-            if (world->systems[i].components[0] != component) continue;
+        for (int i = 0; i < world->systems.bufferCount; i++) {
+            struct system *system = dynarrayGet(&world->systems, i);
+
+            if (system->phase != SYSTEM_ON_DELETE) continue;
+            if (system->components[0] != component) continue;
 
             struct systemRunData data = {
                 world,
                 { .entity = id },
-                &world->systems[i]
+                system
             };
 
-            world->systems[i].callback(data);
+            system->callback(data);
         }
     }
 
@@ -304,38 +312,40 @@ void deleteEntity(struct world *world, entityId id) {
 }
 
 void addSystem(struct world *world, struct system system) {
-    world->systems[world->systemsLength] = system;
-    world->systemsLength++;
+    dynarrayAdd(&world->systems, &system);
 
-    for (int i = 1; i < world->systemsLength; i++) {
-        struct system x = world->systems[i];
+    struct system *systems = world->systems.buffer;
+    for (int i = 1; i < world->systems.bufferCount; i++) {
+        struct system x = systems[i];
         int j = i - 1;
 
-        while (j >= 0 && world->systems[j].priority > x.priority) {
-            world->systems[j + 1] = world->systems[j];
+        while (j >= 0 && systems[j].priority > x.priority) {
+            systems[j + 1] = systems[j];
             j = j - 1;
         }
 
-        world->systems[j + 1] = x;
+        systems[j + 1] = x;
     }
 }
 
 void runWorldPhase(struct world *world, enum systemPhase phase, float dt) {
-    for (int i = 0; i < world->systemsLength; i++) {
-        if (world->systems[i].phase != phase) continue;
+    for (int i = 0; i < world->systems.bufferCount; i++) {
+        struct system *system = dynarrayGet(&world->systems, i);
+
+        if (system->phase != phase) continue;
 
         tableId tables[MAX_ARCHETYPE_COUNT];
-        unsigned int tablesLength = getAllTablesWithComponents(world, world->systems[i].components, world->systems[i].componentsLength, tables, MAX_ARCHETYPE_COUNT);
+        unsigned int tablesLength = getAllTablesWithComponents(world, system->components, system->componentsLength, tables, MAX_ARCHETYPE_COUNT);
 
         for (int j = 0; j < tablesLength; j++) {
             struct systemRunData data = {
                 world,
                 { .table = tables[j] },
-                &world->systems[i],
+                system,
                 dt
             };
 
-            world->systems[i].callback(data);
+            system->callback(data);
         }
     }
 }
@@ -344,10 +354,12 @@ void printWorld(struct world *world) {
     print("[ECS World]\n");
 
     print("[ECS Systems]\n");
-    for (int i = 0; i < world->systemsLength; i++) {
-        print("(name: %s) (priority: %d) (phase: %d) (components:", world->systems[i].name, world->systems[i].priority, world->systems[i].phase);
-        for (int j = 0; j < world->systems[i].componentsLength; j++) {
-            print(" %s,", world->systems[i].components[j]);
+    for (int i = 0; i < world->systems.bufferCount; i++) {
+        struct system *system = dynarrayGet(&world->systems, i);
+
+        print("(name: %s) (priority: %d) (phase: %d) (components:", system->name, system->priority, system->phase);
+        for (int j = 0; j < system->componentsLength; j++) {
+            print(" %s,", system->components[j]);
         }
         print("\b)\n");
     }
