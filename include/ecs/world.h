@@ -9,6 +9,7 @@
 #define INVALID_POSITION (UINT_MAX)
 
 #include <data/hashtable.h>
+#include <data/dynarray.h>
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -72,8 +73,7 @@ struct table {
 };
 
 struct world {
-    struct table tables[MAX_ARCHETYPE_COUNT];
-    unsigned int tablesLength;
+    struct dynarray tables;
 
     struct hashtable components;
 
@@ -98,7 +98,7 @@ struct world {
 
 #define GET_SYSTEM_COMPONENT(d) getComponent((d).world, (d).entity, (d).system->components[0])
 #define GET_SYSTEM_COMPONENTS(d, i) getComponentsFromTable((d).world, (d).table, (d).system->components[i])
-#define GET_SYSTEM_COMPONENTS_LENGTH(d) ((d).world->tables[(d).table].componentsLength)
+#define GET_SYSTEM_COMPONENTS_LENGTH(d) (((struct table *)dynarrayGet(&(d).world->tables, (d).table))->componentsLength)
 
 //#define COMPONENT_PACKAGE(...) ({ __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__)})
 //#define COMPONENT_LIST(...) { __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__) }

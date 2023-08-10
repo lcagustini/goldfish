@@ -9,6 +9,8 @@
 struct world createWorld() {
     struct world world = {0};
 
+    world.tables = DYNARRAY_CREATE(MAX_ARCHETYPE_COUNT, struct table);
+
     world.components = HASHTABLE_CREATE(MAX_COMPONENT_COUNT, struct component);
     world.entities = HASHTABLE_CREATE(MAX_ENTITY_COUNT, struct entity);
 
@@ -18,11 +20,13 @@ struct world createWorld() {
 }
 
 void destroyWorld(struct world *world) {
-    for (int i = 0; i < world->tablesLength; i++) {
-        for (int j = 0; j < world->tables[i].recordsLength; j++) {
-            free(world->tables[i].records[j].components);
+    for (int i = 0; i < world->tables.bufferCount; i++) {
+        struct table *table = dynarrayGet(&world->tables, i);
+
+        for (int j = 0; j < table->recordsLength; j++) {
+            free(table->records[j].components);
         }
-        free(world->tables[i].records);
+        free(table->records);
     }
 
     hashtableDestroy(&world->components);
@@ -39,14 +43,16 @@ void createComponent(struct world *world, const char *component, unsigned int co
 
 unsigned int getAllTablesWithComponents(struct world *world, componentId *components, unsigned int componentsLength, tableId *tables, unsigned int tablesLength) {
     int l = 0;
-    for (int j = 0; j < world->tablesLength; j++) {
-        if (world->tables[j].recordsLength < componentsLength) continue;
-        if (world->tables[j].componentsLength == 0) continue;
+    for (int j = 0; j < world->tables.bufferCount; j++) {
+        struct table *table = dynarrayGet(&world->tables, j);
+
+        if (table->recordsLength < componentsLength) continue;
+        if (table->componentsLength == 0) continue;
 
         int hits = 0;
         for (int k = 0; k < componentsLength; k++) {
-            for (int i = 0; i < world->tables[j].recordsLength; i++) {
-                hits += strcmp(world->tables[j].records[i].componentType, components[k]) == 0;
+            for (int i = 0; i < table->recordsLength; i++) {
+                hits += strcmp(table->records[i].componentType, components[k]) == 0;
             }
         }
         if (hits == componentsLength) {
@@ -59,35 +65,37 @@ unsigned int getAllTablesWithComponents(struct world *world, componentId *compon
 }
 
 static tableId getTableForComponents(struct world *world, componentId *components, unsigned int componentsLength) {
-    for (int j = 0; j < world->tablesLength; j++) {
-        if (world->tables[j].recordsLength != componentsLength) continue;
+    for (int j = 0; j < world->tables.bufferCount; j++) {
+        struct table *table = dynarrayGet(&world->tables, j);
+
+        if (table->recordsLength != componentsLength) continue;
 
         int hits = 0;
         for (int k = 0; k < componentsLength; k++) {
             for (int i = 0; i < componentsLength; i++) {
-                hits += strcmp(world->tables[j].records[i].componentType, components[k]) == 0;
+                hits += strcmp(table->records[i].componentType, components[k]) == 0;
             }
         }
         if (hits == componentsLength) return j;
     }
 
-    tableId len = world->tablesLength;
-    world->tables[len].records = malloc(componentsLength * sizeof(struct record));
-    world->tables[len].recordsLength = componentsLength;
-    world->tables[len].componentsLength = 0;
+    struct table newTable = {0};
+    newTable.records = malloc(componentsLength * sizeof(struct record));
+    newTable.recordsLength = componentsLength;
+    newTable.componentsLength = 0;
 
     for (int i = 0; i < componentsLength; i++) {
-        world->tables[len].records[i].componentType = components[i];
-        world->tables[len].records[i].components = malloc(MAX_ENTITY_COUNT * COMPONENT_SIZE(world, components[i]));
+        newTable.records[i].componentType = components[i];
+        newTable.records[i].components = malloc(MAX_ENTITY_COUNT * COMPONENT_SIZE(world, components[i]));
     }
 
-    world->tablesLength++;
+    dynarrayAdd(&world->tables, &newTable);
 
-    return len;
+    return world->tables.bufferCount - 1;
 }
 
 static struct entity addEntityToTable(struct world *world, tableId table, struct entity *entity) {
-    struct table *t = &world->tables[table];
+    struct table *t = dynarrayGet(&world->tables, table);
 
     struct entity e = {
         entity->name,
@@ -101,7 +109,7 @@ static struct entity addEntityToTable(struct world *world, tableId table, struct
 }
 
 static void removeEntityFromTable(struct world *world, struct entity *entity) {
-    struct table *t = &world->tables[entity->table];
+    struct table *t = dynarrayGet(&world->tables, entity->table);
 
     for (int j = 0; j < t->recordsLength; j++) {
         unsigned int size = COMPONENT_SIZE(world, t->records[j].componentType);
@@ -125,8 +133,8 @@ static void removeEntityFromTable(struct world *world, struct entity *entity) {
 // Assumes tableTo exists already
 static struct entity copyEntityBetweenTables(struct world *world, struct entity *entity, tableId tableTo) {
     tableId tableFrom = entity->table;
-    struct table *tFrom = &world->tables[tableFrom];
-    struct table *tTo = &world->tables[tableTo];
+    struct table *tFrom = dynarrayGet(&world->tables, tableFrom);
+    struct table *tTo = dynarrayGet(&world->tables, tableTo);
 
     unsigned int len = tTo->componentsLength;
 
@@ -160,12 +168,13 @@ void addComponent(struct world *world, entityId entity, componentId component) {
         hashtableSet(&world->entities, entity, &newEntity);
     }
     else {
+        struct table *table = dynarrayGet(&world->tables, e->table);
         componentId components[MAX_COMPONENT_COUNT];
-        for (int i = 0; i < world->tables[e->table].recordsLength; i++) {
-            components[i] = world->tables[e->table].records[i].componentType;
+        for (int i = 0; i < table->recordsLength; i++) {
+            components[i] = table->records[i].componentType;
         }
-        components[world->tables[e->table].recordsLength] = component;
-        tableId t = getTableForComponents(world, components, world->tables[e->table].recordsLength + 1);
+        components[table->recordsLength] = component;
+        tableId t = getTableForComponents(world, components, table->recordsLength + 1);
         struct entity newEntity = copyEntityBetweenTables(world, e, t);
         removeEntityFromTable(world, e);
         hashtableSet(&world->entities, entity, &newEntity);
@@ -189,10 +198,11 @@ void *getComponent(struct world *world, entityId entity, componentId component) 
     if (entity == NULL) return NULL;
 
     struct entity *e = hashtableGet(&world->entities, entity);
+    struct table *table = dynarrayGet(&world->tables, e->table);
 
-    for (int i = 0; i < world->tables[e->table].recordsLength; i++) {
-        if (strcmp(world->tables[e->table].records[i].componentType, component) == 0) {
-            return world->tables[e->table].records[i].components + (e->position * COMPONENT_SIZE(world, component));
+    for (int i = 0; i < table->recordsLength; i++) {
+        if (strcmp(table->records[i].componentType, component) == 0) {
+            return table->records[i].components + (e->position * COMPONENT_SIZE(world, component));
         }
     }
 
@@ -200,10 +210,10 @@ void *getComponent(struct world *world, entityId entity, componentId component) 
 }
 
 void *getComponentsFromTable(struct world *world, tableId table, componentId component) {
-    struct table t = world->tables[table];
+    struct table *t = dynarrayGet(&world->tables, table);
 
-    for (int i = 0; i < t.recordsLength; i++) {
-        if (strcmp(t.records[i].componentType, component) == 0) return t.records[i].components;
+    for (int i = 0; i < t->recordsLength; i++) {
+        if (strcmp(t->records[i].componentType, component) == 0) return t->records[i].components;
     }
 
     return NULL;
@@ -216,12 +226,13 @@ void removeComponent(struct world *world, entityId entity, componentId component
         return;
     }
     else {
+        struct table *table = dynarrayGet(&world->tables, e->table);
         componentId components[MAX_COMPONENT_COUNT];
-        for (int i = 0; i < world->tables[e->table].recordsLength; i++) {
-            if (strcmp(world->tables[e->table].records[i].componentType, component) == 0) continue;
-            components[i] = world->tables[e->table].records[i].componentType;
+        for (int i = 0; i < table->recordsLength; i++) {
+            if (strcmp(table->records[i].componentType, component) == 0) continue;
+            components[i] = table->records[i].componentType;
         }
-        tableId t = getTableForComponents(world, components, world->tables[e->table].recordsLength - 1);
+        tableId t = getTableForComponents(world, components, table->recordsLength - 1);
         struct entity newEntity = copyEntityBetweenTables(world, e, t);
         removeEntityFromTable(world, e);
         hashtableSet(&world->entities, entity, &newEntity);
@@ -268,7 +279,7 @@ entityId createEntity(struct world *world, const char *name) {
 
 void deleteEntity(struct world *world, entityId id) {
     struct entity *e = hashtableGet(&world->entities, id);
-    struct table *t = &world->tables[e->table];
+    struct table *t = dynarrayGet(&world->tables, e->table);
 
     for (int j = 0; j < t->recordsLength; j++) {
         componentId component = t->records[j].componentType;
@@ -358,10 +369,11 @@ void printWorld(struct world *world) {
     print("\n");
 
     print("[ECS Tables]\n");
-    for (int i = 0; i < world->tablesLength; i++) {
-        print("(id: %d) (records: %u) (rows: %u)\n", i, world->tables[i].recordsLength, world->tables[i].componentsLength);
-        for (int j = 0; j < world->tables[i].recordsLength; j++) {
-            print("(component: %s -> 0x%p)\n", world->tables[i].records[j].componentType, world->tables[i].records[j].components);
+    for (int i = 0; i < world->tables.bufferCount; i++) {
+        struct table *table = dynarrayGet(&world->tables, i);
+        print("(id: %d) (records: %u) (rows: %u)\n", i, table->recordsLength, table->componentsLength);
+        for (int j = 0; j < table->recordsLength; j++) {
+            print("(component: %s -> 0x%p)\n", table->records[j].componentType, table->records[j].components);
         }
         print("\n");
     }
