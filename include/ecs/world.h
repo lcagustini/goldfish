@@ -15,7 +15,7 @@
 #include <limits.h>
 
 typedef char * componentId;
-typedef unsigned int entityId;
+typedef char * entityId;
 typedef unsigned int tableId;
 
 enum systemPhase {
@@ -77,8 +77,7 @@ struct world {
 
     struct hashtable components;
 
-    struct entity entities[MAX_ENTITY_COUNT];
-    unsigned int entitiesLength;
+    struct hashtable entities;
     entityId singletonEntity;
 
     struct system systems[MAX_SYSTEM_COUNT];

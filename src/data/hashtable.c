@@ -131,7 +131,7 @@ void hashtableSet(struct hashtable *hashtable, const char *key, void *data) {
     uint32_t hash = hashString(key, strlen(key));
     unsigned int position = hash % hashtable->bufferCount;
 
-    while (hashtable->valids[position]) {
+    while (hashtable->valids[position] && strcmp(hashtable->keys[position], key) != 0) {
         position++;
         if (position == hashtable->bufferCount) position = 0;
     }

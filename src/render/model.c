@@ -158,14 +158,14 @@ entityId loadModel(struct world *world, const char *modelPath, const char *diffu
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         print("Error loading model %s: %s\n", modelPath, aiGetErrorString());
-        return INVALID_POSITION;
+        return NULL;
     }
 
     struct material material = {0};
     createMaterial(&material, diffusePath, normalPath, specularPath);
 
     print("File has %d meshes\n", scene->mNumMeshes);
-    entityId model = processNode(world, INVALID_POSITION, scene->mRootNode, scene, material);
+    entityId model = processNode(world, NULL, scene->mRootNode, scene, material);
 
     aiReleaseImport(scene);
 

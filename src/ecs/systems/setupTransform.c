@@ -5,6 +5,6 @@ void setupTransform(struct systemRunData data) {
     transform->position = (struct vec3) {0};
     transform->rotation = (struct quat) {0, 0, 0, 1};
     transform->scale = (struct vec3) {1, 1, 1};
-    transform->parent = INVALID_POSITION;
+    transform->parent = NULL;
 }
 
