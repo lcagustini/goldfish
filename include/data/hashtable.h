@@ -1,5 +1,5 @@
-#ifndef STRUCTURE_H
-#define STRUCTURE_H
+#ifndef HASHTABLE_H
+#define HASHTABLE_H
 
 #include <stdint.h>
 #include <stdbool.h>

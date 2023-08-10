@@ -43,6 +43,7 @@ add_executable(${PROJECT_NAME}
     src/ecs/systems/updateFirstPersonTransform.c
 
     src/data/hashtable.c
+    src/data/dynarray.c
 
     src/print.c
     src/global.c

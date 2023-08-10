@@ -100,6 +100,8 @@ void hashtableDestroy(struct hashtable *hashtable) {
     free(hashtable->keys);
 
     free(hashtable->valids);
+
+    memset(hashtable, 0, sizeof(struct hashtable));
 }
 
 static void hashtableResize(struct hashtable *hashtable) {
