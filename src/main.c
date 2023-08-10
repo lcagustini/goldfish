@@ -16,6 +16,8 @@
 
 #include <ecs/systems.h>
 
+#include <data/dynarray.h>
+
 int main() {
     resetPrint();
 

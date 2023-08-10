@@ -30,18 +30,52 @@ void dynarrayDestroy(struct dynarray *array) {
 }
 
 static void dynarrayResize(struct dynarray *array) {
+    unsigned int newCapacity = (unsigned int)(1.5f * array->capacityCount + 0.5f);
+    void *newBuffer = malloc(newCapacity * array->typeSize);
+
+    memcpy(newBuffer, array->buffer, array->bufferCount * array->typeSize);
+    free(array->buffer);
+
+    array->capacityCount = newCapacity;
+    array->buffer = newBuffer;
 }
 
 void dynarrayAdd(struct dynarray *array, void *data) {
+    if (array->bufferCount >= array->capacityCount) dynarrayResize(array);
+
+    memcpy(array->buffer + array->bufferCount * array->typeSize, data, array->typeSize);
+    array->bufferCount++;
 }
 
-void dynarraySet(struct dynarray *array, unsigned int index, void *data) {
+bool dynarraySet(struct dynarray *array, unsigned int index, void *data) {
+    if (index >= array->bufferCount) {
+        print("[dynarray] Index out of range! (%d >= %d)", index, array->bufferCount);
+        return false;
+    }
+
+    memcpy(array->buffer + index * array->typeSize, data, array->typeSize);
+
+    return true;
 }
 
 bool dynarrayRemove(struct dynarray *array, unsigned int index) {
-    return false;
+    if (index >= array->bufferCount) {
+        print("[dynarray] Index out of range! (%d >= %d)", index, array->bufferCount);
+        return false;
+    }
+
+    memcpy(array->buffer + index * array->typeSize, array->buffer + (index + 1) * array->typeSize, (array->bufferCount - index + 1) * array->typeSize);
+
+    array->bufferCount--;
+
+    return true;
 }
 
 void *dynarrayGet(struct dynarray *array, unsigned int index) {
-    return NULL;
+    if (index >= array->bufferCount) {
+        print("[dynarray] Index out of range! (%d >= %d)", index, array->bufferCount);
+        return NULL;
+    }
+
+    return array->buffer + index * array->typeSize;
 }

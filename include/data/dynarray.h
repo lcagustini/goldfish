@@ -16,7 +16,7 @@ struct dynarray dynarrayCreate(unsigned int capacity, unsigned int size);
 void dynarrayDestroy(struct dynarray *array);
 
 void dynarrayAdd(struct dynarray *array, void *data);
-void dynarraySet(struct dynarray *array, unsigned int index, void *data);
+bool dynarraySet(struct dynarray *array, unsigned int index, void *data);
 bool dynarrayRemove(struct dynarray *array, unsigned int index);
 void *dynarrayGet(struct dynarray *array, unsigned int index);
 
