@@ -5,13 +5,16 @@ cd build && cmake .. && cmake --build . && cd ..
 
 DLLS=`ldd ./build/psvita-opengl.exe | grep ucrt64 | cut -d " " -f 3`
 
-#if [ -z "$DLLS" ]
-#then
-#      echo "DLLs already copied"
-#else
-#      echo "Copying DLLs..."
-#      cp $DLLS build/
-#fi
+if [[ $* == *--dll* ]]
+then
+    if [ -z "$DLLS" ]
+    then
+        echo "No DLL to copy"
+    else
+        echo "Copying DLLs..."
+        cp $DLLS build/
+    fi
+fi
 
 if [[ $* == *--zip* ]]
 then
