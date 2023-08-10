@@ -365,10 +365,13 @@ void printWorld(struct world *world) {
     }
     print("\n");
 
-    print("[ECS Entities]\n");
-    //for (int i = 0; i < world->entitiesLength; i++) {
-        //print("(id: %d) (name: %s) (table: %u) (row: %u)\n", i, world->entities[i].name, world->entities[i].table, world->entities[i].position);
-    //}
+    print("[ECS Entities (%d)]\n", world->entities.bufferCount);
+    struct entity *entities = world->entities.buffer;
+    for (int i = 0; i < world->entities.bufferCount; i++) {
+        if (!world->entities.valids[i]) continue;
+
+        print("(name: %s) (table: %u) (row: %u)\n", entities[i].name, entities[i].table, entities[i].position);
+    }
     print("\n");
 
     print("[ECS Components (%d)]\n", world->components.bufferCount);
