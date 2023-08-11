@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define QOI_IMPLEMENTATION
 #include <qoi.h>
+
 #include <print.h>
 
 GLuint loadShader(const GLchar *shaderSrc, GLenum type, GLint *size) {

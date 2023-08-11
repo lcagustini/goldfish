@@ -29,6 +29,7 @@ add_executable(${PROJECT_NAME}
     src/math/matrix.c
     src/math/vector.c
 
+    src/render/skybox.c
     src/render/model.c
     src/render/material.c
 
@@ -40,6 +41,7 @@ add_executable(${PROJECT_NAME}
     src/ecs/systems/setupCamera.c
     src/ecs/systems/setupTransform.c
     src/ecs/systems/renderModel.c
+    src/ecs/systems/renderSkybox.c
     src/ecs/systems/updateFirstPersonTransform.c
 
     src/data/hashtable.c

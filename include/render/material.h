@@ -84,6 +84,7 @@ struct material {
     struct shader shader;
 };
 
+GLuint loadShaderFromFile(const char *shaderFile, GLenum type);
 void createMaterial(struct material *material, const char *diffusePath, const char *normalPath, const char *specularPath);
 
 #endif

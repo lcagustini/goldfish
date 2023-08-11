@@ -8,11 +8,15 @@
 #include <math/matrix.h>
 
 #include <render/model.h>
+#include <render/skybox.h>
 
 #include <ecs/world.h>
 
 #include <print.h>
 #include <global.h>
+
+#define QOI_IMPLEMENTATION
+#include <qoi.h>
 
 #include <ecs/systems.h>
 
@@ -33,6 +37,7 @@ int main() {
     CREATE_COMPONENT(&ecsWorld, struct dirLightComponent);
     CREATE_COMPONENT(&ecsWorld, struct spotLightComponent);
     CREATE_COMPONENT(&ecsWorld, struct pointLightComponent);
+    CREATE_COMPONENT(&ecsWorld, struct skyboxComponent);
 
     // TODO: Apply GET_COMPONENT_ID to variadic arguments
     ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_CREATE, setupTransform, GET_COMPONENT_ID(struct transformComponent));
@@ -43,7 +48,8 @@ int main() {
     ADD_SYSTEM(&ecsWorld, 2, SYSTEM_ON_UPDATE, updateCameraView, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent));
     ADD_SYSTEM(&ecsWorld, 10, SYSTEM_ON_UPDATE, updateTransformMatrix, GET_COMPONENT_ID(struct transformComponent));
 
-    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_RENDER, renderModel, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
+    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_RENDER, renderSkybox, GET_COMPONENT_ID(struct skyboxComponent));
+    ADD_SYSTEM(&ecsWorld, 1, SYSTEM_ON_RENDER, renderModel, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
 
     entityId camera = createEntity(&ecsWorld, "Camera");
     ADD_COMPONENT(&ecsWorld, camera, struct transformComponent);
@@ -81,6 +87,11 @@ int main() {
     transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
     transform->parent = chest2;
 #endif
+
+    entityId skybox = createEntity(&ecsWorld, "Skybox");
+    ADD_COMPONENT(&ecsWorld, skybox, struct skyboxComponent);
+    const char *skyboxPaths[] = { "assets/skybox/clouds1_east.qoi", "assets/skybox/clouds1_west.qoi", "assets/skybox/clouds1_up.qoi", "assets/skybox/clouds1_down.qoi", "assets/skybox/clouds1_north.qoi", "assets/skybox/clouds1_south.qoi" };
+    loadSkybox(skyboxPaths, GET_COMPONENT(&ecsWorld, skybox, struct skyboxComponent));
 
 #if 1
     entityId cubes = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");

@@ -10,6 +10,13 @@
 
 #include <ecs/world.h>
 
+struct skyboxComponent {
+    unsigned int shaderProgram;
+
+    unsigned int texture;
+    unsigned int VAO, VBO, EBO;
+};
+
 struct meshComponent {
     struct vertex *vertices;
     unsigned int verticesLength;
