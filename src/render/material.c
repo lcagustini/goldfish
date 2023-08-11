@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <qoi.h>
 
@@ -50,9 +51,9 @@ GLuint loadShaderFromFile(const char *shaderFile, GLenum type) {
     unsigned long len = (unsigned long)ftell(file);
 
     GLchar *shaderStr = malloc(len + 1);
+    memset(shaderStr, 0, len + 1);
     fseek(file, 0, SEEK_SET);
     fread(shaderStr, len, 1, file);
-    shaderStr[len] = '\0';
 
     GLuint shader = loadShader(shaderStr, type, NULL);
     fclose(file);

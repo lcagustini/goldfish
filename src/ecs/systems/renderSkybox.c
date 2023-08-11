@@ -11,8 +11,6 @@ void renderSkybox(struct systemRunData data) {
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
         struct skyboxComponent *skybox = &skyboxes[i];
 
-        glDepthMask(GL_FALSE);
-
         glUseProgram(skybox->shaderProgram);
 
         union mat4 viewMatrix;
@@ -32,8 +30,6 @@ void renderSkybox(struct systemRunData data) {
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
         glBindVertexArray(0);
-
-        glDepthMask(GL_TRUE);
     }
 }
 

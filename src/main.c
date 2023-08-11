@@ -48,8 +48,8 @@ int main() {
     ADD_SYSTEM(&ecsWorld, 2, SYSTEM_ON_UPDATE, updateCameraView, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent));
     ADD_SYSTEM(&ecsWorld, 10, SYSTEM_ON_UPDATE, updateTransformMatrix, GET_COMPONENT_ID(struct transformComponent));
 
-    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_RENDER, renderSkybox, GET_COMPONENT_ID(struct skyboxComponent));
-    ADD_SYSTEM(&ecsWorld, 1, SYSTEM_ON_RENDER, renderModel, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
+    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_RENDER, renderModel, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
+    ADD_SYSTEM(&ecsWorld, 1, SYSTEM_ON_RENDER, renderSkybox, GET_COMPONENT_ID(struct skyboxComponent));
 
     entityId camera = createEntity(&ecsWorld, "Camera");
     ADD_COMPONENT(&ecsWorld, camera, struct transformComponent);
