@@ -94,7 +94,7 @@ int main() {
     loadSkybox(skyboxPaths, GET_COMPONENT(&ecsWorld, skybox, struct skyboxComponent));
 
 #if 1
-    entityId cubes = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
+    entityId cubes = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi");
     transform = GET_COMPONENT(&ecsWorld, cubes, struct transformComponent);
     transform->position = (struct vec3) { 0, -1, -1 };
 #endif

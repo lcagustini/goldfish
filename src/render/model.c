@@ -144,7 +144,7 @@ static entityId processNode(struct world *world, entityId parent, struct aiNode 
     return entity;
 }
 
-entityId loadModel(struct world *world, const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath) {
+entityId loadModel(struct world *world, const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath, const char *reflectancePath) {
     print("[Model load start]\n");
 
     const struct aiScene *scene = aiImportFile(modelPath,
@@ -162,7 +162,7 @@ entityId loadModel(struct world *world, const char *modelPath, const char *diffu
     }
 
     struct material material = {0};
-    createMaterial(&material, diffusePath, normalPath, specularPath);
+    createMaterial(&material, diffusePath, normalPath, specularPath, reflectancePath);
 
     print("File has %d meshes\n", scene->mNumMeshes);
     entityId model = processNode(world, NULL, scene->mRootNode, scene, material);

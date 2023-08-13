@@ -65,8 +65,10 @@ enum textureType {
     TEXTURE_DIFFUSE,
     TEXTURE_NORMAL,
     TEXTURE_SPECULAR,
+    TEXTURE_REFLECTANCE,
+    TEXTURE_CUBEMAP,
 
-    TEXTURE_MAX
+    TEXTURE_MAX,
 };
 
 struct texture {
@@ -85,6 +87,6 @@ struct material {
 };
 
 GLuint loadShaderFromFile(const char *shaderFile, GLenum type);
-void createMaterial(struct material *material, const char *diffusePath, const char *normalPath, const char *specularPath);
+void createMaterial(struct material *material, const char *diffusePath, const char *normalPath, const char *specularPath, const char *reflectancePath);
 
 #endif

@@ -149,6 +149,8 @@ int createShader(struct shader *shader, const char *vertexPath, const char *frag
         glUniform1i(glGetUniformLocation(shader->program, "textureMap"), TEXTURE_DIFFUSE);
         glUniform1i(glGetUniformLocation(shader->program, "normalMap"), TEXTURE_NORMAL);
         glUniform1i(glGetUniformLocation(shader->program, "specularMap"), TEXTURE_SPECULAR);
+        glUniform1i(glGetUniformLocation(shader->program, "reflectanceMap"), TEXTURE_REFLECTANCE);
+        glUniform1i(glGetUniformLocation(shader->program, "skybox"), TEXTURE_CUBEMAP);
     }
     else {
         print("Failed to create a shader program\n");
@@ -183,7 +185,7 @@ void loadTexture(struct texture *texture, const char *path, enum textureType tex
     texture->path = path;
 }
 
-void createMaterial(struct material *material, const char *diffusePath, const char *normalPath, const char *specularPath) {
+void createMaterial(struct material *material, const char *diffusePath, const char *normalPath, const char *specularPath, const char *reflectancePath) {
     createShader(&material->shader, "assets/shaders/default_v.glsl", "assets/shaders/default_f.glsl");
 
     if (diffusePath) {
@@ -196,6 +198,10 @@ void createMaterial(struct material *material, const char *diffusePath, const ch
     }
     if (specularPath) {
         loadTexture(&material->textures[material->texturesLength], specularPath, TEXTURE_SPECULAR);
+        material->texturesLength++;
+    }
+    if (reflectancePath) {
+        loadTexture(&material->textures[material->texturesLength], reflectancePath, TEXTURE_REFLECTANCE);
         material->texturesLength++;
     }
 

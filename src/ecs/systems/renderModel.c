@@ -10,6 +10,11 @@ void renderModel(struct systemRunData data) {
     struct transformComponent *cameraTransform = getComponentsFromTable(data.world, cameraTable, cameraTypes[0]);
     struct cameraComponent *camera = getComponentsFromTable(data.world, cameraTable, cameraTypes[1]);
 
+    componentId skyboxTypes[] = { GET_COMPONENT_ID(struct skyboxComponent) };
+    tableId skyboxTable;
+    getAllTablesWithComponents(data.world, skyboxTypes, 1, &skyboxTable, 1);
+    struct skyboxComponent *skybox = getComponentsFromTable(data.world, skyboxTable, skyboxTypes[0]);
+
     componentId dirLightTypes[] = { GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct dirLightComponent) };
     tableId dirLightTables[MAX_LIGHTS];
     unsigned int dirLightTablesLength = getAllTablesWithComponents(data.world, dirLightTypes, 2, dirLightTables, MAX_LIGHTS);
@@ -103,6 +108,9 @@ void renderModel(struct systemRunData data) {
                 glActiveTexture(GL_TEXTURE0 + model->meshes[j].material.textures[i].type);
                 glBindTexture(GL_TEXTURE_2D, model->meshes[j].material.textures[i].textureBuffer);
             }
+
+            glActiveTexture(GL_TEXTURE0 + TEXTURE_CUBEMAP);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->texture);
 
             glDrawElements(GL_TRIANGLES, model->meshes[j].indicesLength, GL_UNSIGNED_INT, 0);
 

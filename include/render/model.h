@@ -10,7 +10,7 @@ struct vertex {
     struct vec3 tangent;
 };
 
-entityId loadModel(struct world *world, const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath);
+entityId loadModel(struct world *world, const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath, const char *reflectancePath);
 void destroyModel(struct modelComponent *model);
 
 void printModel(struct modelComponent *model);

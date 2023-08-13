@@ -45,6 +45,8 @@ uniform float shininess;
 uniform sampler2D textureMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
+uniform sampler2D reflectanceMap;
+uniform samplerCube skybox;
 
 in vec3 position;
 in vec3 normal;
@@ -69,7 +71,7 @@ vec3 dirLightning() {
 
         vec3 fragColor = texture(textureMap, textCoord).rgb;
 
-        float ambientStrength = 0.1;
+        float ambientStrength = 0.15;
         vec3 ambient = ambientStrength * dl.ambientColor;
 
         float diffuseStrength = max(dot(norm, lightDir), 0.0);
@@ -82,7 +84,11 @@ vec3 dirLightning() {
         float spec = pow(max(dot(norm, halfwayDir), 0.0), shininess);
         vec3 specular = specularStrength * spec * dl.specularColor;
 
-        color += (ambient + diffuse + specular) * fragColor;
+        float reflectanceStrength = texture(reflectanceMap, textCoord).r;
+        vec3 reflectionDir = reflect(viewDir, norm);
+        vec3 reflectance = reflectanceStrength * texture(skybox, reflectionDir).rgb;
+
+        color += (ambient + diffuse + specular + reflectance) * fragColor;
     }
 
     return color;
@@ -103,7 +109,7 @@ vec3 pointLightning() {
 
         vec3 fragColor = texture(textureMap, textCoord).rgb;
 
-        float ambientStrength = 0.1;
+        float ambientStrength = 0.15;
         vec3 ambient = ambientStrength * pl.ambientColor;
 
         float diffuseStrength = max(dot(norm, lightDir), 0.0);
@@ -116,9 +122,13 @@ vec3 pointLightning() {
         float spec = pow(max(dot(norm, halfwayDir), 0.0), shininess);
         vec3 specular = specularStrength * spec * pl.specularColor;
 
+        float reflectanceStrength = texture(reflectanceMap, textCoord).r;
+        vec3 reflectionDir = reflect(viewDir, norm);
+        vec3 reflectance = reflectanceStrength * texture(skybox, reflectionDir).rgb;
+
         float attenuation = 1.0 / (pl.attenuation.x + pl.attenuation.y * lightDistance + pl.attenuation.z * (lightDistance * lightDistance));
 
-        color += attenuation * (ambient + diffuse + specular) * fragColor;
+        color += attenuation * (ambient + diffuse + specular + reflectance) * fragColor;
     }
 
     return color;
@@ -136,7 +146,7 @@ vec3 spotLightning() {
         float epsilon = sl.cutOff.x - sl.cutOff.y;
         float intensity = clamp((theta - sl.cutOff.y) / epsilon, 0.0, 1.0);
 
-        float ambientStrength = 0.1;
+        float ambientStrength = 0.15;
         vec3 ambient = ambientStrength * sl.ambientColor;
 
         vec3 fragColor = texture(textureMap, textCoord).rgb;
@@ -154,7 +164,11 @@ vec3 spotLightning() {
         float spec = pow(max(dot(norm, halfwayDir), 0.0), shininess);
         vec3 specular = intensity * specularStrength * spec * sl.specularColor;
 
-        color += (ambient + diffuse + specular) * fragColor;
+        float reflectanceStrength = texture(reflectanceMap, textCoord).r;
+        vec3 reflectionDir = reflect(viewDir, norm);
+        vec3 reflectance = reflectanceStrength * texture(skybox, reflectionDir).rgb;
+
+        color += (ambient + diffuse + specular + reflectance) * fragColor;
     }
 
     return color;
