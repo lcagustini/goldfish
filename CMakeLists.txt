@@ -28,6 +28,7 @@ link_directories(
 add_executable(${PROJECT_NAME}
     src/math/matrix.c
     src/math/vector.c
+    src/math/float.c
 
     src/render/skybox.c
     src/render/model.c

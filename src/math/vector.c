@@ -111,9 +111,9 @@ struct quat quatMult(struct quat a, struct quat b) {
     struct quat ret;
 
     ret.w = a.w*b.w - a.x*b.x - a.y*b.y - a.z*b.z;
-    ret.x = a.w*b.x + a.x*b.w - a.y*b.z + a.z*b.y;
-    ret.y = a.w*b.y + a.x*b.z + a.y*b.w - a.z*b.x;
-    ret.z = a.w*b.z - a.x*b.y + a.y*b.x + a.z*b.w;
+    ret.x = a.w*b.x + a.x*b.w + a.y*b.z - a.z*b.y;
+    ret.y = a.w*b.y - a.x*b.z + a.y*b.w + a.z*b.x;
+    ret.z = a.w*b.z + a.x*b.y - a.y*b.x + a.z*b.w;
 
     return ret;
 }

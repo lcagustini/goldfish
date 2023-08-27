@@ -55,6 +55,10 @@ int main() {
     ADD_COMPONENT(&ecsWorld, camera, struct transformComponent);
     ADD_COMPONENT(&ecsWorld, camera, struct cameraComponent);
     ADD_COMPONENT(&ecsWorld, camera, struct firstPersonComponent);
+    struct firstPersonComponent *firstPerson = GET_COMPONENT(&ecsWorld, camera, struct firstPersonComponent);
+    firstPerson->rotation = (struct vec2) { 0, 0 };
+    firstPerson->rotationSpeed = 1.3f;
+    firstPerson->moveSpeed = 2.0f;
 
     ADD_SINGLETON_COMPONENT(&ecsWorld, struct controllerDataComponent);
 

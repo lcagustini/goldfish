@@ -74,6 +74,10 @@ struct controllerDataComponent {
 };
 
 struct firstPersonComponent {
+    struct vec2 rotation;
+
+    float rotationSpeed;
+    float moveSpeed;
 };
 
 struct dirLightComponent {
