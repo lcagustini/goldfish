@@ -4,6 +4,9 @@ void updateCameraView(struct systemRunData data) {
     struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0);
     struct cameraComponent *cameras = GET_SYSTEM_COMPONENTS(data, 1);
 
+    int width, height;
+    glfwGetWindowSize(globalState.window, &width, &height);
+
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
         struct transformComponent *transform = &transforms[i];
         struct cameraComponent *camera = &cameras[i];
@@ -12,5 +15,7 @@ void updateCameraView(struct systemRunData data) {
         struct vec3 worldUp = { 0, 1, 0 };
 
         lookAt(&camera->viewMat, transform->position, dir, worldUp);
+
+        createProjectionMatrix(&camera->projectionMat, 60, (float)width/(float)height);
     }
 }

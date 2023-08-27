@@ -11,7 +11,6 @@ void updateCameraView(struct systemRunData data);
 void updateControllerData(struct systemRunData data);
 void updateTransformMatrix(struct systemRunData data);
 void setupTransform(struct systemRunData data);
-void setupCamera(struct systemRunData data);
 void updateFirstPersonTransform(struct systemRunData data);
 void renderModel(struct systemRunData data);
 void renderSkybox(struct systemRunData data);

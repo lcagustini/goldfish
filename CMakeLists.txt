@@ -39,7 +39,6 @@ add_executable(${PROJECT_NAME}
     src/ecs/systems/updateCameraView.c
     src/ecs/systems/updateControllerData.c
     src/ecs/systems/updateTransformMatrix.c
-    src/ecs/systems/setupCamera.c
     src/ecs/systems/setupTransform.c
     src/ecs/systems/renderModel.c
     src/ecs/systems/renderSkybox.c

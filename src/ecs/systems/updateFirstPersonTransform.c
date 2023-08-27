@@ -33,5 +33,9 @@ void updateFirstPersonTransform(struct systemRunData data) {
 
         struct vec3 right = vectorRotate((struct vec3) { 1, 0, 0 }, transform->rotation);
         transform->position = vectorAdd(transform->position, vectorScale(leftAnalog.x * rotation->moveSpeed, right));
+
+        struct vec3 up = { 0, 1, 0 };
+        transform->position = vectorAdd(transform->position, vectorScale(controllerData->rb * data.dt * rotation->moveSpeed, up));
+        transform->position = vectorSubtract(transform->position, vectorScale(controllerData->lb * data.dt * rotation->moveSpeed, up));
     }
 }

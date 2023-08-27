@@ -45,6 +45,8 @@ struct transformComponent {
 };
 
 struct cameraComponent {
+    float fov;
+
     union mat4 viewMat;
     union mat4 projectionMat;
 };

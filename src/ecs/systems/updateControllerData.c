@@ -47,6 +47,20 @@ void updateControllerData(struct systemRunData data) {
         else {
             controllerData->rx = 128;
         }
+
+        if (glfwGetKey(globalState.window, GLFW_KEY_Q) == GLFW_PRESS) {
+            controllerData->lb = true;
+        }
+        else {
+            controllerData->lb = false;
+        }
+
+        if (glfwGetKey(globalState.window, GLFW_KEY_E) == GLFW_PRESS) {
+            controllerData->rb = true;
+        }
+        else {
+            controllerData->rb = false;
+        }
     }
 }
 
