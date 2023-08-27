@@ -5,8 +5,12 @@
 
 struct globalState globalState;
 
-void GLAPIENTRY errorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
+static void GLAPIENTRY errorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
     fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n", ( type == GL_DEBUG_TYPE_ERROR ? "Error" : "" ), type, severity, message );
+}
+
+static void windowResizeCallback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
 }
 
 void globalInit() {
@@ -29,6 +33,7 @@ void globalInit() {
     }
 
     glfwMakeContextCurrent(globalState.window);
+    glfwSetFramebufferSizeCallback(globalState.window, windowResizeCallback);
     glfwSwapInterval(1);
 
     glewExperimental = 1;
@@ -46,7 +51,7 @@ void globalInit() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-#if 0
+#if 1
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(errorCallback, 0);
 #endif
