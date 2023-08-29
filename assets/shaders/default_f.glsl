@@ -177,6 +177,9 @@ vec3 spotLightning() {
 void main() {
     vec3 color = vec3(0.0);
 
+    float alpha = texture(textureMap, textCoord).a;
+    if (alpha < 0.5) discard;
+
     color += dirLightning();
     color += pointLightning();
     color += spotLightning();

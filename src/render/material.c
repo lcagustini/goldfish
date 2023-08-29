@@ -170,11 +170,11 @@ void loadTexture(struct texture *texture, const char *path, enum textureType tex
     glGenTextures(1, &texture->textureBuffer);
 
     qoi_desc desc;
-    void *rgbPixels = qoi_read(path, &desc, 3);
+    void *rgbPixels = qoi_read(path, &desc, 4);
 
     glBindTexture(GL_TEXTURE_2D, texture->textureBuffer);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, desc.width, desc.height, 0, GL_RGB, GL_UNSIGNED_BYTE, rgbPixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, desc.width, desc.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgbPixels);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     glBindTexture(GL_TEXTURE_2D, 0);

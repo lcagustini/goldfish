@@ -104,6 +104,10 @@ int main() {
     transform->position = (struct vec3) { 0, -1, -1 };
 #endif
 
+    entityId grass = loadModel(&ecsWorld, "assets/grass.fbx", "assets/grass.qoi", NULL, NULL, NULL);
+    transform = GET_COMPONENT(&ecsWorld, grass, struct transformComponent);
+    transform->position = (struct vec3) { 0, 0, 2 };
+
     entityId light = createEntity(&ecsWorld, "Light");
     ADD_COMPONENT(&ecsWorld, light, struct transformComponent);
     ADD_COMPONENT(&ecsWorld, light, struct dirLightComponent);
