@@ -159,19 +159,17 @@ void lookAt(union mat4 *result, struct vec3 position, struct vec3 dir, struct ve
     result->mat[3][2] = vectorDot(dir, position);
 }
 
-void createProjectionMatrix(union mat4 *result, int yFOV, float aspect) {
+void createProjectionMatrix(union mat4 *result, float yFOV, float aspect, float near, float far) {
     memset(result, 0, sizeof(union mat4));
 
-    float near = 0.1f;
-    float far  = 100.0f;
-    yFOV = yFOV * M_PI / 180;
+    yFOV = yFOV * M_PI / 180.0f;
 
     float tanHalfFovy = tan(yFOV / 2.0f);
 
     result->mat[0][0] = 1 / (aspect * tanHalfFovy);
     result->mat[1][1] = 1 / (tanHalfFovy);
-    result->mat[2][2] = far / (near - far);
+    result->mat[2][2] = - ((far + near) / (far - near));
     result->mat[2][3] = -1;
-    result->mat[3][2] = -(far * near) / (far - near);
+    result->mat[3][2] = (-2 * far * near) / (far - near);
 }
 

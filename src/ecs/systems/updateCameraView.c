@@ -16,6 +16,6 @@ void updateCameraView(struct systemRunData data) {
 
         lookAt(&camera->viewMat, transform->position, dir, worldUp);
 
-        createProjectionMatrix(&camera->projectionMat, 60, (float)width/(float)height);
+        createProjectionMatrix(&camera->projectionMat, camera->fov, (float)width/(float)height, camera->near, camera->far);
     }
 }

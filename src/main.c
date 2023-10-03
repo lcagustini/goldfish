@@ -55,7 +55,9 @@ int main() {
     ADD_COMPONENT(&ecsWorld, camera, struct cameraComponent);
     ADD_COMPONENT(&ecsWorld, camera, struct firstPersonComponent);
     struct cameraComponent *cameraComponent = GET_COMPONENT(&ecsWorld, camera, struct cameraComponent);
-    cameraComponent->fov = 60;
+    cameraComponent->fov = 60.0f;
+    cameraComponent->near = 0.1f;
+    cameraComponent->far = 100.0f;
     struct firstPersonComponent *firstPerson = GET_COMPONENT(&ecsWorld, camera, struct firstPersonComponent);
     firstPerson->rotation = (struct vec2) { 0, 0 };
     firstPerson->rotationSpeed = 1.3f;
@@ -127,9 +129,9 @@ int main() {
 
         glfwPollEvents();
 
-#if 0
+#if 1
         {
-            struct transformComponent *transform = getComponent(&ecsWorld, chest1, transformId);
+            struct transformComponent *transform = GET_COMPONENT(&ecsWorld, cubes, struct transformComponent);
             transform->rotation = quatMult(transform->rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
         }
 #endif
