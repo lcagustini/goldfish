@@ -6,7 +6,7 @@
 struct globalState globalState;
 
 static void GLAPIENTRY errorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
-    fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n", ( type == GL_DEBUG_TYPE_ERROR ? "Error" : "" ), type, severity, message );
+    fprintf(stderr, "[GL %s] type = 0x%x, severity = 0x%x, message = %s\n", ( type == GL_DEBUG_TYPE_ERROR ? "Error" : "Info" ), type, severity, message );
 }
 
 static void windowResizeCallback(GLFWwindow* window, int width, int height) {
@@ -21,11 +21,8 @@ void globalInit() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    //glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-    //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    globalState.window = glfwCreateWindow(1280, 720, "Hello World", NULL, NULL);
+    globalState.window = glfwCreateWindow(1280, 720, "psvita-opengl", NULL, NULL);
     if (!globalState.window) {
         print("Error creating window\n");
         glfwTerminate();
@@ -51,7 +48,7 @@ void globalInit() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-#if 1
+#if 0
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(errorCallback, 0);
 #endif
