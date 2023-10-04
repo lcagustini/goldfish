@@ -41,6 +41,7 @@ uniform spotLight spotLights[MAX_LIGHTS];
 uniform int spotLightsLength;
 
 uniform float shininess;
+uniform float alphaClipping;
 
 uniform sampler2D textureMap;
 uniform sampler2D normalMap;
@@ -178,7 +179,7 @@ void main() {
     vec3 color = vec3(0.0);
 
     float alpha = texture(textureMap, textCoord).a;
-    if (alpha < 0.5) discard;
+    if (alpha < alphaClipping) discard;
 
     color += dirLightning();
     color += pointLightning();

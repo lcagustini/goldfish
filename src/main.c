@@ -100,15 +100,15 @@ int main() {
     const char *skyboxPaths[] = { "assets/skybox/clouds1_east.qoi", "assets/skybox/clouds1_west.qoi", "assets/skybox/clouds1_up.qoi", "assets/skybox/clouds1_down.qoi", "assets/skybox/clouds1_north.qoi", "assets/skybox/clouds1_south.qoi" };
     loadSkybox(skyboxPaths, GET_COMPONENT(&ecsWorld, skybox, struct skyboxComponent));
 
+    entityId grass = loadModel(&ecsWorld, "assets/grass.fbx", "assets/grass.qoi", NULL, NULL, NULL);
+    transform = GET_COMPONENT(&ecsWorld, grass, struct transformComponent);
+    transform->position = (struct vec3) { 0, 0, 2 };
+
 #if 1
     entityId cubes = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi");
     transform = GET_COMPONENT(&ecsWorld, cubes, struct transformComponent);
     transform->position = (struct vec3) { 0, -1, -1 };
 #endif
-
-    entityId grass = loadModel(&ecsWorld, "assets/grass.fbx", "assets/grass.qoi", NULL, NULL, NULL);
-    transform = GET_COMPONENT(&ecsWorld, grass, struct transformComponent);
-    transform->position = (struct vec3) { 0, 0, 2 };
 
     entityId light = createEntity(&ecsWorld, "Light");
     ADD_COMPONENT(&ecsWorld, light, struct transformComponent);

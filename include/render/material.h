@@ -57,6 +57,7 @@ struct shader {
     GLuint spotLightsLengthLoc;
 
     GLuint shininessLoc;
+    GLuint alphaClippingLoc;
 
     GLuint program;
 };
@@ -82,6 +83,7 @@ struct material {
     unsigned int texturesLength;
 
     float shininess;
+    float alphaClipping;
 
     struct shader shader;
 };

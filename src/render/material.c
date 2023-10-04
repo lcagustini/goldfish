@@ -144,6 +144,7 @@ int createShader(struct shader *shader, const char *vertexPath, const char *frag
         shader->spotLightsLengthLoc = glGetUniformLocation(shader->program, "spotLightsLength");
 
         shader->shininessLoc = glGetUniformLocation(shader->program, "shininess");
+        shader->alphaClippingLoc = glGetUniformLocation(shader->program, "alphaClipping");
 
         glUseProgram(shader->program);
         glUniform1i(glGetUniformLocation(shader->program, "textureMap"), TEXTURE_DIFFUSE);
@@ -206,4 +207,5 @@ void createMaterial(struct material *material, const char *diffusePath, const ch
     }
 
     material->shininess = 64.0f;
+    material->alphaClipping = 0.5f;
 }

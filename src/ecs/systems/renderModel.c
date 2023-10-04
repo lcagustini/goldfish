@@ -101,6 +101,7 @@ void renderModel(struct systemRunData data) {
             glUniform1i(model->meshes[j].material.shader.pointLightsLengthLoc, pointLightTablesLength);
 
             glUniform1f(model->meshes[j].material.shader.shininessLoc, model->meshes[j].material.shininess);
+            glUniform1f(model->meshes[j].material.shader.alphaClippingLoc, model->meshes[j].material.alphaClipping);
 
             glBindVertexArray(model->meshes[j].VAO);
 
