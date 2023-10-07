@@ -161,6 +161,11 @@ entityId loadModel(struct world *world, const char *modelPath, const char *diffu
         return NULL;
     }
 
+    if (diffusePath == NULL) diffusePath = "assets/white.qoi";
+    if (normalPath == NULL) normalPath = "assets/normal.qoi";
+    if (specularPath == NULL) specularPath = "assets/white.qoi";
+    if (reflectancePath == NULL) reflectancePath = "assets/black.qoi";
+
     struct material material = {0};
     createMaterial(&material, diffusePath, normalPath, specularPath, reflectancePath);
 
