@@ -18,24 +18,35 @@
 typedef char * componentId;
 typedef char * entityId;
 typedef unsigned int tableId;
+typedef char * filterId;
+
+union genericId {
+    filterId filter;
+	tableId table;
+	entityId entity;
+	componentId component;
+};
 
 enum systemPhase {
-    SYSTEM_ON_CREATE,
     SYSTEM_ON_UPDATE,
     SYSTEM_ON_RENDER,
-    SYSTEM_ON_DELETE
 };
 
 struct systemRunData {
     struct world *world;
 
-    union {
-        tableId table;
-        entityId entity;
-    };
+    union genericId filterResult;
 
     struct system *system;
     float dt;
+};
+
+struct filter {
+    componentId components[MAX_COMPONENT_COUNT];
+    unsigned int componentsLength;
+
+    tableId results[MAX_ARCHETYPE_COUNT];
+    unsigned int resultsLength;
 };
 
 struct system {
@@ -44,8 +55,7 @@ struct system {
     int priority;
     enum systemPhase phase;
 
-    componentId components[MAX_COMPONENT_COUNT];
-    unsigned int componentsLength;
+    filterId filter;
 
     void (*callback)(struct systemRunData);
 };
@@ -81,6 +91,8 @@ struct world {
     entityId singletonEntity;
 
     struct dynarray systems;
+
+    struct hashtable filters;
 };
 
 #include <macros.h>
@@ -95,20 +107,29 @@ struct world {
 #define GET_SINGLETON_COMPONENT(w, c) getSingletonComponent((w), STRINGIFY(c))
 #define ADD_SINGLETON_COMPONENT(w, c) addSingletonComponent((w), STRINGIFY(c))
 
-#define GET_SYSTEM_COMPONENT(d) getComponent((d).world, (d).entity, (d).system->components[0])
-#define GET_SYSTEM_COMPONENTS(d, i) getComponentsFromTable((d).world, (d).table, (d).system->components[i])
-#define GET_SYSTEM_COMPONENTS_LENGTH(d) (((struct table *)dynarrayGet(&(d).world->tables, (d).table))->componentsLength)
+#define GET_FILTER_COMPONENT(w, f, i) ((struct filter *)hashtableGet(&(w)->filters, (f)))->components[i]
+
+#define GET_SYSTEM_COMPONENT(d) getComponent((d).world, (d).filterResult.entity, GET_FILTER_COMPONENT((d).world, (d).system->filter, 0))
+#define GET_SYSTEM_COMPONENTS(d, i) getComponentsFromTable((d).world, (d).filterResult.table, GET_FILTER_COMPONENT((d).world, (d).system->filter, i))
+#define GET_SYSTEM_COMPONENTS_LENGTH(d) (((struct table *)dynarrayGet(&(d).world->tables, (d).filterResult.table))->componentsLength)
 
 //#define COMPONENT_PACKAGE(...) ({ __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__)})
 //#define COMPONENT_LIST(...) { __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__) }
 
 #define ADD_SYSTEM(w, pr, ph, callback, ...) do { \
-    struct system s = { \
-        STRINGIFY(callback), \
-        pr, \
-        ph, \
+	char *name = STRINGIFY(callback); \
+    struct filter f = { \
         { __VA_ARGS__ }, \
         VARIADIC_COUNT(char *, __VA_ARGS__), \
+        { 0 }, \
+        0 \
+    }; \
+    addFilter(w, name, f); \
+    struct system s = { \
+        name, \
+        pr, \
+        ph, \
+        name, \
         callback \
     }; \
     addSystem(w, s); \
@@ -131,7 +152,9 @@ void removeSingletonComponent(struct world *world, componentId component);
 
 entityId createEntity(struct world *world, const char *name);
 void deleteEntity(struct world *world, entityId id);
+
 void addSystem(struct world *world, struct system system);
+void addFilter(struct world *world, const char *name, struct filter filter);
 
 void runWorldPhase(struct world *world, enum systemPhase phase, float dt);
 void printWorld(struct world *world);
