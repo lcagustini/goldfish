@@ -40,15 +40,15 @@ int main() {
     CREATE_COMPONENT(&ecsWorld, struct skyboxComponent);
 
     // TODO: Apply GET_COMPONENT_ID to variadic arguments
-    //ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_CREATE, setupTransform, GET_COMPONENT_ID(struct transformComponent));
+    ADD_EVENT_SYSTEM(&ecsWorld, 0, SYSTEM_ON_COMPONENT_ADD, setupTransform, GET_COMPONENT_ID(struct transformComponent));
 
-    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_UPDATE, updateControllerData, GET_COMPONENT_ID(struct controllerDataComponent));
-    ADD_SYSTEM(&ecsWorld, 1, SYSTEM_ON_UPDATE, updateFirstPersonTransform, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct firstPersonComponent));
-    ADD_SYSTEM(&ecsWorld, 2, SYSTEM_ON_UPDATE, updateCameraView, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent));
-    ADD_SYSTEM(&ecsWorld, 10, SYSTEM_ON_UPDATE, updateTransformMatrix, GET_COMPONENT_ID(struct transformComponent));
+    ADD_PHASE_SYSTEM(&ecsWorld, 0, SYSTEM_ON_UPDATE, updateControllerData, GET_COMPONENT_ID(struct controllerDataComponent));
+    ADD_PHASE_SYSTEM(&ecsWorld, 1, SYSTEM_ON_UPDATE, updateFirstPersonTransform, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct firstPersonComponent));
+    ADD_PHASE_SYSTEM(&ecsWorld, 2, SYSTEM_ON_UPDATE, updateCameraView, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent));
+    ADD_PHASE_SYSTEM(&ecsWorld, 10, SYSTEM_ON_UPDATE, updateTransformMatrix, GET_COMPONENT_ID(struct transformComponent));
 
-    ADD_SYSTEM(&ecsWorld, 0, SYSTEM_ON_RENDER, renderModel, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
-    ADD_SYSTEM(&ecsWorld, 1, SYSTEM_ON_RENDER, renderSkybox, GET_COMPONENT_ID(struct skyboxComponent));
+    ADD_PHASE_SYSTEM(&ecsWorld, 0, SYSTEM_ON_RENDER, renderModel, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
+    ADD_PHASE_SYSTEM(&ecsWorld, 1, SYSTEM_ON_RENDER, renderSkybox, GET_COMPONENT_ID(struct skyboxComponent));
 
     entityId camera = createEntity(&ecsWorld, "Camera");
     ADD_COMPONENT(&ecsWorld, camera, struct transformComponent);

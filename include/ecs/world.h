@@ -27,9 +27,17 @@ union genericId {
 	componentId component;
 };
 
+enum systemEvent {
+    SYSTEM_ON_COMPONENT_ADD,
+
+    SYSTEM_EVENT_MAX,
+};
+
 enum systemPhase {
     SYSTEM_ON_UPDATE,
     SYSTEM_ON_RENDER,
+    
+    SYSTEM_PHASE_MAX,
 };
 
 struct systemRunData {
@@ -53,7 +61,6 @@ struct system {
     const char *name;
 
     int priority;
-    enum systemPhase phase;
 
     filterId filter;
 
@@ -90,7 +97,8 @@ struct world {
     struct hashtable entities;
     entityId singletonEntity;
 
-    struct dynarray systems;
+    struct dynarray phaseSystems[SYSTEM_PHASE_MAX];
+    struct dynarray eventSystems[SYSTEM_EVENT_MAX];
 
     struct hashtable filters;
 };
@@ -116,7 +124,7 @@ struct world {
 //#define COMPONENT_PACKAGE(...) ({ __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__)})
 //#define COMPONENT_LIST(...) { __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__) }
 
-#define ADD_SYSTEM(w, pr, ph, callback, ...) do { \
+#define ADD_PHASE_SYSTEM(w, pr, ph, callback, ...) do { \
 	char *name = STRINGIFY(callback); \
     struct filter f = { \
         { __VA_ARGS__ }, \
@@ -128,11 +136,28 @@ struct world {
     struct system s = { \
         name, \
         pr, \
-        ph, \
         name, \
         callback \
     }; \
-    addSystem(w, s); \
+    addPhaseSystem(w, ph, s); \
+} while (0); \
+
+#define ADD_EVENT_SYSTEM(w, pr, ev, callback, component) do { \
+	char *name = STRINGIFY(callback); \
+    struct filter f = { \
+        { component }, \
+        1, \
+        { 0 }, \
+        0 \
+    }; \
+    addFilter(w, name, f); \
+    struct system s = { \
+        name, \
+        pr, \
+        name, \
+        callback \
+    }; \
+    addEventSystem(w, ev, s); \
 } while (0); \
 
 struct world createWorld();
@@ -153,7 +178,8 @@ void removeSingletonComponent(struct world *world, componentId component);
 entityId createEntity(struct world *world, const char *name);
 void deleteEntity(struct world *world, entityId id);
 
-void addSystem(struct world *world, struct system system);
+void addPhaseSystem(struct world *world, enum systemPhase phase, struct system system);
+void addEventSystem(struct world *world, enum systemEvent event, struct system system);
 void addFilter(struct world *world, const char *name, struct filter filter);
 
 void runWorldPhase(struct world *world, enum systemPhase phase, float dt);
