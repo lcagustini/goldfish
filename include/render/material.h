@@ -85,6 +85,8 @@ struct material {
     float shininess;
     float alphaClipping;
 
+    bool transparent;
+
     struct shader shader;
 };
 

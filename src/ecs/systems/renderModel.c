@@ -25,7 +25,7 @@ void renderModel(struct systemRunData data) {
 
     componentId pointLightTypes[] = { GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct pointLightComponent) };
     tableId pointLightTables[MAX_LIGHTS];
-    unsigned int pointLightTablesLength = getAllTablesWithComponents(data.world, pointLightTypes, 2, pointLightTables, 10);
+    unsigned int pointLightTablesLength = getAllTablesWithComponents(data.world, pointLightTypes, 2, pointLightTables, MAX_LIGHTS);
 
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
         struct transformComponent *transform = &transforms[i];

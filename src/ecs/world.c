@@ -300,39 +300,11 @@ void deleteEntity(struct world *world, entityId id) {
 void addPhaseSystem(struct world *world, enum systemPhase phase, struct system system) {
     dynarrayAdd(&world->phaseSystems[phase], &system);
     updateFilter(world, system.filter);
-
-    // Sort systems by priority
-    struct system *systems = world->phaseSystems[phase].buffer;
-    for (int i = 1; i < world->phaseSystems[phase].bufferCount; i++) {
-        struct system x = systems[i];
-        int j = i - 1;
-
-        while (j >= 0 && systems[j].priority > x.priority) {
-            systems[j + 1] = systems[j];
-            j = j - 1;
-        }
-
-        systems[j + 1] = x;
-    }
 }
 
 void addEventSystem(struct world *world, enum systemEvent event, struct system system) {
     dynarrayAdd(&world->eventSystems[event], &system);
     updateFilter(world, system.filter);
-
-    // Sort systems by priority
-    struct system *systems = world->eventSystems[event].buffer;
-    for (int i = 1; i < world->eventSystems[event].bufferCount; i++) {
-        struct system x = systems[i];
-        int j = i - 1;
-
-        while (j >= 0 && systems[j].priority > x.priority) {
-            systems[j + 1] = systems[j];
-            j = j - 1;
-        }
-
-        systems[j + 1] = x;
-    }
 }
 
 void addFilter(struct world *world, const char *name, struct filter filter) {
@@ -366,7 +338,7 @@ void printWorld(struct world *world) {
 			struct system *system = dynarrayGet(&world->phaseSystems[j], i);
 			struct filter *filter = hashtableGet(&world->filters, system->filter);
 
-			print("(name: %s) (priority: %d) (phase: %d) (components:", system->name, system->priority, j);
+			print("(name: %s) (phase: %d) (components:", system->name, j);
 			for (int j = 0; j < filter->componentsLength; j++) {
 				print(" %s,", filter->components[j]);
 			}

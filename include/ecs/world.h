@@ -34,8 +34,15 @@ enum systemEvent {
 };
 
 enum systemPhase {
+    SYSTEM_ON_PRE_UPDATE,
     SYSTEM_ON_UPDATE,
-    SYSTEM_ON_RENDER,
+    SYSTEM_ON_POST_UPDATE,
+
+    SYSTEM_ON_RENDER_SETUP,
+    SYSTEM_ON_RENDER_OPAQUE,
+    SYSTEM_ON_RENDER_SKYBOX,
+    SYSTEM_ON_RENDER_TRANSPARENT,
+    SYSTEM_ON_RENDER_POST,
     
     SYSTEM_PHASE_MAX,
 };
@@ -59,8 +66,6 @@ struct filter {
 
 struct system {
     const char *name;
-
-    int priority;
 
     filterId filter;
 
@@ -124,7 +129,7 @@ struct world {
 //#define COMPONENT_PACKAGE(...) ({ __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__)})
 //#define COMPONENT_LIST(...) { __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__) }
 
-#define ADD_PHASE_SYSTEM(w, pr, ph, callback, ...) do { \
+#define ADD_PHASE_SYSTEM(w, ph, callback, ...) do { \
 	char *name = STRINGIFY(callback); \
     struct filter f = { \
         { __VA_ARGS__ }, \
@@ -135,14 +140,13 @@ struct world {
     addFilter(w, name, f); \
     struct system s = { \
         name, \
-        pr, \
         name, \
         callback \
     }; \
     addPhaseSystem(w, ph, s); \
 } while (0); \
 
-#define ADD_EVENT_SYSTEM(w, pr, ev, callback, component) do { \
+#define ADD_EVENT_SYSTEM(w, ev, callback, component) do { \
 	char *name = STRINGIFY(callback); \
     struct filter f = { \
         { component }, \
@@ -153,7 +157,6 @@ struct world {
     addFilter(w, name, f); \
     struct system s = { \
         name, \
-        pr, \
         name, \
         callback \
     }; \

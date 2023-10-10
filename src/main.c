@@ -40,15 +40,15 @@ int main() {
     CREATE_COMPONENT(&ecsWorld, struct skyboxComponent);
 
     // TODO: Apply GET_COMPONENT_ID to variadic arguments
-    ADD_EVENT_SYSTEM(&ecsWorld, 0, SYSTEM_ON_COMPONENT_ADD, setupTransform, GET_COMPONENT_ID(struct transformComponent));
+    ADD_EVENT_SYSTEM(&ecsWorld, SYSTEM_ON_COMPONENT_ADD, setupTransform, GET_COMPONENT_ID(struct transformComponent));
 
-    ADD_PHASE_SYSTEM(&ecsWorld, 0, SYSTEM_ON_UPDATE, updateControllerData, GET_COMPONENT_ID(struct controllerDataComponent));
-    ADD_PHASE_SYSTEM(&ecsWorld, 1, SYSTEM_ON_UPDATE, updateFirstPersonTransform, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct firstPersonComponent));
-    ADD_PHASE_SYSTEM(&ecsWorld, 2, SYSTEM_ON_UPDATE, updateCameraView, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent));
-    ADD_PHASE_SYSTEM(&ecsWorld, 10, SYSTEM_ON_UPDATE, updateTransformMatrix, GET_COMPONENT_ID(struct transformComponent));
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_PRE_UPDATE, updateControllerData, GET_COMPONENT_ID(struct controllerDataComponent));
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_UPDATE, updateFirstPersonTransform, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct firstPersonComponent));
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_UPDATE, updateCameraView, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent));
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_POST_UPDATE, updateTransformMatrix, GET_COMPONENT_ID(struct transformComponent));
 
-    ADD_PHASE_SYSTEM(&ecsWorld, 0, SYSTEM_ON_RENDER, renderModel, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
-    ADD_PHASE_SYSTEM(&ecsWorld, 1, SYSTEM_ON_RENDER, renderSkybox, GET_COMPONENT_ID(struct skyboxComponent));
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, renderModel, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SKYBOX, renderSkybox, GET_COMPONENT_ID(struct skyboxComponent));
 
     entityId camera = createEntity(&ecsWorld, "Camera");
     ADD_COMPONENT(&ecsWorld, camera, struct transformComponent);
@@ -66,30 +66,22 @@ int main() {
     ADD_SINGLETON_COMPONENT(&ecsWorld, struct controllerDataComponent);
 
     struct transformComponent *transform;
-#if 0
-    entityId chest1 = createEntity(&ecsWorld, "Chest 1");
-    addComponent(&ecsWorld, chest1, transformId);
-    loadModel(&ecsWorld, chest1, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
-    transform = getComponent(&ecsWorld, chest1, transformId);
-    transform->position = (struct vec3) { 0, -1, -1 };
-    transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
-#endif
 
-#if 0
-    entityId chest2 = createEntity(&ecsWorld, "Chest 2");
-    addComponent(&ecsWorld, chest2, transformId);
-    loadModel(&ecsWorld, chest2, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
-    transform = getComponent(&ecsWorld, chest2, transformId);
+#if 1
+    entityId chest1 = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi");
+    transform = GET_COMPONENT(&ecsWorld, chest1, struct transformComponent);
+    transform->position = (struct vec3) { 0, -1, -1 };
+#endif
+#if 1
+    entityId chest2 = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi");
+    transform = GET_COMPONENT(&ecsWorld, chest2, struct transformComponent);
     transform->position = (struct vec3) { 0, -1, -1 };
     transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
     transform->parent = chest1;
 #endif
-
-#if 0
-    entityId chest3 = createEntity(&ecsWorld, "Chest 3");
-    addComponent(&ecsWorld, chest3, transformId);
-    loadModel(&ecsWorld, chest3, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi");
-    transform = getComponent(&ecsWorld, chest3, transformId);
+#if 1
+    entityId chest3 = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi");
+    transform = GET_COMPONENT(&ecsWorld, chest3, struct transformComponent);
     transform->position = (struct vec3) { 0, -1, -1 };
     transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
     transform->parent = chest2;
@@ -103,12 +95,6 @@ int main() {
     entityId grass = loadModel(&ecsWorld, "assets/grass.fbx", "assets/grass.qoi", NULL, NULL, NULL);
     transform = GET_COMPONENT(&ecsWorld, grass, struct transformComponent);
     transform->position = (struct vec3) { 0, 0, 2 };
-
-#if 1
-    entityId cubes = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi");
-    transform = GET_COMPONENT(&ecsWorld, cubes, struct transformComponent);
-    transform->position = (struct vec3) { 0, -1, -1 };
-#endif
 
     entityId light = createEntity(&ecsWorld, "Light");
     ADD_COMPONENT(&ecsWorld, light, struct transformComponent);
@@ -129,18 +115,31 @@ int main() {
 
         glfwPollEvents();
 
+        runWorldPhase(&ecsWorld, SYSTEM_ON_PRE_UPDATE, deltaTime);
+
 #if 1
         {
-            struct transformComponent *transform = GET_COMPONENT(&ecsWorld, cubes, struct transformComponent);
+            struct transformComponent *transform = GET_COMPONENT(&ecsWorld, chest1, struct transformComponent);
             transform->rotation = quatMult(transform->rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
         }
 #endif
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE, deltaTime);
+        runWorldPhase(&ecsWorld, SYSTEM_ON_POST_UPDATE, deltaTime);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER, deltaTime);
+        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SETUP, deltaTime);
+        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, deltaTime);
+        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SKYBOX, deltaTime);
+
+        glEnable(GL_BLEND);
+
+        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_TRANSPARENT, deltaTime);
+
+        glDisable(GL_BLEND);
+
+        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_POST, deltaTime);
 
         glfwSwapBuffers(globalState.window);
     }
