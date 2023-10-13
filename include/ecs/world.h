@@ -5,6 +5,7 @@
 #define MAX_COMPONENT_COUNT 50
 #define MAX_SYSTEM_COUNT 20
 #define MAX_ARCHETYPE_COUNT 50
+#define MAX_FILTER_COUNT 10
 
 #define INVALID_POSITION (UINT_MAX)
 
@@ -50,7 +51,8 @@ enum systemPhase {
 struct systemRunData {
     struct world *world;
 
-    union genericId filterResult;
+    union genericId filterResults[MAX_FILTER_COUNT];
+    unsigned int filterResultsLength;
 
     struct system *system;
     float dt;
@@ -67,7 +69,8 @@ struct filter {
 struct system {
     const char *name;
 
-    filterId filter;
+    filterId filters[MAX_FILTER_COUNT];
+    unsigned int filtersLength;
 
     void (*callback)(struct systemRunData);
 };
@@ -122,9 +125,9 @@ struct world {
 
 #define GET_FILTER_COMPONENT(w, f, i) ((struct filter *)hashtableGet(&(w)->filters, (f)))->components[i]
 
-#define GET_SYSTEM_COMPONENT(d) getComponent((d).world, (d).filterResult.entity, GET_FILTER_COMPONENT((d).world, (d).system->filter, 0))
-#define GET_SYSTEM_COMPONENTS(d, i) getComponentsFromTable((d).world, (d).filterResult.table, GET_FILTER_COMPONENT((d).world, (d).system->filter, i))
-#define GET_SYSTEM_COMPONENTS_LENGTH(d) (((struct table *)dynarrayGet(&(d).world->tables, (d).filterResult.table))->componentsLength)
+#define GET_SYSTEM_COMPONENT(d) getComponent((d).world, (d).filterResults[0].entity, GET_FILTER_COMPONENT((d).world, (d).system->filters[0], 0))
+#define GET_SYSTEM_COMPONENTS(d, i) getComponentsFromTable((d).world, (d).filterResults[0].table, GET_FILTER_COMPONENT((d).world, (d).system->filters[0], i))
+#define GET_SYSTEM_COMPONENTS_LENGTH(d) (((struct table *)dynarrayGet(&(d).world->tables, (d).filterResults[0].table))->componentsLength)
 
 //#define COMPONENT_PACKAGE(...) ({ __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__)})
 //#define COMPONENT_LIST(...) { __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__) }
@@ -140,7 +143,8 @@ struct world {
     addFilter(w, name, f); \
     struct system s = { \
         name, \
-        name, \
+        { name }, \
+        1, \
         callback \
     }; \
     addPhaseSystem(w, ph, s); \
@@ -157,7 +161,8 @@ struct world {
     addFilter(w, name, f); \
     struct system s = { \
         name, \
-        name, \
+        { name }, \
+        1, \
         callback \
     }; \
     addEventSystem(w, ev, s); \

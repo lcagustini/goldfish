@@ -4,6 +4,8 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 
+#include <stdbool.h>
+
 #define MAX_LIGHTS 8
 
 struct dirLight {
