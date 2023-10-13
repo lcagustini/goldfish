@@ -335,6 +335,8 @@ void runWorldPhase(struct world *world, enum systemPhase phase, float dt) {
             runTimes *= filter->resultsLength;
         }
 
+        if (runTimes == 0) continue;
+
 		struct systemRunData *runDatas = malloc(runTimes * sizeof(struct systemRunData));
 
 		int incrementAt = runTimes;

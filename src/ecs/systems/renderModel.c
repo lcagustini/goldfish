@@ -4,11 +4,8 @@ void renderModel(struct systemRunData data) {
     struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0, 0);
     struct modelComponent *models = GET_SYSTEM_COMPONENTS(data, 0, 1);
 
-    componentId cameraTypes[] = { GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent) };
-    tableId cameraTable;
-    getAllTablesWithComponents(data.world, cameraTypes, 2, &cameraTable, 1);
-    struct transformComponent *cameraTransform = getComponentsFromTable(data.world, cameraTable, cameraTypes[0]);
-    struct cameraComponent *camera = getComponentsFromTable(data.world, cameraTable, cameraTypes[1]);
+    struct transformComponent *cameraTransform = GET_SYSTEM_COMPONENTS(data, 1, 0);
+    struct cameraComponent *camera = GET_SYSTEM_COMPONENTS(data, 1, 1);
 
     componentId skyboxTypes[] = { GET_COMPONENT_ID(struct skyboxComponent) };
     tableId skyboxTable;

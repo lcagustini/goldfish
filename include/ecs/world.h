@@ -132,7 +132,27 @@ struct world {
 //#define COMPONENT_PACKAGE(...) ({ __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__)})
 //#define COMPONENT_LIST(...) { __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__) }
 
-#define ADD_PHASE_SYSTEM(w, ph, callback, ...) do { \
+#define ADD_FILTER(w, name, ...) do { \
+    struct filter f = { \
+        { __VA_ARGS__ }, \
+        VARIADIC_COUNT(componentId, __VA_ARGS__), \
+        { 0 }, \
+        0 \
+    }; \
+    addFilter(w, name, f); \
+} while (0); \
+
+#define ADD_PHASE_SYSTEM_MULTIPLE_FILTERS(w, ph, callback, ...) do { \
+    struct system s = { \
+        STRINGIFY(callback), \
+        { __VA_ARGS__ }, \
+        VARIADIC_COUNT(filterId, __VA_ARGS__), \
+        callback \
+    }; \
+    addPhaseSystem(w, ph, s); \
+} while (0); \
+
+#define ADD_PHASE_SYSTEM_SINGLE_FILTER(w, ph, callback, ...) do { \
 	char *name = STRINGIFY(callback); \
     struct filter f = { \
         { __VA_ARGS__ }, \

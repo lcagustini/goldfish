@@ -42,13 +42,20 @@ int main() {
     // TODO: Apply GET_COMPONENT_ID to variadic arguments
     ADD_EVENT_SYSTEM(&ecsWorld, SYSTEM_ON_COMPONENT_ADD, setupTransform, GET_COMPONENT_ID(struct transformComponent));
 
-    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_PRE_UPDATE, updateControllerData, GET_COMPONENT_ID(struct controllerDataComponent));
-    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_UPDATE, updateFirstPersonTransform, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct firstPersonComponent));
-    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_UPDATE, updateCameraView, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent));
-    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_POST_UPDATE, updateTransformMatrix, GET_COMPONENT_ID(struct transformComponent));
+    ADD_PHASE_SYSTEM_SINGLE_FILTER(&ecsWorld, SYSTEM_ON_PRE_UPDATE, updateControllerData, GET_COMPONENT_ID(struct controllerDataComponent));
+    ADD_PHASE_SYSTEM_SINGLE_FILTER(&ecsWorld, SYSTEM_ON_UPDATE, updateFirstPersonTransform, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct firstPersonComponent));
+    ADD_PHASE_SYSTEM_SINGLE_FILTER(&ecsWorld, SYSTEM_ON_UPDATE, updateCameraView, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent));
+    ADD_PHASE_SYSTEM_SINGLE_FILTER(&ecsWorld, SYSTEM_ON_POST_UPDATE, updateTransformMatrix, GET_COMPONENT_ID(struct transformComponent));
 
-    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, renderModel, GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
-    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SKYBOX, renderSkybox, GET_COMPONENT_ID(struct skyboxComponent));
+    ADD_FILTER(&ecsWorld, "renderModel_model", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
+    ADD_FILTER(&ecsWorld, "renderModel_camera", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent));
+    //ADD_FILTER(&ecsWorld, "renderModel_skybox", GET_COMPONENT_ID(struct skyboxComponent));
+    //ADD_FILTER(&ecsWorld, "renderModel_dirLight", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct dirLightComponent));
+    //ADD_FILTER(&ecsWorld, "renderModel_spotLight", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct spotLightComponent));
+    //ADD_FILTER(&ecsWorld, "renderModel_pointLight", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct pointLightComponent));
+    //ADD_PHASE_SYSTEM_MULTIPLE_FILTERS(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, renderModel, "renderModel_model", "renderModel_camera", "renderModel_skybox", "renderModel_dirLight", "renderModel_spotLight", "renderModel_pointLight");
+    ADD_PHASE_SYSTEM_MULTIPLE_FILTERS(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, renderModel, "renderModel_model", "renderModel_camera");
+    ADD_PHASE_SYSTEM_SINGLE_FILTER(&ecsWorld, SYSTEM_ON_RENDER_SKYBOX, renderSkybox, GET_COMPONENT_ID(struct skyboxComponent));
 
     entityId camera = createEntity(&ecsWorld, "Camera");
     ADD_COMPONENT(&ecsWorld, camera, struct transformComponent);
