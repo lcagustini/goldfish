@@ -142,29 +142,11 @@ struct world {
     addFilter(w, name, f); \
 } while (0); \
 
-#define ADD_PHASE_SYSTEM_MULTIPLE_FILTERS(w, ph, callback, ...) do { \
+#define ADD_PHASE_SYSTEM(w, ph, callback, ...) do { \
     struct system s = { \
         STRINGIFY(callback), \
         { __VA_ARGS__ }, \
         VARIADIC_COUNT(filterId, __VA_ARGS__), \
-        callback \
-    }; \
-    addPhaseSystem(w, ph, s); \
-} while (0); \
-
-#define ADD_PHASE_SYSTEM_SINGLE_FILTER(w, ph, callback, ...) do { \
-	char *name = STRINGIFY(callback); \
-    struct filter f = { \
-        { __VA_ARGS__ }, \
-        VARIADIC_COUNT(char *, __VA_ARGS__), \
-        { 0 }, \
-        0 \
-    }; \
-    addFilter(w, name, f); \
-    struct system s = { \
-        name, \
-        { name }, \
-        1, \
         callback \
     }; \
     addPhaseSystem(w, ph, s); \
