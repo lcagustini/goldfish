@@ -126,8 +126,8 @@ struct world {
 #define GET_FILTER_COMPONENT(w, f, i) ((struct filter *)hashtableGet(&(w)->filters, (f)))->components[i]
 
 #define GET_SYSTEM_COMPONENT(d) getComponent((d).world, (d).filterResults[0].entity, GET_FILTER_COMPONENT((d).world, (d).system->filters[0], 0))
-#define GET_SYSTEM_COMPONENTS(d, i) getComponentsFromTable((d).world, (d).filterResults[0].table, GET_FILTER_COMPONENT((d).world, (d).system->filters[0], i))
-#define GET_SYSTEM_COMPONENTS_LENGTH(d) (((struct table *)dynarrayGet(&(d).world->tables, (d).filterResults[0].table))->componentsLength)
+#define GET_SYSTEM_COMPONENTS(d, i, j) getComponentsFromTable((d).world, (d).filterResults[i].table, GET_FILTER_COMPONENT((d).world, (d).system->filters[i], j))
+#define GET_SYSTEM_COMPONENTS_LENGTH(d, i) (((struct table *)dynarrayGet(&(d).world->tables, (d).filterResults[i].table))->componentsLength)
 
 //#define COMPONENT_PACKAGE(...) ({ __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__)})
 //#define COMPONENT_LIST(...) { __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__) }

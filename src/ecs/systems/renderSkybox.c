@@ -1,14 +1,14 @@
 #include <ecs/systems.h>
 
 void renderSkybox(struct systemRunData data) {
-    struct skyboxComponent *skyboxes = GET_SYSTEM_COMPONENTS(data, 0);
+    struct skyboxComponent *skyboxes = GET_SYSTEM_COMPONENTS(data, 0, 0);
 
     componentId cameraTypes[] = { GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent) };
     tableId cameraTable;
     getAllTablesWithComponents(data.world, cameraTypes, 2, &cameraTable, 1);
     struct cameraComponent *camera = getComponentsFromTable(data.world, cameraTable, cameraTypes[1]);
 
-    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
+    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
         struct skyboxComponent *skybox = &skyboxes[i];
 
         glUseProgram(skybox->shaderProgram);

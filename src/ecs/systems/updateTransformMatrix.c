@@ -15,9 +15,9 @@ static union mat4 getMatrixForTransform(struct transformComponent *t) {
 }
 
 void updateTransformMatrix(struct systemRunData data) {
-    struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0);
+    struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0, 0);
 
-    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
+    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
         struct transformComponent *originalTransform = &transforms[i];
         loadIdentity(&originalTransform->modelMatrix);
 

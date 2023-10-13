@@ -1,13 +1,13 @@
 #include <ecs/systems.h>
 
 void updateCameraView(struct systemRunData data) {
-    struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0);
-    struct cameraComponent *cameras = GET_SYSTEM_COMPONENTS(data, 1);
+    struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0, 0);
+    struct cameraComponent *cameras = GET_SYSTEM_COMPONENTS(data, 0, 1);
 
     int width, height;
     glfwGetWindowSize(globalState.window, &width, &height);
 
-    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
+    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
         struct transformComponent *transform = &transforms[i];
         struct cameraComponent *camera = &cameras[i];
 

@@ -5,10 +5,10 @@
 void updateFirstPersonTransform(struct systemRunData data) {
     struct controllerDataComponent *controllerData = GET_SINGLETON_COMPONENT(data.world, struct controllerDataComponent);
 
-    struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0);
-    struct firstPersonComponent *rotations = GET_SYSTEM_COMPONENTS(data, 1);
+    struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0, 0);
+    struct firstPersonComponent *rotations = GET_SYSTEM_COMPONENTS(data, 0, 1);
 
-    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
+    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
         struct transformComponent *transform = &transforms[i];
         struct firstPersonComponent *rotation = &rotations[i];
 

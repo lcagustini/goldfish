@@ -1,9 +1,9 @@
 #include <ecs/systems.h>
 
 void updateControllerData(struct systemRunData data) {
-    struct controllerDataComponent *controllers = GET_SYSTEM_COMPONENTS(data, 0);
+    struct controllerDataComponent *controllers = GET_SYSTEM_COMPONENTS(data, 0, 0);
 
-    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data); i++) {
+    for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
         struct controllerDataComponent *controllerData = &controllers[i];
 
         memset(controllerData, 0, sizeof (struct controllerDataComponent));
