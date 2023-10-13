@@ -15,7 +15,14 @@ void updateFirstPersonTransform(struct systemRunData data);
 
 void updateTransformMatrix(struct systemRunData data);
 
-void renderModel(struct systemRunData data);
+void rendererGetModels(struct systemRunData data);
+void rendererGetCameras(struct systemRunData data);
+void rendererGetSkybox(struct systemRunData data);
+void rendererGetDirLights(struct systemRunData data);
+void rendererGetSpotLights(struct systemRunData data);
+void rendererGetPointLights(struct systemRunData data);
+
+void rendererRender(struct systemRunData data);
 void renderSkybox(struct systemRunData data);
 
 #endif

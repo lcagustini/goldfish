@@ -71,6 +71,10 @@ bool dynarrayRemove(struct dynarray *array, unsigned int index) {
     return true;
 }
 
+void dynarrayClear(struct dynarray *array) {
+    array->bufferCount = 0;
+}
+
 void *dynarrayGet(struct dynarray *array, unsigned int index) {
     if (index >= array->bufferCount) {
         print("[dynarray] Index out of range! (%d >= %d)", index, array->bufferCount);
@@ -78,4 +82,8 @@ void *dynarrayGet(struct dynarray *array, unsigned int index) {
     }
 
     return array->buffer + index * array->typeSize;
+}
+
+unsigned int dynarrayCount(struct dynarray *array) {
+    return array->bufferCount;
 }

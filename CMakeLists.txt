@@ -36,13 +36,23 @@ add_executable(${PROJECT_NAME}
 
     src/ecs/world.c
 
-    src/ecs/systems/updateCameraView.c
-    src/ecs/systems/updateControllerData.c
-    src/ecs/systems/updateTransformMatrix.c
     src/ecs/systems/setupTransform.c
-    src/ecs/systems/renderModel.c
-    src/ecs/systems/renderSkybox.c
+
+    src/ecs/systems/updateControllerData.c
+    src/ecs/systems/updateCameraView.c
     src/ecs/systems/updateFirstPersonTransform.c
+
+    src/ecs/systems/updateTransformMatrix.c
+
+	src/ecs/systems/rendererGetModels.c
+	src/ecs/systems/rendererGetCameras.c
+	src/ecs/systems/rendererGetSkybox.c
+	src/ecs/systems/rendererGetDirLights.c
+	src/ecs/systems/rendererGetSpotLights.c
+	src/ecs/systems/rendererGetPointLights.c
+
+    src/ecs/systems/rendererRender.c
+    src/ecs/systems/renderSkybox.c
 
     src/data/hashtable.c
     src/data/dynarray.c

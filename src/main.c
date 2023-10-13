@@ -38,6 +38,7 @@ int main() {
     CREATE_COMPONENT(&ecsWorld, struct spotLightComponent);
     CREATE_COMPONENT(&ecsWorld, struct pointLightComponent);
     CREATE_COMPONENT(&ecsWorld, struct skyboxComponent);
+    CREATE_COMPONENT(&ecsWorld, struct rendererDataComponent);
 
     // TODO: Apply GET_COMPONENT_ID to variadic arguments
     ADD_EVENT_SYSTEM(&ecsWorld, SYSTEM_ON_COMPONENT_ADD, setupTransform, GET_COMPONENT_ID(struct transformComponent));
@@ -46,25 +47,35 @@ int main() {
     ADD_FILTER(&ecsWorld, "firstPersonFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct firstPersonComponent));
     ADD_FILTER(&ecsWorld, "cameraFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent));
     ADD_FILTER(&ecsWorld, "transformFilter", GET_COMPONENT_ID(struct transformComponent));
+    ADD_FILTER(&ecsWorld, "rendererDataFilter", GET_COMPONENT_ID(struct rendererDataComponent));
     ADD_FILTER(&ecsWorld, "modelFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
     ADD_FILTER(&ecsWorld, "skyboxFilter", GET_COMPONENT_ID(struct skyboxComponent));
-    //ADD_FILTER(&ecsWorld, "dirLightFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct dirLightComponent));
-    //ADD_FILTER(&ecsWorld, "spotLightFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct spotLightComponent));
-    //ADD_FILTER(&ecsWorld, "pointLightFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct pointLightComponent));
+    ADD_FILTER(&ecsWorld, "renderCameraFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent), GET_COMPONENT_ID(struct rendererDataComponent));
+    ADD_FILTER(&ecsWorld, "dirLightFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct dirLightComponent));
+    ADD_FILTER(&ecsWorld, "spotLightFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct spotLightComponent));
+    ADD_FILTER(&ecsWorld, "pointLightFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct pointLightComponent));
 
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_PRE_UPDATE, updateControllerData, "controllerDataFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_UPDATE, updateFirstPersonTransform, "firstPersonFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_UPDATE, updateCameraView, "cameraFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_POST_UPDATE, updateTransformMatrix, "transformFilter");
 
-    //ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, renderModel, "modelFilter", "cameraFilter", "skyboxFilter", "dirLightFilter", "spotLightFilter", "pointLightFilter");
-    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, renderModel, "modelFilter", "cameraFilter");
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetModels, "modelFilter", "rendererDataFilter");
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetCameras, "renderCameraFilter");
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetSkybox, "skyboxFilter", "rendererDataFilter");
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetDirLights, "dirLightFilter", "rendererDataFilter");
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetSpotLights, "spotLightFilter", "rendererDataFilter");
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetPointLights, "pointLightFilter", "rendererDataFilter");
+
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, rendererRender, "rendererDataFilter");
+
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SKYBOX, renderSkybox, "skyboxFilter");
 
     entityId camera = createEntity(&ecsWorld, "Camera");
     ADD_COMPONENT(&ecsWorld, camera, struct transformComponent);
     ADD_COMPONENT(&ecsWorld, camera, struct cameraComponent);
     ADD_COMPONENT(&ecsWorld, camera, struct firstPersonComponent);
+    ADD_COMPONENT(&ecsWorld, camera, struct rendererDataComponent);
     struct cameraComponent *cameraComponent = GET_COMPONENT(&ecsWorld, camera, struct cameraComponent);
     cameraComponent->fov = 60.0f;
     cameraComponent->near = 0.1f;
@@ -140,9 +151,32 @@ int main() {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        struct rendererDataComponent *renderer = GET_COMPONENT(&ecsWorld, camera, struct rendererDataComponent);
+		memset(renderer, 0, sizeof(struct rendererDataComponent));
+
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SETUP, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SKYBOX, deltaTime);
+
+#if 0
+        {
+            for (int i = 0; i < renderer->meshesLength; i++) {
+                struct meshRenderData *meshData = &renderer->meshes[i];
+
+                print("(shader: %u) (VAO: %u) (indices: %u)\n", meshData->shader.program, meshData->VAO, meshData->indicesLength);
+                for (int j = 0; j < meshData->uniformsLength; j++) {
+                    struct uniformRenderData *uniformData = &meshData->uniforms[j];
+                    print("uniform (type: %d) (loc: %u) (count: %u) (data: %p)\n", uniformData->type, uniformData->location, uniformData->count, uniformData->data);
+                }
+
+                for (int j = 0; j < meshData->texturesLength; j++) {
+                    struct textureRenderData *textureData = &meshData->textures[j];
+                    print("texture (type: %d) (slot: %u) (buffer: %u)\n", textureData->type, textureData->slot, textureData->buffer);
+                }
+                print("\n");
+            }
+        }
+#endif
 
         glEnable(GL_BLEND);
 

@@ -4,6 +4,9 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 
+#include <math/vector.h>
+#include <math/matrix.h>
+
 #include <stdbool.h>
 
 #define MAX_LIGHTS 8
@@ -90,6 +93,47 @@ struct material {
     bool transparent;
 
     struct shader shader;
+};
+
+struct uniformRenderData {
+	enum {
+		RENDERER_UNIFORM_MATRIX_4,
+		RENDERER_UNIFORM_VECTOR_3,
+		RENDERER_UNIFORM_VECTOR_2,
+		RENDERER_UNIFORM_INT,
+		RENDERER_UNIFORM_FLOAT
+	} type;
+	unsigned int location;
+	unsigned int count;
+	union {
+        union mat4 matrix;
+        struct vec3 vector3;
+        struct vec2 vector2;
+        int integer;
+        float single;
+    } data;
+};
+
+struct textureRenderData {
+	enum {
+		RENDERER_TEXTURE_2D,
+		RENDERER_TEXTURE_CUBE_MAP
+	} type;
+	unsigned int slot;
+	unsigned int buffer;
+};
+
+struct meshRenderData {
+	struct shader shader;
+
+	struct uniformRenderData uniforms[128];
+	unsigned int uniformsLength;
+
+	struct textureRenderData textures[16];
+	unsigned int texturesLength;
+
+	unsigned int VAO;
+	unsigned int indicesLength;
 };
 
 GLuint loadShaderFromFile(const char *shaderFile, GLenum type);

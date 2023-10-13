@@ -10,6 +10,11 @@
 
 #include <ecs/world.h>
 
+struct rendererDataComponent {
+	struct meshRenderData meshes[1024];
+    unsigned int meshesLength;
+};
+
 struct skyboxComponent {
     unsigned int shaderProgram;
 
