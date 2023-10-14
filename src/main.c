@@ -40,7 +40,6 @@ int main() {
     CREATE_COMPONENT(&ecsWorld, struct skyboxComponent);
     CREATE_COMPONENT(&ecsWorld, struct rendererDataComponent);
 
-    // TODO: Apply GET_COMPONENT_ID to variadic arguments
     ADD_EVENT_SYSTEM(&ecsWorld, SYSTEM_ON_COMPONENT_ADD, setupTransform, GET_COMPONENT_ID(struct transformComponent));
 
     ADD_FILTER(&ecsWorld, "controllerDataFilter", GET_COMPONENT_ID(struct controllerDataComponent));
@@ -67,9 +66,9 @@ int main() {
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetSpotLights, "spotLightFilter", "rendererDataFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetPointLights, "pointLightFilter", "rendererDataFilter");
 
-    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, rendererRender, "rendererDataFilter");
-
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, rendererOpaqueRender, "rendererDataFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SKYBOX, renderSkybox, "skyboxFilter");
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_TRANSPARENT, rendererTransparentRender, "rendererDataFilter");
 
     entityId camera = createEntity(&ecsWorld, "Camera");
     ADD_COMPONENT(&ecsWorld, camera, struct transformComponent);
@@ -90,19 +89,19 @@ int main() {
     struct transformComponent *transform;
 
 #if 1
-    entityId chest1 = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi");
+    entityId chest1 = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi", false);
     transform = GET_COMPONENT(&ecsWorld, chest1, struct transformComponent);
     transform->position = (struct vec3) { 0, -1, -1 };
 #endif
 #if 1
-    entityId chest2 = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi");
+    entityId chest2 = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi", false);
     transform = GET_COMPONENT(&ecsWorld, chest2, struct transformComponent);
     transform->position = (struct vec3) { 0, -1, -1 };
     transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
     transform->parent = chest1;
 #endif
 #if 1
-    entityId chest3 = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi");
+    entityId chest3 = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi", false);
     transform = GET_COMPONENT(&ecsWorld, chest3, struct transformComponent);
     transform->position = (struct vec3) { 0, -1, -1 };
     transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
@@ -114,7 +113,7 @@ int main() {
     const char *skyboxPaths[] = { "assets/skybox/clouds1_east.qoi", "assets/skybox/clouds1_west.qoi", "assets/skybox/clouds1_up.qoi", "assets/skybox/clouds1_down.qoi", "assets/skybox/clouds1_north.qoi", "assets/skybox/clouds1_south.qoi" };
     loadSkybox(skyboxPaths, GET_COMPONENT(&ecsWorld, skybox, struct skyboxComponent));
 
-    entityId grass = loadModel(&ecsWorld, "assets/grass.fbx", "assets/grass.qoi", NULL, NULL, NULL);
+    entityId grass = loadModel(&ecsWorld, "assets/grass.fbx", "assets/grass.qoi", NULL, NULL, NULL, true);
     transform = GET_COMPONENT(&ecsWorld, grass, struct transformComponent);
     transform->position = (struct vec3) { 0, 0, 2 };
 
@@ -160,8 +159,9 @@ int main() {
 
 #if 0
         {
-            for (int i = 0; i < renderer->meshesLength; i++) {
-                struct meshRenderData *meshData = &renderer->meshes[i];
+            print("[Opaque (%u)]\n", renderer->opaqueMeshesLength);
+            for (int i = 0; i < renderer->opaqueMeshesLength; i++) {
+                struct meshRenderData *meshData = &renderer->opaqueMeshes[i];
 
                 print("(shader: %u) (VAO: %u) (indices: %u)\n", meshData->shader.program, meshData->VAO, meshData->indicesLength);
                 for (int j = 0; j < meshData->uniformsLength; j++) {
@@ -175,15 +175,29 @@ int main() {
                 }
                 print("\n");
             }
+			print("\n");
+
+            print("[Transparent (%u)]\n", renderer->transparentMeshesLength);
+            for (int i = 0; i < renderer->transparentMeshesLength; i++) {
+                struct meshRenderData *meshData = &renderer->transparentMeshes[i];
+
+                print("(shader: %u) (VAO: %u) (indices: %u)\n", meshData->shader.program, meshData->VAO, meshData->indicesLength);
+                for (int j = 0; j < meshData->uniformsLength; j++) {
+                    struct uniformRenderData *uniformData = &meshData->uniforms[j];
+                    print("uniform (type: %d) (loc: %u) (count: %u) (data: %p)\n", uniformData->type, uniformData->location, uniformData->count, uniformData->data);
+                }
+
+                for (int j = 0; j < meshData->texturesLength; j++) {
+                    struct textureRenderData *textureData = &meshData->textures[j];
+                    print("texture (type: %d) (slot: %u) (buffer: %u)\n", textureData->type, textureData->slot, textureData->buffer);
+                }
+                print("\n");
+            }
+			print("\n");
         }
 #endif
 
-        glEnable(GL_BLEND);
-
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_TRANSPARENT, deltaTime);
-
-        glDisable(GL_BLEND);
-
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_POST, deltaTime);
 
         glfwSwapBuffers(globalState.window);

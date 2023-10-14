@@ -185,5 +185,5 @@ void main() {
     color += pointLightning();
     color += spotLightning();
 
-    FragColor = vec4(color, 1.0);
+    FragColor = vec4(color, alpha);
 }

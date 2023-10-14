@@ -11,35 +11,6 @@
 
 #define MAX_LIGHTS 8
 
-struct dirLight {
-    GLuint direction;
-
-    GLuint ambientColor;
-    GLuint diffuseColor;
-    GLuint specularColor;
-};
-
-struct pointLight {
-    GLuint position;
-
-    GLuint attenuation;
-
-    GLuint ambientColor;
-    GLuint diffuseColor;
-    GLuint specularColor;
-};
-
-struct spotLight {
-    GLuint position;
-    GLuint direction;
-
-    GLuint cutOff;
-
-    GLuint ambientColor;
-    GLuint diffuseColor;
-    GLuint specularColor;
-};
-
 struct shader {
     GLuint modelLoc;
     GLuint viewLoc;
@@ -52,13 +23,36 @@ struct shader {
 
     GLuint cameraPosLoc;
 
-    struct dirLight dirLightLocs[MAX_LIGHTS];
+    struct {
+		GLuint direction;
+
+		GLuint ambientColor;
+		GLuint diffuseColor;
+		GLuint specularColor;
+	} dirLightLocs[MAX_LIGHTS];
     GLuint dirLightsLengthLoc;
 
-    struct pointLight pointLightLocs[MAX_LIGHTS];
+	struct {
+		GLuint position;
+
+		GLuint attenuation;
+
+		GLuint ambientColor;
+		GLuint diffuseColor;
+		GLuint specularColor;
+	} pointLightLocs[MAX_LIGHTS];
     GLuint pointLightsLengthLoc;
 
-    struct spotLight spotLightLocs[MAX_LIGHTS];
+	struct {
+		GLuint position;
+		GLuint direction;
+
+		GLuint cutOff;
+
+		GLuint ambientColor;
+		GLuint diffuseColor;
+		GLuint specularColor;
+	} spotLightLocs[MAX_LIGHTS];
     GLuint spotLightsLengthLoc;
 
     GLuint shininessLoc;
@@ -137,6 +131,6 @@ struct meshRenderData {
 };
 
 GLuint loadShaderFromFile(const char *shaderFile, GLenum type);
-void createMaterial(struct material *material, const char *diffusePath, const char *normalPath, const char *specularPath, const char *reflectancePath);
+void createMaterial(struct material *material, const char *diffusePath, const char *normalPath, const char *specularPath, const char *reflectancePath, bool transparent);
 
 #endif

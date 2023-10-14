@@ -22,7 +22,8 @@ void rendererGetDirLights(struct systemRunData data);
 void rendererGetSpotLights(struct systemRunData data);
 void rendererGetPointLights(struct systemRunData data);
 
-void rendererRender(struct systemRunData data);
+void rendererOpaqueRender(struct systemRunData data);
 void renderSkybox(struct systemRunData data);
+void rendererTransparentRender(struct systemRunData data);
 
 #endif

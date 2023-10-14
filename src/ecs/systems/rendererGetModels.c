@@ -15,7 +15,7 @@ void rendererGetModels(struct systemRunData data) {
 
 			for (int j = 0; j < model->meshesLength; j++) {
 				struct meshComponent *mesh = &model->meshes[j];
-				struct meshRenderData *renderData = &rendererData->meshes[rendererData->meshesLength++];
+				struct meshRenderData *renderData = mesh->material.transparent ? &rendererData->transparentMeshes[rendererData->transparentMeshesLength++] : &rendererData->opaqueMeshes[rendererData->opaqueMeshesLength++];
 
 				renderData->shader = mesh->material.shader;
 				renderData->VAO = model->meshes[j].VAO;

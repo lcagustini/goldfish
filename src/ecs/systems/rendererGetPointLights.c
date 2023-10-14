@@ -1,5 +1,49 @@
 #include <ecs/systems.h>
 
+static void setupPointLight(struct transformComponent *transform, struct pointLightComponent *light, struct meshRenderData *renderData, int i, int count) {
+	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
+		.type = RENDERER_UNIFORM_VECTOR_3,
+		.location = renderData->shader.spotLightLocs[i].position,
+		.count = 1,
+		.data.vector3 = transform->position
+	};
+
+	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
+		.type = RENDERER_UNIFORM_VECTOR_3,
+		.location = renderData->shader.pointLightLocs[i].attenuation,
+		.count = 1,
+		.data.vector3 = light->attenuation
+	};
+
+	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
+		.type = RENDERER_UNIFORM_VECTOR_3,
+		.location = renderData->shader.pointLightLocs[i].ambientColor,
+		.count = 1,
+		.data.vector3 = light->ambientColor
+	};
+
+	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
+		.type = RENDERER_UNIFORM_VECTOR_3,
+		.location = renderData->shader.pointLightLocs[i].diffuseColor,
+		.count = 1,
+		.data.vector3 = light->diffuseColor
+	};
+
+	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
+		.type = RENDERER_UNIFORM_VECTOR_3,
+		.location = renderData->shader.pointLightLocs[i].specularColor,
+		.count = 1,
+		.data.vector3 = light->specularColor
+	};
+
+	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
+		.type = RENDERER_UNIFORM_INT,
+		.location = renderData->shader.pointLightsLengthLoc,
+		.count = 1,
+		.data.integer = count
+	};
+}
+
 void rendererGetPointLights(struct systemRunData data) {
     struct transformComponent *transforms = GET_SYSTEM_COMPONENTS(data, 0, 0);
     struct pointLightComponent *lights = GET_SYSTEM_COMPONENTS(data, 0, 1);
@@ -13,50 +57,14 @@ void rendererGetPointLights(struct systemRunData data) {
         for (int k = 0; k < GET_SYSTEM_COMPONENTS_LENGTH(data, 1); k++) {
 			struct rendererDataComponent *rendererData = &rendererDatas[k];
 
-			for (int j = 0; j < rendererData->meshesLength; j++) {
-				struct meshRenderData *renderData = &rendererData->meshes[j];
+			for (int j = 0; j < rendererData->opaqueMeshesLength; j++) {
+				struct meshRenderData *renderData = &rendererData->opaqueMeshes[j];
+				setupPointLight(transform, light, renderData, i, GET_SYSTEM_COMPONENTS_LENGTH(data, 0));
+			}
 
-				renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-					.type = RENDERER_UNIFORM_VECTOR_3,
-					.location = renderData->shader.spotLightLocs[i].position,
-					.count = 1,
-					.data.vector3 = transform->position
-				};
-
-				renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-					.type = RENDERER_UNIFORM_VECTOR_3,
-					.location = renderData->shader.pointLightLocs[i].attenuation,
-					.count = 1,
-					.data.vector3 = light->attenuation
-				};
-
-				renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-					.type = RENDERER_UNIFORM_VECTOR_3,
-					.location = renderData->shader.pointLightLocs[i].ambientColor,
-					.count = 1,
-					.data.vector3 = light->ambientColor
-				};
-
-				renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-					.type = RENDERER_UNIFORM_VECTOR_3,
-					.location = renderData->shader.pointLightLocs[i].diffuseColor,
-					.count = 1,
-					.data.vector3 = light->diffuseColor
-				};
-
-				renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-					.type = RENDERER_UNIFORM_VECTOR_3,
-					.location = renderData->shader.pointLightLocs[i].specularColor,
-					.count = 1,
-					.data.vector3 = light->specularColor
-				};
-
-				renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-					.type = RENDERER_UNIFORM_INT,
-					.location = renderData->shader.pointLightsLengthLoc,
-					.count = 1,
-					.data.integer = GET_SYSTEM_COMPONENTS_LENGTH(data, 0)
-				};
+			for (int j = 0; j < rendererData->transparentMeshesLength; j++) {
+				struct meshRenderData *renderData = &rendererData->transparentMeshes[j];
+				setupPointLight(transform, light, renderData, i, GET_SYSTEM_COMPONENTS_LENGTH(data, 0));
 			}
         }
     }

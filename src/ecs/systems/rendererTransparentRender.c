@@ -1,13 +1,16 @@
 #include <ecs/systems.h>
 
-void rendererRender(struct systemRunData data) {
+void rendererTransparentRender(struct systemRunData data) {
     struct rendererDataComponent *rendererDatas = GET_SYSTEM_COMPONENTS(data, 0, 0);
+
+	glEnable(GL_BLEND);
+    glDepthMask(GL_FALSE);
 
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
 		struct rendererDataComponent *rendererData = &rendererDatas[i];
 
-        for (int j = 0; j < rendererData->meshesLength; j++) {
-            struct meshRenderData mesh = rendererData->meshes[j];
+        for (int j = 0; j < rendererData->transparentMeshesLength; j++) {
+            struct meshRenderData mesh = rendererData->transparentMeshes[j];
 
             glUseProgram(mesh.shader.program);
 
@@ -54,4 +57,7 @@ void rendererRender(struct systemRunData data) {
             glBindVertexArray(0);
         }
     }
+
+	glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
 }

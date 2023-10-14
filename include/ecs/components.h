@@ -11,8 +11,11 @@
 #include <ecs/world.h>
 
 struct rendererDataComponent {
-	struct meshRenderData meshes[1024];
-    unsigned int meshesLength;
+	struct meshRenderData opaqueMeshes[512];
+    unsigned int opaqueMeshesLength;
+
+	struct meshRenderData transparentMeshes[512];
+    unsigned int transparentMeshesLength;
 };
 
 struct skyboxComponent {

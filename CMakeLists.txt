@@ -51,8 +51,9 @@ add_executable(${PROJECT_NAME}
 	src/ecs/systems/rendererGetSpotLights.c
 	src/ecs/systems/rendererGetPointLights.c
 
-    src/ecs/systems/rendererRender.c
+    src/ecs/systems/rendererOpaqueRender.c
     src/ecs/systems/renderSkybox.c
+    src/ecs/systems/rendererTransparentRender.c
 
     src/data/hashtable.c
     src/data/dynarray.c

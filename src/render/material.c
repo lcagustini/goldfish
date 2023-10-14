@@ -186,7 +186,7 @@ void loadTexture(struct texture *texture, const char *path, enum textureType tex
     texture->path = path;
 }
 
-void createMaterial(struct material *material, const char *diffusePath, const char *normalPath, const char *specularPath, const char *reflectancePath) {
+void createMaterial(struct material *material, const char *diffusePath, const char *normalPath, const char *specularPath, const char *reflectancePath, bool transparent) {
     createShader(&material->shader, "assets/shaders/default_v.glsl", "assets/shaders/default_f.glsl");
 
     if (diffusePath) {
@@ -207,5 +207,6 @@ void createMaterial(struct material *material, const char *diffusePath, const ch
     }
 
     material->shininess = 64.0f;
-    material->alphaClipping = 0.5f;
+    material->alphaClipping = 0.0f;
+    material->transparent = transparent;
 }
