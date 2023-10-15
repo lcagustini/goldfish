@@ -70,7 +70,7 @@ vec3 dirLightning() {
 
         vec3 lightDir = TBN * normalize(dl.direction);
 
-        vec3 fragColor = texture(textureMap, textCoord).rgb;
+        vec3 fragColor = pow(texture(textureMap, textCoord).rgb, vec3(2.2));
 
         float ambientStrength = 0.15;
         vec3 ambient = ambientStrength * dl.ambientColor;
@@ -108,7 +108,7 @@ vec3 pointLightning() {
         float lightDistance = length(lightDir);
         lightDir = normalize(lightDir);
 
-        vec3 fragColor = texture(textureMap, textCoord).rgb;
+        vec3 fragColor = pow(texture(textureMap, textCoord).rgb, vec3(2.2));
 
         float ambientStrength = 0.15;
         vec3 ambient = ambientStrength * pl.ambientColor;
@@ -150,7 +150,7 @@ vec3 spotLightning() {
         float ambientStrength = 0.15;
         vec3 ambient = ambientStrength * sl.ambientColor;
 
-        vec3 fragColor = texture(textureMap, textCoord).rgb;
+        vec3 fragColor = pow(texture(textureMap, textCoord).rgb, vec3(2.2));
 
         vec3 norm = texture(normalMap, textCoord).rgb;
         norm = normalize(2.0 * norm - 1.0);

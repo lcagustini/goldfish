@@ -50,6 +50,8 @@ void globalInit() {
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 
+	glEnable(GL_FRAMEBUFFER_SRGB); 
+
 #if 0
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(errorCallback, 0);
