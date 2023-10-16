@@ -60,7 +60,7 @@ int main() {
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_UPDATE, updateCameraView, "cameraFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_POST_UPDATE, updateTransformMatrix, "transformFilter");
 
-    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetModels, "modelFilter", "rendererDataFilter");
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SORT, rendererGetModels, "modelFilter", "rendererDataFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetCameras, "renderCameraFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetSkybox, "skyboxFilter", "rendererDataFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetDirLights, "dirLightFilter", "rendererDataFilter");
@@ -154,6 +154,7 @@ int main() {
         struct rendererDataComponent *renderer = GET_COMPONENT(&ecsWorld, camera, struct rendererDataComponent);
 		memset(renderer, 0, sizeof(struct rendererDataComponent));
 
+        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SORT, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SETUP, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SKYBOX, deltaTime);

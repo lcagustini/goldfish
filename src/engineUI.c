@@ -2,10 +2,89 @@
 
 #include <fontIconsMaterialDesign.h>
 #include <global.h>
+#include <print.h>
 
 #include <ecs/components.h>
 
 #include <string.h>
+
+static bool hierarchyWindowOpened;
+static bool systemsWindowOpened;
+
+static const char *systemPhaseName(enum systemPhase phase) {
+	switch (phase) {
+		case SYSTEM_ON_PRE_UPDATE:
+			return "Pre Update";
+		case SYSTEM_ON_UPDATE:
+			return "Update";
+		case SYSTEM_ON_POST_UPDATE:
+			return "Post Update";
+		case SYSTEM_ON_RENDER_SORT:
+			return "Render Sort";
+		case SYSTEM_ON_RENDER_SETUP:
+			return "Render Setup";
+		case SYSTEM_ON_RENDER_OPAQUE:
+			return "Render Opaque";
+		case SYSTEM_ON_RENDER_SKYBOX:
+			return "Render Skybox";
+		case SYSTEM_ON_RENDER_TRANSPARENT:
+			return "Render Transparent";
+		case SYSTEM_ON_RENDER_POST:
+			return "Render Post";
+		default:
+			return "";
+	}
+}
+
+static void drawMenuBar(struct world *world) {
+	if (igBeginMainMenuBar()) {
+		if (igBeginMenu("World", true)) {
+			if (igMenuItem_Bool("Entities", NULL, false, true)) { 
+				hierarchyWindowOpened = true;
+			}
+			if (igMenuItem_Bool("Systems", NULL, false, true)) { 
+				systemsWindowOpened = true;
+			}
+			igEndMenu();
+		}
+		igEndMainMenuBar();
+	}
+}
+
+static void drawSystems(struct world *world) {
+	if (systemsWindowOpened) {
+		if (igBegin("Systems", &systemsWindowOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+			for (int j = 0; j < SYSTEM_PHASE_MAX; j++) {
+				if (world->phaseSystems[j].bufferCount == 0) continue;
+
+				if (igTreeNode_Str(systemPhaseName(j))) {
+					for (int i = 0; i < world->phaseSystems[j].bufferCount; i++) {
+						struct system *system = dynarrayGet(&world->phaseSystems[j], i);
+
+						if (igTreeNode_Str(system->name)) {
+							for (int l = 0; l < system->filtersLength; l++) {
+								struct filter *filter = hashtableGet(&world->filters, system->filters[l]);
+
+								char filterName[10] = { 0 };
+								sprintf(filterName, "%d", l);
+
+								if (igTreeNode_Str(filterName)) {
+									for (int k = 0; k < filter->componentsLength; k++) {
+										igText(filter->components[k]);
+									}
+									igTreePop();
+								}
+							}
+							igTreePop();
+						}
+					}
+					igTreePop();
+				}
+			}
+		}
+		igEnd();
+	}
+}
 
 static void drawHierarchy(struct world *world) {
 	componentId transformComponentId = GET_COMPONENT_ID(struct transformComponent);
@@ -61,51 +140,53 @@ removeFromQueue:
 		if (queueLength > 0) j = (j + 1) % queueLength;
 	}
 
-	if (igBegin(ICON_MD_FORMAT_LIST_BULLETED " Hierarchy", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-		int currentLevel = 0;
-		for (int i = 0; i < drawEntitiesLength; i++) {
-			int diff = currentLevel - depth[i];
+	if (hierarchyWindowOpened) {
+		if (igBegin("Entities", &hierarchyWindowOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+			int currentLevel = 0;
+			for (int i = 0; i < drawEntitiesLength; i++) {
+				int diff = currentLevel - depth[i];
+				for (int j = 0; j < diff; j++) {
+					igTreePop();
+					currentLevel--;
+				}
+				if (currentLevel < depth[i]) continue;
+
+				if (i + 1 < drawEntitiesLength && depth[i + 1] > depth[i]) {
+					if (igTreeNode_Str(drawEntities[i])) {
+						currentLevel++;
+					}
+				}
+				else {
+					igIndent(0);
+					igText(drawEntities[i]);
+					igUnindent(0);
+				}
+			}
+			int diff = currentLevel - depth[drawEntitiesLength - 1];
 			for (int j = 0; j < diff; j++) {
 				igTreePop();
-				currentLevel--;
 			}
-			if (currentLevel < depth[i]) continue;
 
-			if (i + 1 < drawEntitiesLength && depth[i + 1] > depth[i]) {
-				if (igTreeNode_Str(drawEntities[i])) {
-					currentLevel++;
+			igSeparator();
+
+			for (int i = 0; i < world->entities.bufferCount; i++) {
+				if (!world->entities.valids[i]) continue;
+
+				bool found = false;
+				for (int j = 0; j < drawEntitiesLength; j++) {
+					if (strcmp(world->entities.keys[i], drawEntities[j]) == 0) {
+						found = true;
+						break;
+					}
+				}
+
+				if (!found) {
+					igText(world->entities.keys[i]);
 				}
 			}
-			else {
-				igIndent(0);
-				igText(drawEntities[i]);
-				igUnindent(0);
-			}
 		}
-		int diff = currentLevel - depth[drawEntitiesLength - 1];
-		for (int j = 0; j < diff; j++) {
-			igTreePop();
-		}
-
-		igSeparator();
-
-		for (int i = 0; i < world->entities.bufferCount; i++) {
-			if (!world->entities.valids[i]) continue;
-
-			bool found = false;
-			for (int j = 0; j < drawEntitiesLength; j++) {
-				if (strcmp(world->entities.keys[i], drawEntities[j]) == 0) {
-					found = true;
-					break;
-				}
-			}
-
-			if (!found) {
-				igText(world->entities.keys[i]);
-			}
-		}
+		igEnd();
 	}
-	igEnd();
 }
 
 void drawEngineUI(struct world *world) {
@@ -113,6 +194,8 @@ void drawEngineUI(struct world *world) {
 	ImGui_ImplGlfw_NewFrame();
 	igNewFrame();
 
+	drawMenuBar(world);
+	drawSystems(world);
 	drawHierarchy(world);
 
 	igRender();
