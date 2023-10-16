@@ -1,6 +1,8 @@
 #include <engineUI.h>
 
+#include <fontIconsMaterialDesign.h>
 #include <global.h>
+
 #include <ecs/components.h>
 
 #include <string.h>
@@ -59,7 +61,7 @@ removeFromQueue:
 		if (queueLength > 0) j = (j + 1) % queueLength;
 	}
 
-	if (igBegin("Hierarchy", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+	if (igBegin(ICON_MD_FORMAT_LIST_BULLETED " Hierarchy", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 		int currentLevel = 0;
 		for (int i = 0; i < drawEntitiesLength; i++) {
 			int diff = currentLevel - depth[i];
@@ -69,7 +71,7 @@ removeFromQueue:
 			}
 			if (currentLevel < depth[i]) continue;
 
-			if (depth[i + 1] > depth[i]) {
+			if (i + 1 < drawEntitiesLength && depth[i + 1] > depth[i]) {
 				if (igTreeNode_Str(drawEntities[i])) {
 					currentLevel++;
 				}
@@ -83,6 +85,24 @@ removeFromQueue:
 		int diff = currentLevel - depth[drawEntitiesLength - 1];
 		for (int j = 0; j < diff; j++) {
 			igTreePop();
+		}
+
+		igSeparator();
+
+		for (int i = 0; i < world->entities.bufferCount; i++) {
+			if (!world->entities.valids[i]) continue;
+
+			bool found = false;
+			for (int j = 0; j < drawEntitiesLength; j++) {
+				if (strcmp(world->entities.keys[i], drawEntities[j]) == 0) {
+					found = true;
+					break;
+				}
+			}
+
+			if (!found) {
+				igText(world->entities.keys[i]);
+			}
 		}
 	}
 	igEnd();

@@ -1,6 +1,8 @@
 #include <global.h>
 #include <print.h>
 
+#include <fontIconsMaterialDesign.h>
+
 #include <stdlib.h>
 
 struct globalState globalState;
@@ -9,7 +11,7 @@ static void GLAPIENTRY errorCallback(GLenum source, GLenum type, GLuint id, GLen
     fprintf(stderr, "[GL %s] type = 0x%x, severity = 0x%x, message = %s\n", ( type == GL_DEBUG_TYPE_ERROR ? "Error" : "Info" ), type, severity, message );
 }
 
-static void windowResizeCallback(GLFWwindow* window, int width, int height) {
+static void windowResizeCallback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
@@ -60,8 +62,18 @@ void globalInit() {
     print("OpenGL: %s - %s\n\n", glGetString(GL_VERSION), glGetString(GL_RENDERER));
 
 	igCreateContext(NULL);
-	ImGuiIO *ioptr = igGetIO();
-	ioptr->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	ImGuiIO *imguiIO = igGetIO();
+	ImFontAtlas *fontAtlas = imguiIO->Fonts;
+    ImFontConfig *config = ImFontConfig_ImFontConfig();
+
+	//imguiIO->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	imguiIO->FontDefault = ImFontAtlas_AddFontFromFileTTF(fontAtlas, "assets/SourceCodePro-Medium.ttf", 14, NULL, ImFontAtlas_GetGlyphRangesDefault(fontAtlas));
+
+	config->MergeMode = true;
+	config->GlyphMinAdvanceX = 12;
+    config->GlyphOffset = (ImVec2) { .x = 0, .y = 2 };
+	static const ImWchar iconRanges[] = { ICON_MIN_MD, ICON_MAX_16_MD, 0 };
+    ImFontAtlas_AddFontFromFileTTF(fontAtlas, "assets/MaterialIcons-Regular.ttf", 12, config, iconRanges);
 
 	ImGui_ImplGlfw_InitForOpenGL(globalState.window, true);
 	ImGui_ImplOpenGL3_Init("#version 130");

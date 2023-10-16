@@ -11,8 +11,6 @@
 #include <imgui/cimgui_impl.h>
 
 struct globalState {
-
-
     GLFWwindow *window;
 };
 
