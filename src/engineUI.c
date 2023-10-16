@@ -10,6 +10,8 @@
 
 static bool hierarchyWindowOpened;
 static bool systemsWindowOpened;
+static bool componentsWindowOpened;
+static bool tablesWindowOpened;
 
 static const char *systemPhaseName(enum systemPhase phase) {
 	switch (phase) {
@@ -45,6 +47,12 @@ static void drawMenuBar(struct world *world) {
 			if (igMenuItem_Bool("Systems", NULL, false, true)) { 
 				systemsWindowOpened = true;
 			}
+			if (igMenuItem_Bool("Components", NULL, false, true)) { 
+				componentsWindowOpened = true;
+			}
+			if (igMenuItem_Bool("Tables", NULL, false, true)) { 
+				tablesWindowOpened = true;
+			}
 			igEndMenu();
 		}
 		igEndMainMenuBar();
@@ -77,6 +85,41 @@ static void drawSystems(struct world *world) {
 							}
 							igTreePop();
 						}
+					}
+					igTreePop();
+				}
+			}
+		}
+		igEnd();
+	}
+}
+
+static void drawComponents(struct world *world) {
+	if (componentsWindowOpened) {
+		if (igBegin("Components", &componentsWindowOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+			struct component *components = world->components.buffer;
+			for (int i = 0; i < world->components.bufferCount; i++) {
+				if (!world->components.valids[i]) continue;
+
+				igText("%s (%u bytes)", components[i].name, components[i].size);
+			}
+		}
+		igEnd();
+	}
+}
+
+static void drawTables(struct world *world) {
+	if (tablesWindowOpened) {
+		if (igBegin("Tables", &tablesWindowOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+			for (int i = 0; i < world->tables.bufferCount; i++) {
+				struct table *table = dynarrayGet(&world->tables, i);
+
+				char tableName[40] = { 0 };
+				sprintf(tableName, "%d (%u entities)", i, table->componentsLength);
+
+				if (igTreeNode_Str(tableName)) {
+					for (int j = 0; j < table->recordsLength; j++) {
+						igText(table->records[j].componentType);
 					}
 					igTreePop();
 				}
@@ -196,6 +239,8 @@ void drawEngineUI(struct world *world) {
 
 	drawMenuBar(world);
 	drawSystems(world);
+	drawComponents(world);
+	drawTables(world);
 	drawHierarchy(world);
 
 	igRender();

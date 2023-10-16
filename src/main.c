@@ -126,7 +126,7 @@ int main() {
     dirLight->diffuseColor = (struct vec3) { 1, 1, 1 };
     dirLight->specularColor = (struct vec3) { 1, 1, 1 };
 
-    printWorld(&ecsWorld);
+    //printWorld(&ecsWorld);
 
     double currentTime = glfwGetTime();
     double lastTime = currentTime;
