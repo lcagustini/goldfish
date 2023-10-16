@@ -12,6 +12,7 @@
 
 #include <ecs/world.h>
 
+#include <engineUI.h>
 #include <print.h>
 #include <global.h>
 
@@ -199,6 +200,8 @@ int main() {
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_TRANSPARENT, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_POST, deltaTime);
+
+        drawEngineUI(&ecsWorld);
 
         glfwSwapBuffers(globalState.window);
     }

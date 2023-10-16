@@ -58,8 +58,21 @@ void globalInit() {
 #endif
 
     print("OpenGL: %s - %s\n\n", glGetString(GL_VERSION), glGetString(GL_RENDERER));
+
+	igCreateContext(NULL);
+	ImGuiIO *ioptr = igGetIO();
+	ioptr->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+	ImGui_ImplGlfw_InitForOpenGL(globalState.window, true);
+	ImGui_ImplOpenGL3_Init("#version 130");
+
+	igStyleColorsDark(NULL);
 }
 
 void globalEnd() {
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	igDestroyContext(NULL);
+
     glfwTerminate();
 }

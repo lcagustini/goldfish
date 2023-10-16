@@ -4,12 +4,14 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-struct globalState {
-    //EGLDisplay display;
-    //EGLSurface surface;
-    //EGLContext context;
+#define CIMGUI_USE_GLFW
+#define CIMGUI_USE_OPENGL3
+#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+#include <imgui/cimgui.h>
+#include <imgui/cimgui_impl.h>
 
-    //EGLint surfaceWidth, surfaceHeight;
+struct globalState {
+
 
     GLFWwindow *window;
 };

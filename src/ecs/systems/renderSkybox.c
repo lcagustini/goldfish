@@ -6,7 +6,7 @@ void renderSkybox(struct systemRunData data) {
     componentId cameraTypes[] = { GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent) };
     tableId cameraTable;
     getAllTablesWithComponents(data.world, cameraTypes, 2, &cameraTable, 1);
-    struct cameraComponent *camera = getComponentsFromTable(data.world, cameraTable, cameraTypes[1]);
+    struct cameraComponent *camera = getComponentsFromTable(data.world, cameraTable, cameraTypes[1], NULL);
 
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
         struct skyboxComponent *skybox = &skyboxes[i];

@@ -234,13 +234,17 @@ void *getComponent(struct world *world, entityId entity, componentId component) 
     return NULL;
 }
 
-void *getComponentsFromTable(struct world *world, tableId table, componentId component) {
+void *getComponentsFromTable(struct world *world, tableId table, componentId component, unsigned int *componentsLength) {
     struct table *t = dynarrayGet(&world->tables, table);
 
     for (int i = 0; i < t->recordsLength; i++) {
-        if (strcmp(t->records[i].componentType, component) == 0) return t->records[i].components;
+        if (strcmp(t->records[i].componentType, component) == 0) {
+            if (componentsLength != NULL) *componentsLength = t->componentsLength;
+            return t->records[i].components;
+        }
     }
 
+    if (componentsLength != NULL) *componentsLength = 0;
     return NULL;
 }
 
@@ -305,6 +309,14 @@ void deleteEntity(struct world *world, entityId id) {
 
     free(e->name);
     hashtableRemove(&world->entities, id);
+}
+
+entityId searchForEntity(struct world *world, tableId table, unsigned int position) {
+    struct entity *entities = world->entities.buffer;
+    for (int i = 0; i < world->entities.bufferCount; i++) {
+        if (entities[i].table == table && entities[i].position == position) return world->entities.keys[i];
+    }
+    return NULL;
 }
 
 void addPhaseSystem(struct world *world, enum systemPhase phase, struct system system) {

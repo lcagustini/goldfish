@@ -77,7 +77,7 @@ struct system {
 
 struct entity {
     char *name;
-    unsigned int table;
+    tableId table;
     unsigned int position;
 };
 
@@ -126,7 +126,7 @@ struct world {
 #define GET_FILTER_COMPONENT(w, f, i) ((struct filter *)hashtableGet(&(w)->filters, (f)))->components[i]
 
 #define GET_SYSTEM_COMPONENT(d) getComponent((d).world, (d).filterResults[0].entity, GET_FILTER_COMPONENT((d).world, (d).system->filters[0], 0))
-#define GET_SYSTEM_COMPONENTS(d, i, j) getComponentsFromTable((d).world, (d).filterResults[i].table, GET_FILTER_COMPONENT((d).world, (d).system->filters[i], j))
+#define GET_SYSTEM_COMPONENTS(d, i, j) getComponentsFromTable((d).world, (d).filterResults[i].table, GET_FILTER_COMPONENT((d).world, (d).system->filters[i], j), NULL)
 #define GET_SYSTEM_COMPONENTS_LENGTH(d, i) (((struct table *)dynarrayGet(&(d).world->tables, (d).filterResults[i].table))->componentsLength)
 
 //#define COMPONENT_PACKAGE(...) ({ __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__)})
@@ -177,7 +177,7 @@ void createComponent(struct world *world, const char *component, unsigned int co
 
 void addComponent(struct world *world, entityId entity, componentId component);
 void *getComponent(struct world *world, entityId entity, componentId component);
-void *getComponentsFromTable(struct world *world, tableId table, componentId component);
+void *getComponentsFromTable(struct world *world, tableId table, componentId component, unsigned int *componentsLength);
 unsigned int getAllTablesWithComponents(struct world *world, componentId *components, unsigned int componentsLength, tableId *tables, unsigned int tablesLength);
 void removeComponent(struct world *world, entityId entity, componentId component);
 
@@ -187,6 +187,7 @@ void removeSingletonComponent(struct world *world, componentId component);
 
 entityId createEntity(struct world *world, const char *name);
 void deleteEntity(struct world *world, entityId id);
+entityId searchForEntity(struct world *world, tableId table, unsigned int position);
 
 void addPhaseSystem(struct world *world, enum systemPhase phase, struct system system);
 void addEventSystem(struct world *world, enum systemEvent event, struct system system);

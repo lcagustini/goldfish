@@ -23,15 +23,17 @@ link_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-file(GLOB 
-	cimgui_files 
-	"src/imgui/*.cpp"
-)
-
 ## Build and link
 # Add all the files needed to compile here
 add_executable(${PROJECT_NAME}
-    ${cimgui_files}
+    src/imgui/cimgui.cpp
+    src/imgui/imgui.cpp
+    src/imgui/imgui_demo.cpp
+    src/imgui/imgui_draw.cpp
+    src/imgui/imgui_impl_glfw.cpp
+    src/imgui/imgui_impl_opengl3.cpp
+    src/imgui/imgui_tables.cpp
+    src/imgui/imgui_widgets.cpp
 
     src/math/matrix.c
     src/math/vector.c
@@ -65,6 +67,7 @@ add_executable(${PROJECT_NAME}
     src/data/hashtable.c
     src/data/dynarray.c
 
+    src/engineUI.c
     src/print.c
     src/global.c
 
