@@ -18,6 +18,15 @@ struct guiState {
 
 static struct guiState guiState;
 
+static const char *systemEventName(enum systemEvent event) {
+	switch (event) {
+		case SYSTEM_ON_COMPONENT_ADD:
+			return "Component Add";
+		default:
+			return "";
+	}
+}
+
 static const char *systemPhaseName(enum systemPhase phase) {
 	switch (phase) {
 		case SYSTEM_ON_PRE_UPDATE:
@@ -158,6 +167,36 @@ static void drawSystems(struct world *world) {
 				if (igTreeNode_Str(systemPhaseName(j))) {
 					for (int i = 0; i < world->phaseSystems[j].bufferCount; i++) {
 						struct system *system = dynarrayGet(&world->phaseSystems[j], i);
+
+						if (igTreeNode_Str(system->name)) {
+							for (int l = 0; l < system->filtersLength; l++) {
+								struct filter *filter = hashtableGet(&world->filters, system->filters[l]);
+
+								char filterName[10] = { 0 };
+								sprintf(filterName, "%d", l);
+
+								if (igTreeNode_Str(filterName)) {
+									for (int k = 0; k < filter->componentsLength; k++) {
+										igText(filter->components[k]);
+									}
+									igTreePop();
+								}
+							}
+							igTreePop();
+						}
+					}
+					igTreePop();
+				}
+			}
+
+			igSeparator();
+
+			for (int j = 0; j < SYSTEM_EVENT_MAX; j++) {
+				if (world->eventSystems[j].bufferCount == 0) continue;
+
+				if (igTreeNode_Str(systemEventName(j))) {
+					for (int i = 0; i < world->eventSystems[j].bufferCount; i++) {
+						struct system *system = dynarrayGet(&world->eventSystems[j], i);
 
 						if (igTreeNode_Str(system->name)) {
 							for (int l = 0; l < system->filtersLength; l++) {
