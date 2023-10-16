@@ -23,9 +23,16 @@ link_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+file(GLOB 
+	cimgui_files 
+	"src/imgui/*.cpp"
+)
+
 ## Build and link
 # Add all the files needed to compile here
 add_executable(${PROJECT_NAME}
+    ${cimgui_files}
+
     src/math/matrix.c
     src/math/vector.c
     src/math/float.c
@@ -62,6 +69,11 @@ add_executable(${PROJECT_NAME}
     src/global.c
 
     src/main.c
+)
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE 
+	IMGUI_IMPL_API=extern\ \"C\"
+	IMGUI_IMPL_OPENGL_LOADER_GL3W
 )
 
 target_link_libraries(${PROJECT_NAME}
