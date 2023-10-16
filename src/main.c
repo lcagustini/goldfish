@@ -126,8 +126,6 @@ int main() {
     dirLight->diffuseColor = (struct vec3) { 1, 1, 1 };
     dirLight->specularColor = (struct vec3) { 1, 1, 1 };
 
-    //printWorld(&ecsWorld);
-
     double currentTime = glfwGetTime();
     double lastTime = currentTime;
     while (!glfwWindowShouldClose(globalState.window)) {
@@ -151,55 +149,13 @@ int main() {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        struct rendererDataComponent *renderer = GET_COMPONENT(&ecsWorld, camera, struct rendererDataComponent);
-		memset(renderer, 0, sizeof(struct rendererDataComponent));
-
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SORT, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SETUP, deltaTime);
+
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SKYBOX, deltaTime);
-
-#if 0
-        {
-            print("[Opaque (%u)]\n", renderer->opaqueMeshesLength);
-            for (int i = 0; i < renderer->opaqueMeshesLength; i++) {
-                struct meshRenderData *meshData = &renderer->opaqueMeshes[i];
-
-                print("(shader: %u) (VAO: %u) (indices: %u)\n", meshData->shader.program, meshData->VAO, meshData->indicesLength);
-                for (int j = 0; j < meshData->uniformsLength; j++) {
-                    struct uniformRenderData *uniformData = &meshData->uniforms[j];
-                    print("uniform (type: %d) (loc: %u) (count: %u) (data: %p)\n", uniformData->type, uniformData->location, uniformData->count, uniformData->data);
-                }
-
-                for (int j = 0; j < meshData->texturesLength; j++) {
-                    struct textureRenderData *textureData = &meshData->textures[j];
-                    print("texture (type: %d) (slot: %u) (buffer: %u)\n", textureData->type, textureData->slot, textureData->buffer);
-                }
-                print("\n");
-            }
-			print("\n");
-
-            print("[Transparent (%u)]\n", renderer->transparentMeshesLength);
-            for (int i = 0; i < renderer->transparentMeshesLength; i++) {
-                struct meshRenderData *meshData = &renderer->transparentMeshes[i];
-
-                print("(shader: %u) (VAO: %u) (indices: %u)\n", meshData->shader.program, meshData->VAO, meshData->indicesLength);
-                for (int j = 0; j < meshData->uniformsLength; j++) {
-                    struct uniformRenderData *uniformData = &meshData->uniforms[j];
-                    print("uniform (type: %d) (loc: %u) (count: %u) (data: %p)\n", uniformData->type, uniformData->location, uniformData->count, uniformData->data);
-                }
-
-                for (int j = 0; j < meshData->texturesLength; j++) {
-                    struct textureRenderData *textureData = &meshData->textures[j];
-                    print("texture (type: %d) (slot: %u) (buffer: %u)\n", textureData->type, textureData->slot, textureData->buffer);
-                }
-                print("\n");
-            }
-			print("\n");
-        }
-#endif
-
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_TRANSPARENT, deltaTime);
+
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_POST, deltaTime);
 
         drawEngineUI(&ecsWorld);

@@ -6,6 +6,11 @@ void rendererGetModels(struct systemRunData data) {
 
     struct rendererDataComponent *rendererDatas = GET_SYSTEM_COMPONENTS(data, 1, 0);
 
+	for (int k = 0; k < GET_SYSTEM_COMPONENTS_LENGTH(data, 1); k++) {
+		struct rendererDataComponent *rendererData = &rendererDatas[k];
+		memset(rendererData, 0, sizeof(struct rendererDataComponent));
+	}
+
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
 		struct transformComponent *transform = &transforms[i];
 		struct modelComponent *model = &models[i];

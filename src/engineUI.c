@@ -8,11 +8,15 @@
 
 #include <string.h>
 
-static bool hierarchyWindowOpened;
-static bool systemsWindowOpened;
-static bool componentsWindowOpened;
-static bool tablesWindowOpened;
-static bool rendererDataOpened;
+struct guiState {
+	bool hierarchyWindowOpened;
+	bool systemsWindowOpened;
+	bool componentsWindowOpened;
+	bool tablesWindowOpened;
+	bool rendererDataOpened;
+};
+
+static struct guiState guiState;
 
 static const char *systemPhaseName(enum systemPhase phase) {
 	switch (phase) {
@@ -43,22 +47,22 @@ static void drawMenuBar(struct world *world) {
 	if (igBeginMainMenuBar()) {
 		if (igBeginMenu("World", true)) {
 			if (igMenuItem_Bool("Entities", NULL, false, true)) { 
-				hierarchyWindowOpened = true;
+				guiState.hierarchyWindowOpened = true;
 			}
 			if (igMenuItem_Bool("Systems", NULL, false, true)) { 
-				systemsWindowOpened = true;
+				guiState.systemsWindowOpened = true;
 			}
 			if (igMenuItem_Bool("Components", NULL, false, true)) { 
-				componentsWindowOpened = true;
+				guiState.componentsWindowOpened = true;
 			}
 			if (igMenuItem_Bool("Tables", NULL, false, true)) { 
-				tablesWindowOpened = true;
+				guiState.tablesWindowOpened = true;
 			}
 			igEndMenu();
 		}
 		if (igBeginMenu("Render", true)) {
 			if (igMenuItem_Bool("Renderer Data", NULL, false, true)) { 
-				rendererDataOpened = true;
+				guiState.rendererDataOpened = true;
 			}
 			igEndMenu();
 		}
@@ -67,8 +71,8 @@ static void drawMenuBar(struct world *world) {
 }
 
 static void drawRendererData(struct world *world) {
-	if (rendererDataOpened) {
-		if (igBegin("Renderer Data", &rendererDataOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+	if (guiState.rendererDataOpened) {
+		if (igBegin("Renderer Data", &guiState.rendererDataOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
 			struct filter *filter = getFilter(world, "rendererDataFilter");
 
 			for (int i = 0; i < filter->resultsLength; i++) {
@@ -146,8 +150,8 @@ static void drawRendererData(struct world *world) {
 }
 
 static void drawSystems(struct world *world) {
-	if (systemsWindowOpened) {
-		if (igBegin("Systems", &systemsWindowOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+	if (guiState.systemsWindowOpened) {
+		if (igBegin("Systems", &guiState.systemsWindowOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
 			for (int j = 0; j < SYSTEM_PHASE_MAX; j++) {
 				if (world->phaseSystems[j].bufferCount == 0) continue;
 
@@ -181,8 +185,8 @@ static void drawSystems(struct world *world) {
 }
 
 static void drawComponents(struct world *world) {
-	if (componentsWindowOpened) {
-		if (igBegin("Components", &componentsWindowOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+	if (guiState.componentsWindowOpened) {
+		if (igBegin("Components", &guiState.componentsWindowOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
 			struct component *components = world->components.buffer;
 			for (int i = 0; i < world->components.bufferCount; i++) {
 				if (!world->components.valids[i]) continue;
@@ -195,8 +199,8 @@ static void drawComponents(struct world *world) {
 }
 
 static void drawTables(struct world *world) {
-	if (tablesWindowOpened) {
-		if (igBegin("Tables", &tablesWindowOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+	if (guiState.tablesWindowOpened) {
+		if (igBegin("Tables", &guiState.tablesWindowOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
 			for (int i = 0; i < world->tables.bufferCount; i++) {
 				struct table *table = dynarrayGet(&world->tables, i);
 
@@ -269,8 +273,8 @@ removeFromQueue:
 		if (queueLength > 0) j = (j + 1) % queueLength;
 	}
 
-	if (hierarchyWindowOpened) {
-		if (igBegin("Entities", &hierarchyWindowOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+	if (guiState.hierarchyWindowOpened) {
+		if (igBegin("Entities", &guiState.hierarchyWindowOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
 			int currentLevel = 0;
 			for (int i = 0; i < drawEntitiesLength; i++) {
 				int diff = currentLevel - depth[i];
