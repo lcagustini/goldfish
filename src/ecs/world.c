@@ -337,6 +337,10 @@ void addFilter(struct world *world, const char *name, struct filter filter) {
     hashtableSet(&world->filters, name, &filter);
 }
 
+struct filter *getFilter(struct world *world, const char *name) {
+    return hashtableGet(&world->filters, name);
+}
+
 void runWorldPhase(struct world *world, enum systemPhase phase, float dt) {
     for (int i = 0; i < world->phaseSystems[phase].bufferCount; i++) {
         struct system *system = dynarrayGet(&world->phaseSystems[phase], i);

@@ -12,6 +12,7 @@ static bool hierarchyWindowOpened;
 static bool systemsWindowOpened;
 static bool componentsWindowOpened;
 static bool tablesWindowOpened;
+static bool rendererDataOpened;
 
 static const char *systemPhaseName(enum systemPhase phase) {
 	switch (phase) {
@@ -55,7 +56,92 @@ static void drawMenuBar(struct world *world) {
 			}
 			igEndMenu();
 		}
+		if (igBeginMenu("Render", true)) {
+			if (igMenuItem_Bool("Renderer Data", NULL, false, true)) { 
+				rendererDataOpened = true;
+			}
+			igEndMenu();
+		}
 		igEndMainMenuBar();
+	}
+}
+
+static void drawRendererData(struct world *world) {
+	if (rendererDataOpened) {
+		if (igBegin("Renderer Data", &rendererDataOpened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+			struct filter *filter = getFilter(world, "rendererDataFilter");
+
+			for (int i = 0; i < filter->resultsLength; i++) {
+				unsigned int rendererDatasLength;
+				struct rendererDataComponent *rendererDatas = getComponentsFromTable(world, filter->results[i], GET_COMPONENT_ID(struct rendererDataComponent), &rendererDatasLength);
+
+				for (int j = 0; j < rendererDatasLength; j++) {
+					char rendererName[30] = { 0 };
+					sprintf(rendererName, "%d %d", i, j);
+
+					if (igTreeNode_Str(rendererName)) {
+						struct rendererDataComponent *renderer = &rendererDatas[j];
+
+						if (igTreeNode_Str("Opaques")) {
+							for (int k = 0; k < renderer->opaqueMeshesLength; k++) {
+								struct meshRenderData *meshData = &renderer->opaqueMeshes[k];
+
+								char meshName[100] = { 0 };
+								sprintf(meshName, "shader: %u - VAO: %u - indices: %u\n", meshData->shader.program, meshData->VAO, meshData->indicesLength);
+
+								if (igTreeNode_Str(meshName)) {
+									if (igTreeNode_Str("Uniforms")) {
+										for (int l = 0; l < meshData->uniformsLength; l++) {
+											struct uniformRenderData *uniformData = &meshData->uniforms[l];
+											igText("uniform (type: %d) (loc: %u) (count: %u) (data: %p)", uniformData->type, uniformData->location, uniformData->count, uniformData->data);
+										}
+										igTreePop();
+									}
+									if (igTreeNode_Str("Textures")) {
+										for (int l = 0; l < meshData->texturesLength; l++) {
+											struct textureRenderData *textureData = &meshData->textures[l];
+											igText("texture (type: %d) (slot: %u) (buffer: %u)\n", textureData->type, textureData->slot, textureData->buffer);
+										}
+										igTreePop();
+									}
+									igTreePop();
+								}
+							}
+							igTreePop();
+						}
+						if (igTreeNode_Str("Transparents")) {
+							for (int k = 0; k < renderer->transparentMeshesLength; k++) {
+								struct meshRenderData *meshData = &renderer->transparentMeshes[k];
+
+								char meshName[100] = { 0 };
+								sprintf(meshName, "shader: %u - VAO: %u - indices: %u\n", meshData->shader.program, meshData->VAO, meshData->indicesLength);
+
+								if (igTreeNode_Str(meshName)) {
+									if (igTreeNode_Str("Uniforms")) {
+										for (int l = 0; l < meshData->uniformsLength; l++) {
+											struct uniformRenderData *uniformData = &meshData->uniforms[l];
+											igText("uniform (type: %d) (loc: %u) (count: %u) (data: %p)", uniformData->type, uniformData->location, uniformData->count, uniformData->data);
+										}
+										igTreePop();
+									}
+									if (igTreeNode_Str("Textures")) {
+										for (int l = 0; l < meshData->texturesLength; l++) {
+											struct textureRenderData *textureData = &meshData->textures[l];
+											igText("texture (type: %d) (slot: %u) (buffer: %u)\n", textureData->type, textureData->slot, textureData->buffer);
+										}
+										igTreePop();
+									}
+									igTreePop();
+								}
+							}
+							igTreePop();
+						}
+						igTreePop();
+					}
+				}
+			}
+		}
+		igEnd();
 	}
 }
 
@@ -241,6 +327,7 @@ void drawEngineUI(struct world *world) {
 	drawSystems(world);
 	drawComponents(world);
 	drawTables(world);
+	drawRendererData(world);
 	drawHierarchy(world);
 
 	igRender();
