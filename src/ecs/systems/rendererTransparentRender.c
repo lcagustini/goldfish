@@ -4,10 +4,13 @@ void rendererTransparentRender(struct systemRunData data) {
     struct rendererDataComponent *rendererDatas = GET_SYSTEM_COMPONENTS(data, 0, 0);
 
 	glEnable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
 
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
 		struct rendererDataComponent *rendererData = &rendererDatas[i];
+
+        glBindFramebuffer(GL_FRAMEBUFFER, rendererData->FBO);
 
         for (int j = 0; j < rendererData->transparentMeshesLength; j++) {
             struct meshRenderData mesh = rendererData->transparentMeshes[j];
@@ -56,6 +59,8 @@ void rendererTransparentRender(struct systemRunData data) {
 
             glBindVertexArray(0);
         }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
 	glDisable(GL_BLEND);

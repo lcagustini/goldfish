@@ -12,7 +12,7 @@ static void GLAPIENTRY errorCallback(GLenum source, GLenum type, GLuint id, GLen
 }
 
 static void windowResizeCallback(GLFWwindow *window, int width, int height) {
-    glViewport(0, 0, width, height);
+    //glViewport(0, 0, width, height);
 }
 
 void globalInit() {

@@ -1,6 +1,6 @@
 #include <ecs/systems.h>
 
-static void setupCamera(struct transformComponent *transform, struct cameraComponent *camera, struct meshRenderData *renderData) {
+static void setupCameraUniforms(struct transformComponent *transform, struct cameraComponent *camera, struct meshRenderData *renderData) {
 	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
 		.type = RENDERER_UNIFORM_MATRIX_4,
 		.location = renderData->shader.viewLoc,
@@ -35,12 +35,17 @@ void rendererGetCameras(struct systemRunData data) {
 
         for (int j = 0; j < rendererData->opaqueMeshesLength; j++) {
 			struct meshRenderData *renderData = &rendererData->opaqueMeshes[j];
-			setupCamera(transform, camera, renderData);
+			setupCameraUniforms(transform, camera, renderData);
         }
 
         for (int j = 0; j < rendererData->transparentMeshesLength; j++) {
 			struct meshRenderData *renderData = &rendererData->transparentMeshes[j];
-			setupCamera(transform, camera, renderData);
+			setupCameraUniforms(transform, camera, renderData);
         }
+
+		rendererData->FBO = camera->FBO;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, camera->FBO);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     }
 }

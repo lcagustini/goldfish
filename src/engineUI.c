@@ -89,12 +89,12 @@ static void drawRendererData(struct world *world) {
 				struct rendererDataComponent *rendererDatas = getComponentsFromTable(world, filter->results[i], GET_COMPONENT_ID(struct rendererDataComponent), &rendererDatasLength);
 
 				for (int j = 0; j < rendererDatasLength; j++) {
+					struct rendererDataComponent *renderer = &rendererDatas[j];
+
 					char rendererName[30] = { 0 };
-					sprintf(rendererName, "%d %d", i, j);
+					sprintf(rendererName, "%d %d (%u)", i, j, renderer->FBO);
 
 					if (igTreeNode_Str(rendererName)) {
-						struct rendererDataComponent *renderer = &rendererDatas[j];
-
 						if (igTreeNode_Str("Opaques")) {
 							for (int k = 0; k < renderer->opaqueMeshesLength; k++) {
 								struct meshRenderData *meshData = &renderer->opaqueMeshes[k];

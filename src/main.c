@@ -42,10 +42,12 @@ int main() {
     CREATE_COMPONENT(&ecsWorld, struct rendererDataComponent);
 
     ADD_EVENT_SYSTEM(&ecsWorld, SYSTEM_ON_COMPONENT_ADD, setupTransform, GET_COMPONENT_ID(struct transformComponent));
+    ADD_EVENT_SYSTEM(&ecsWorld, SYSTEM_ON_COMPONENT_ADD, setupCamera, GET_COMPONENT_ID(struct cameraComponent));
 
     ADD_FILTER(&ecsWorld, "controllerDataFilter", GET_COMPONENT_ID(struct controllerDataComponent));
     ADD_FILTER(&ecsWorld, "firstPersonFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct firstPersonComponent));
-    ADD_FILTER(&ecsWorld, "cameraFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent));
+    ADD_FILTER(&ecsWorld, "cameraTransformFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct cameraComponent));
+    ADD_FILTER(&ecsWorld, "cameraFilter", GET_COMPONENT_ID(struct cameraComponent));
     ADD_FILTER(&ecsWorld, "transformFilter", GET_COMPONENT_ID(struct transformComponent));
     ADD_FILTER(&ecsWorld, "rendererDataFilter", GET_COMPONENT_ID(struct rendererDataComponent));
     ADD_FILTER(&ecsWorld, "modelFilter", GET_COMPONENT_ID(struct transformComponent), GET_COMPONENT_ID(struct modelComponent));
@@ -57,7 +59,7 @@ int main() {
 
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_PRE_UPDATE, updateControllerData, "controllerDataFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_UPDATE, updateFirstPersonTransform, "firstPersonFilter");
-    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_UPDATE, updateCameraView, "cameraFilter");
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_UPDATE, updateCameraView, "cameraTransformFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_POST_UPDATE, updateTransformMatrix, "transformFilter");
 
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SORT, rendererGetModels, "modelFilter", "rendererDataFilter");
@@ -70,6 +72,8 @@ int main() {
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, rendererOpaqueRender, "rendererDataFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SKYBOX, renderSkybox, "skyboxFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_TRANSPARENT, rendererTransparentRender, "rendererDataFilter");
+
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_FINISH, finishRender, "cameraFilter");
 
     entityId camera = createEntity(&ecsWorld, "Camera");
     ADD_COMPONENT(&ecsWorld, camera, struct transformComponent);
@@ -147,8 +151,6 @@ int main() {
         runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_POST_UPDATE, deltaTime);
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SORT, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SETUP, deltaTime);
 
@@ -157,6 +159,7 @@ int main() {
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_TRANSPARENT, deltaTime);
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_POST, deltaTime);
+        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_FINISH, deltaTime);
 
         drawEngineUI(&ecsWorld);
 

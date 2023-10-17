@@ -16,6 +16,8 @@ struct rendererDataComponent {
 
 	struct meshRenderData transparentMeshes[512];
     unsigned int transparentMeshesLength;
+
+    unsigned int FBO, RBO;
 };
 
 struct skyboxComponent {
@@ -59,6 +61,11 @@ struct cameraComponent {
 
     union mat4 viewMat;
     union mat4 projectionMat;
+
+    unsigned int shader;
+    unsigned int colorBuffer;
+    unsigned int FBO, RBO;
+    unsigned int VAO, VBO;
 };
 
 struct controllerDataComponent {

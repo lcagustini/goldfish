@@ -46,6 +46,7 @@ add_executable(${PROJECT_NAME}
     src/ecs/world.c
 
     src/ecs/systems/setupTransform.c
+    src/ecs/systems/setupCamera.c
 
     src/ecs/systems/updateControllerData.c
     src/ecs/systems/updateCameraView.c
@@ -63,6 +64,8 @@ add_executable(${PROJECT_NAME}
     src/ecs/systems/rendererOpaqueRender.c
     src/ecs/systems/renderSkybox.c
     src/ecs/systems/rendererTransparentRender.c
+
+    src/ecs/systems/finishRender.c
 
     src/data/hashtable.c
     src/data/dynarray.c

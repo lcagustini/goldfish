@@ -8,6 +8,11 @@ void renderSkybox(struct systemRunData data) {
     getAllTablesWithComponents(data.world, cameraTypes, 2, &cameraTable, 1);
     struct cameraComponent *camera = getComponentsFromTable(data.world, cameraTable, cameraTypes[1], NULL);
 
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, camera->FBO);
+
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
         struct skyboxComponent *skybox = &skyboxes[i];
 
@@ -31,5 +36,6 @@ void renderSkybox(struct systemRunData data) {
 
         glBindVertexArray(0);
     }
-}
 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}

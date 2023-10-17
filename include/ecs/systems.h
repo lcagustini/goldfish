@@ -8,6 +8,7 @@
 #include <global.h>
 
 void setupTransform(struct systemRunData data);
+void setupCamera(struct systemRunData data);
 
 void updateControllerData(struct systemRunData data);
 void updateCameraView(struct systemRunData data);
@@ -25,5 +26,7 @@ void rendererGetPointLights(struct systemRunData data);
 void rendererOpaqueRender(struct systemRunData data);
 void renderSkybox(struct systemRunData data);
 void rendererTransparentRender(struct systemRunData data);
+
+void finishRender(struct systemRunData data);
 
 #endif
