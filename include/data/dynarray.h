@@ -20,6 +20,5 @@ bool dynarraySet(struct dynarray *array, unsigned int index, void *data);
 bool dynarrayRemove(struct dynarray *array, unsigned int index);
 void dynarrayClear(struct dynarray *array);
 void *dynarrayGet(struct dynarray *array, unsigned int index);
-unsigned int dynarrayCount(struct dynarray *array);
 
 #endif

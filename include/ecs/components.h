@@ -7,6 +7,7 @@
 #include <math/matrix.h>
 
 #include <render/material.h>
+#include <render/framebuffer.h>
 
 #include <ecs/world.h>
 
@@ -17,7 +18,7 @@ struct rendererDataComponent {
 	struct meshRenderData transparentMeshes[512];
     unsigned int transparentMeshesLength;
 
-    unsigned int FBO, RBO;
+    framebufferId target;
 };
 
 struct skyboxComponent {
@@ -62,9 +63,8 @@ struct cameraComponent {
     union mat4 viewMat;
     union mat4 projectionMat;
 
+    framebufferId framebuffer;
     unsigned int shader;
-    unsigned int colorBuffer;
-    unsigned int FBO, RBO;
     unsigned int VAO, VBO;
 };
 

@@ -1,5 +1,7 @@
 #include <ecs/systems.h>
 
+#include <render/framebuffer.h>
+
 void rendererOpaqueRender(struct systemRunData data) {
     struct rendererDataComponent *rendererDatas = GET_SYSTEM_COMPONENTS(data, 0, 0);
 
@@ -9,7 +11,7 @@ void rendererOpaqueRender(struct systemRunData data) {
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
 		struct rendererDataComponent *rendererData = &rendererDatas[i];
 
-        glBindFramebuffer(GL_FRAMEBUFFER, rendererData->FBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, activeFramebuffers[rendererData->target].FBO);
 
         for (int j = 0; j < rendererData->opaqueMeshesLength; j++) {
             struct meshRenderData mesh = rendererData->opaqueMeshes[j];

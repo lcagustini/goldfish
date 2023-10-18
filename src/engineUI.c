@@ -14,6 +14,7 @@ struct guiState {
 	bool componentsWindowOpened;
 	bool tablesWindowOpened;
 	bool rendererDataOpened;
+	bool framebuffersWindowOpen;
 };
 
 static struct guiState guiState;
@@ -73,6 +74,9 @@ static void drawMenuBar(struct world *world) {
 			if (igMenuItem_Bool("Renderer Data", NULL, false, true)) { 
 				guiState.rendererDataOpened = true;
 			}
+			if (igMenuItem_Bool("Framebuffers", NULL, false, true)) { 
+				guiState.framebuffersWindowOpen = true;
+			}
 			igEndMenu();
 		}
 		igEndMainMenuBar();
@@ -92,7 +96,7 @@ static void drawRendererData(struct world *world) {
 					struct rendererDataComponent *renderer = &rendererDatas[j];
 
 					char rendererName[30] = { 0 };
-					sprintf(rendererName, "%d %d (%u)", i, j, renderer->FBO);
+					sprintf(rendererName, "%d %d (%u)", i, j, renderer->target);
 
 					if (igTreeNode_Str(rendererName)) {
 						if (igTreeNode_Str("Opaques")) {
@@ -361,6 +365,17 @@ removeFromQueue:
 	}
 }
 
+static void drawFramebuffers() {
+	if (guiState.framebuffersWindowOpen) {
+		if (igBegin("Framebuffers", &guiState.framebuffersWindowOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+			for (int i = 0; i < MAX_FRAMEBUFFERS; i++) {
+				igText("(valid: %d) (scaleToWindow: %d) (color: %u) (FBO: %u) (RBO: %u)", activeFramebuffers[i].valid, activeFramebuffers[i].scaleToWindow, activeFramebuffers[i].colorBuffer, activeFramebuffers[i].FBO, activeFramebuffers[i].RBO);
+			}
+		}
+		igEnd();
+	}
+}
+
 void drawEngineUI(struct world *world) {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -372,6 +387,7 @@ void drawEngineUI(struct world *world) {
 	drawTables(world);
 	drawRendererData(world);
 	drawHierarchy(world);
+	drawFramebuffers();
 
 	igRender();
 	ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());

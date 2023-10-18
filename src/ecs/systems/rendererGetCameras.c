@@ -1,5 +1,7 @@
 #include <ecs/systems.h>
 
+#include <render/framebuffer.h>
+
 static void setupCameraUniforms(struct transformComponent *transform, struct cameraComponent *camera, struct meshRenderData *renderData) {
 	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
 		.type = RENDERER_UNIFORM_MATRIX_4,
@@ -43,9 +45,9 @@ void rendererGetCameras(struct systemRunData data) {
 			setupCameraUniforms(transform, camera, renderData);
         }
 
-		rendererData->FBO = camera->FBO;
+		rendererData->target = camera->framebuffer;
 
-        glBindFramebuffer(GL_FRAMEBUFFER, camera->FBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, activeFramebuffers[camera->framebuffer].FBO);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     }
 }

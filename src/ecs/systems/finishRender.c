@@ -1,5 +1,7 @@
 #include <ecs/systems.h>
 
+#include <render/framebuffer.h>
+
 void finishRender(struct systemRunData data) {
     struct cameraComponent *cameras = GET_SYSTEM_COMPONENTS(data, 0, 0);
 
@@ -10,7 +12,7 @@ void finishRender(struct systemRunData data) {
 		glBindVertexArray(camera->VAO);
 		glDisable(GL_DEPTH_TEST);
         glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, camera->colorBuffer);
+		glBindTexture(GL_TEXTURE_2D, activeFramebuffers[camera->framebuffer].colorBuffer);
 		glDrawArrays(GL_TRIANGLES, 0, 6); 
     }
 }

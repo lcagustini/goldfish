@@ -42,6 +42,7 @@ add_executable(${PROJECT_NAME}
     src/render/skybox.c
     src/render/model.c
     src/render/material.c
+    src/render/framebuffer.c
 
     src/ecs/world.c
 

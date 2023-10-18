@@ -1,5 +1,7 @@
 #include <ecs/systems.h>
 
+#include <render/framebuffer.h>
+
 void renderSkybox(struct systemRunData data) {
     struct skyboxComponent *skyboxes = GET_SYSTEM_COMPONENTS(data, 0, 0);
 
@@ -11,7 +13,7 @@ void renderSkybox(struct systemRunData data) {
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, camera->FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, activeFramebuffers[camera->framebuffer].FBO);
 
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
         struct skyboxComponent *skybox = &skyboxes[i];

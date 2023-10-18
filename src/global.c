@@ -3,6 +3,8 @@
 
 #include <fontIconsMaterialDesign.h>
 
+#include <render/framebuffer.h>
+
 #include <stdlib.h>
 
 struct globalState globalState;
@@ -12,7 +14,8 @@ static void GLAPIENTRY errorCallback(GLenum source, GLenum type, GLuint id, GLen
 }
 
 static void windowResizeCallback(GLFWwindow *window, int width, int height) {
-    //glViewport(0, 0, width, height);
+    glViewport(0, 0, width, height);
+	updateFramebuffersWindowSize();
 }
 
 void globalInit() {

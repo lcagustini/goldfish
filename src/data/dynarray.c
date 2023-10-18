@@ -83,7 +83,3 @@ void *dynarrayGet(struct dynarray *array, unsigned int index) {
 
     return array->buffer + index * array->typeSize;
 }
-
-unsigned int dynarrayCount(struct dynarray *array) {
-    return array->bufferCount;
-}
