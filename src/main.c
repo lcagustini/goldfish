@@ -22,7 +22,7 @@
 #include <ecs/systems.h>
 
 int main() {
-    resetPrint();
+	setPrintType(PRINT_STDOUT, NULL);
 
     globalInit();
 

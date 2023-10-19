@@ -1,11 +1,12 @@
 #ifndef PRINT_H
 #define PRINT_H
 
-#include <stdio.h>
-#include <stdarg.h>
+enum printType {
+	PRINT_STDOUT,
+	PRINT_FILE
+};
 
-void resetPrint();
-
+void setPrintType(enum printType type, const char *file);
 void print(const char *format, ...);
 
 #endif

@@ -1,24 +1,41 @@
 #include <print.h>
 
-void resetPrint() {
-    //FILE *f = fopen("ux0:data/a.txt", "w");
-    //fclose(f);
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+
+static enum printType currentType;
+static FILE *openFile;
+
+void setPrintType(enum printType type, const char *file) {
+    switch (type) {
+		case PRINT_FILE:
+			openFile = fopen(file, "w");
+            fclose(openFile);
+			openFile = fopen(file, "a");
+			break;
+		default:
+			break;
+    }
+
+    currentType = type;
 }
 
 void print(const char *format, ...) {
-    //va_list args;
-    //va_start(args, format);
-
-    //FILE *f = fopen("ux0:data/a.txt", "a");
-    //vfprintf(f, format, args);
-    //fclose(f);
-
-    //va_end(args);
+    FILE *printTarget;
+    switch (currentType) {
+		case PRINT_FILE:
+            printTarget = openFile;
+            break;
+		default:
+            printTarget = stdout;
+			break;
+    }
 
     va_list args;
     va_start(args, format);
 
-    vfprintf(stdout, format, args);
+    vfprintf(printTarget, format, args);
 
     va_end(args);
 }
