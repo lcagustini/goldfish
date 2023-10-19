@@ -16,7 +16,7 @@ void setupCamera(struct systemRunData data) {
 		 1.0f,  1.0f,  1.0f, 1.0f
 	};	
 
-    camera->framebuffer = createWindowFramebuffer();
+    camera->framebuffer = createWindowFramebuffer(FRAMEBUFFER_COLOR_DEPTH);
 
     GLuint vshader = loadShaderFromFile("assets/shaders/quad_v.glsl", GL_VERTEX_SHADER);
     GLuint fshader = loadShaderFromFile("assets/shaders/quad_f.glsl", GL_FRAGMENT_SHADER);

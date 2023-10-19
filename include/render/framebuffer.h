@@ -9,9 +9,17 @@
 
 typedef unsigned int framebufferId;
 
+enum framebufferType {
+    FRAMEBUFFER_COLOR_DEPTH,
+    FRAMEBUFFER_COLOR_ONLY,
+    FRAMEBUFFER_DEPTH_ONLY,
+};
+
 struct framebuffer {
     bool valid;
     bool scaleToWindow;
+
+    enum framebufferType type;
 
     GLuint colorBuffer;
     GLuint FBO, RBO;
@@ -19,8 +27,8 @@ struct framebuffer {
 
 extern struct framebuffer activeFramebuffers[MAX_FRAMEBUFFERS];
 
-framebufferId createFixedFramebuffer(int width, int height);
-framebufferId createWindowFramebuffer();
+framebufferId createFixedFramebuffer(enum framebufferType type, int width, int height);
+framebufferId createWindowFramebuffer(enum framebufferType type);
 
 void updateFramebuffersWindowSize();
 
