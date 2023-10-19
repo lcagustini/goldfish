@@ -32,6 +32,7 @@ void rotationMatrix(union mat4 *result, struct quat quat);
 struct quat rotationMatrixToQuat(union mat4 src);
 
 void lookAt(union mat4 *result, struct vec3 position, struct vec3 dir, struct vec3 worldUp);
-void createProjectionMatrix(union mat4 *result, float yFOV, float aspect, float near, float far);
+void createPerspProjectionMatrix(union mat4 *result, float yFOV, float aspect, float near, float far);
+void createOrthoProjectionMatrix(union mat4 *result, float yFOV, float aspect, float near, float far);
 
 #endif
