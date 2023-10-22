@@ -75,6 +75,8 @@ int main() {
 
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_FINISH, finishRender, "cameraFilter");
 
+    ADD_SINGLETON_COMPONENT(&ecsWorld, struct controllerDataComponent);
+
     entityId camera = createEntity(&ecsWorld, "Camera");
     ADD_COMPONENT(&ecsWorld, camera, struct transformComponent);
     ADD_COMPONENT(&ecsWorld, camera, struct cameraComponent);
@@ -89,10 +91,7 @@ int main() {
     firstPerson->rotationSpeed = 1.3f;
     firstPerson->moveSpeed = 2.0f;
 
-    ADD_SINGLETON_COMPONENT(&ecsWorld, struct controllerDataComponent);
-
     struct transformComponent *transform;
-
 #if 1
     entityId chest1 = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi", false);
     transform = GET_COMPONENT(&ecsWorld, chest1, struct transformComponent);
@@ -102,16 +101,22 @@ int main() {
     entityId chest2 = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi", false);
     transform = GET_COMPONENT(&ecsWorld, chest2, struct transformComponent);
     transform->position = (struct vec3) { 0, -1, -1 };
-    transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
+    transform->scale = (struct vec3) { 0.5f, 0.5f, 0.5f };
     transform->parent = chest1;
 #endif
 #if 1
     entityId chest3 = loadModel(&ecsWorld, "assets/chest.obj", "assets/chest.qoi", "assets/chest_normal.qoi", "assets/chest_specular.qoi", "assets/chest_reflectance.qoi", false);
     transform = GET_COMPONENT(&ecsWorld, chest3, struct transformComponent);
     transform->position = (struct vec3) { 0, -1, -1 };
-    transform->scale = (struct vec3) { 0.5, 0.5, 0.5 };
+    transform->scale = (struct vec3) { 0.5f, 0.5f, 0.5f };
     transform->parent = chest2;
 #endif
+
+    entityId plane = loadModel(&ecsWorld, "assets/plane.fbx", NULL, NULL, NULL, NULL, false);
+    transform = GET_COMPONENT(&ecsWorld, plane, struct transformComponent);
+    transform->position = (struct vec3) { 0, -3.2f, 0 };
+	transform->rotation = eulerToQuat((struct vec3) { M_PI, 0, 0 });
+    transform->scale = (struct vec3) { 0.1f, 0.1f, 0.1f };
 
     entityId skybox = createEntity(&ecsWorld, "Skybox");
     ADD_COMPONENT(&ecsWorld, skybox, struct skyboxComponent);
@@ -142,10 +147,8 @@ int main() {
         runWorldPhase(&ecsWorld, SYSTEM_ON_PRE_UPDATE, deltaTime);
 
 #if 1
-        {
-            struct transformComponent *transform = GET_COMPONENT(&ecsWorld, chest1, struct transformComponent);
-            transform->rotation = quatMult(transform->rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
-        }
+		transform = GET_COMPONENT(&ecsWorld, chest1, struct transformComponent);
+		transform->rotation = quatMult(transform->rotation, (struct quat) { 0, 0.005, 0, 0.9999875 });
 #endif
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE, deltaTime);

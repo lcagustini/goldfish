@@ -72,7 +72,7 @@ vec3 dirLightning() {
 
         vec3 fragColor = pow(texture(textureMap, textCoord).rgb, vec3(2.2));
 
-        float ambientStrength = 0.15;
+        float ambientStrength = 0.1;
         vec3 ambient = ambientStrength * dl.ambientColor;
 
         float diffuseStrength = max(dot(norm, lightDir), 0.0);
@@ -110,7 +110,7 @@ vec3 pointLightning() {
 
         vec3 fragColor = pow(texture(textureMap, textCoord).rgb, vec3(2.2));
 
-        float ambientStrength = 0.15;
+        float ambientStrength = 0.1;
         vec3 ambient = ambientStrength * pl.ambientColor;
 
         float diffuseStrength = max(dot(norm, lightDir), 0.0);
@@ -147,7 +147,7 @@ vec3 spotLightning() {
         float epsilon = sl.cutOff.x - sl.cutOff.y;
         float intensity = clamp((theta - sl.cutOff.y) / epsilon, 0.0, 1.0);
 
-        float ambientStrength = 0.15;
+        float ambientStrength = 0.1;
         vec3 ambient = ambientStrength * sl.ambientColor;
 
         vec3 fragColor = pow(texture(textureMap, textCoord).rgb, vec3(2.2));

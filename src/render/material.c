@@ -206,7 +206,7 @@ void createMaterial(struct material *material, const char *diffusePath, const ch
         material->texturesLength++;
     }
 
-    material->shininess = 64.0f;
+    material->shininess = 1.0f;
     material->alphaClipping = 0.0f;
     material->transparent = transparent;
 }

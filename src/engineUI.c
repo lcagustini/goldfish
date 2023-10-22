@@ -48,6 +48,8 @@ static const char *systemPhaseName(enum systemPhase phase) {
 			return "Render Transparent";
 		case SYSTEM_ON_RENDER_POST:
 			return "Render Post";
+		case SYSTEM_ON_RENDER_FINISH:
+			return "Render Finish";
 		default:
 			return "";
 	}
