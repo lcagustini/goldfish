@@ -2,7 +2,7 @@
 
 static void setupSpotLight(struct transformComponent *transform, struct spotLightComponent *light, struct meshRenderData *renderData, int i, int count) {
 	struct vec3 direction = (struct vec3) { 0, 0, -1 };
-	vectorRotate(direction, transform->rotation);
+	direction = vectorRotate(direction, transform->rotation);
 
 	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
 		.type = RENDERER_UNIFORM_VECTOR_3,
