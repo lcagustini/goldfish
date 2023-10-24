@@ -48,6 +48,7 @@ uniform sampler2D normalMap;
 uniform sampler2D specularMap;
 uniform sampler2D reflectanceMap;
 uniform samplerCube skybox;
+uniform sampler2D shadowMap;
 
 in vec3 position;
 in vec3 normal;
@@ -57,7 +58,17 @@ in vec3 tangentPosition;
 in vec3 tangentViewPosition;
 in mat3 TBN;
 
+in vec4 positionLightSpace;
+
 out vec4 FragColor;
+
+float getShadowValue() {
+    vec3 projCoords = positionLightSpace.xyz / positionLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    return currentDepth > closestDepth ? 1.0 : 0.0;
+}
 
 vec3 dirLightning() {
     vec3 color = vec3(0.0);
@@ -89,7 +100,8 @@ vec3 dirLightning() {
         vec3 reflectionDir = reflect(viewDir, norm);
         vec3 reflectance = reflectanceStrength * texture(skybox, reflectionDir).rgb;
 
-        color += (ambient + diffuse + specular + reflectance) * fragColor;
+        float shadow = 1.0 - getShadowValue();
+        color += (ambient + reflectance + shadow * (diffuse + specular)) * fragColor;
     }
 
     return color;

@@ -22,7 +22,8 @@ struct framebuffer {
     enum framebufferType type;
 
     GLuint colorBuffer;
-    GLuint FBO, RBO;
+    GLuint depthBuffer;
+    GLuint FBO;
 };
 
 extern struct framebuffer activeFramebuffers[MAX_FRAMEBUFFERS];
