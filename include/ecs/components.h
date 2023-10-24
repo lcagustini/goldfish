@@ -103,6 +103,8 @@ struct dirLightComponent {
     struct vec3 ambientColor;
     struct vec3 diffuseColor;
     struct vec3 specularColor;
+
+    framebufferId shadowDepthMap;
 };
 
 struct pointLightComponent {

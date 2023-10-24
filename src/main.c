@@ -69,6 +69,8 @@ int main() {
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetSpotLights, "spotLightFilter", "rendererDataFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SETUP, rendererGetPointLights, "pointLightFilter", "rendererDataFilter");
 
+    ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SHADOW, renderShadowDepthMap, "dirLightFilter", "rendererDataFilter");
+
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, rendererOpaqueRender, "rendererDataFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_SKYBOX, renderSkybox, "skyboxFilter", "cameraFilter");
     ADD_PHASE_SYSTEM(&ecsWorld, SYSTEM_ON_RENDER_TRANSPARENT, rendererTransparentRender, "rendererDataFilter");
@@ -134,6 +136,10 @@ int main() {
     dirLight->ambientColor = (struct vec3) { 1, 1, 1 };
     dirLight->diffuseColor = (struct vec3) { 1, 1, 1 };
     dirLight->specularColor = (struct vec3) { 1, 1, 1 };
+    dirLight->shadowDepthMap = createFixedFramebuffer(FRAMEBUFFER_DEPTH_ONLY, 1024, 1024);
+    transform = GET_COMPONENT(&ecsWorld, light, struct transformComponent);
+    transform->position = (struct vec3) { 0, 1, 5 };
+    transform->rotation = getRotationQuat((struct vec3) { 0, 0, -1 }, vectorSubtract((struct vec3) { 0, 0, 0 }, transform->position));
 
     double currentTime = glfwGetTime();
     double lastTime = currentTime;
@@ -156,6 +162,12 @@ int main() {
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SORT, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SETUP, deltaTime);
+
+        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SHADOW, deltaTime);
+
+        int width, height;
+		glfwGetWindowSize(globalState.window, &width, &height);
+        glViewport(0, 0, width, height);
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SKYBOX, deltaTime);

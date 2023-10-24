@@ -27,6 +27,8 @@ void rendererOpaqueRender(struct systemRunData data);
 void renderSkybox(struct systemRunData data);
 void rendererTransparentRender(struct systemRunData data);
 
+void renderShadowDepthMap(struct systemRunData data);
+
 void finishRender(struct systemRunData data);
 
 #endif

@@ -40,6 +40,8 @@ static const char *systemPhaseName(enum systemPhase phase) {
 			return "Render Sort";
 		case SYSTEM_ON_RENDER_SETUP:
 			return "Render Setup";
+		case SYSTEM_ON_RENDER_SHADOW:
+			return "Render Shadow";
 		case SYSTEM_ON_RENDER_OPAQUE:
 			return "Render Opaque";
 		case SYSTEM_ON_RENDER_SKYBOX:

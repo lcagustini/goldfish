@@ -2,11 +2,11 @@
 
 uniform vec3 viewPos;
 
-uniform mat4 model;
+layout (location = 50) uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-in vec3 aPos;
+layout (location = 0) in vec3 aPos;
 in vec3 aNormal;
 in vec2 aTexCoord;
 in vec3 aTangent;
