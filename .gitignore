@@ -32,5 +32,7 @@
 
 build/
 .vs/
+.idea/
+cmake-build-debug/
 
 imgui.ini

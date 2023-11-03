@@ -23,59 +23,14 @@ link_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+FILE(GLOB_RECURSE C_SOURCES src/*.c)
+FILE(GLOB_RECURSE CPP_SOURCES src/*.cpp)
+
 ## Build and link
 # Add all the files needed to compile here
 add_executable(${PROJECT_NAME}
-    src/imgui/cimgui.cpp
-    src/imgui/imgui.cpp
-    src/imgui/imgui_demo.cpp
-    src/imgui/imgui_draw.cpp
-    src/imgui/imgui_impl_glfw.cpp
-    src/imgui/imgui_impl_opengl3.cpp
-    src/imgui/imgui_tables.cpp
-    src/imgui/imgui_widgets.cpp
-
-    src/math/matrix.c
-    src/math/vector.c
-    src/math/float.c
-
-    src/render/skybox.c
-    src/render/model.c
-    src/render/material.c
-    src/render/framebuffer.c
-
-    src/ecs/world.c
-
-    src/ecs/systems/setupTransform.c
-    src/ecs/systems/setupCamera.c
-
-    src/ecs/systems/updateControllerData.c
-    src/ecs/systems/updateCameraView.c
-    src/ecs/systems/updateFirstPersonTransform.c
-
-    src/ecs/systems/updateTransformMatrix.c
-
-	src/ecs/systems/rendererGetModels.c
-	src/ecs/systems/rendererGetCameras.c
-	src/ecs/systems/rendererGetSkybox.c
-	src/ecs/systems/rendererGetDirLights.c
-	src/ecs/systems/rendererGetSpotLights.c
-	src/ecs/systems/rendererGetPointLights.c
-
-    src/ecs/systems/rendererOpaqueRender.c
-    src/ecs/systems/renderSkybox.c
-    src/ecs/systems/rendererTransparentRender.c
-
-    src/ecs/systems/finishRender.c
-
-    src/data/hashtable.c
-    src/data/dynarray.c
-
-    src/engineUI.c
-    src/print.c
-    src/global.c
-
-    src/main.c
+    ${CPP_SOURCES}
+	${C_SOURCES}
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
