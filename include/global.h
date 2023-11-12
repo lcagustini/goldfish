@@ -1,23 +1,21 @@
-#ifndef GLOBAL_H
-#define GLOBAL_H
+#ifndef GOLDFISH_GLOBAL_H
+#define GOLDFISH_GLOBAL_H
 
-#include <GL/glew.h>
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#define CIMGUI_USE_GLFW
-#define CIMGUI_USE_OPENGL3
-#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#include <imgui/cimgui.h>
-#include <imgui/cimgui_impl.h>
+#include <render/vkBase.h>
+#include <render/vkDraw.h>
 
 struct globalState {
     GLFWwindow *window;
+
+    struct vulkanState vulkanState;
 };
 
 extern struct globalState globalState;
 
-void globalInit();
+void initGlobal(void);
+void destroyGlobal(void);
 
-void globalEnd();
-
-#endif
+#endif //GOLDFISH_GLOBAL_H
