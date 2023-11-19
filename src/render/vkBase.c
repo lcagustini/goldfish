@@ -58,10 +58,8 @@ static void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT 
 }
 
 static bool checkValidationLayerSupport(void) {
-    uint32_t availableLayerCount;
-    vkEnumerateInstanceLayerProperties(&availableLayerCount, NULL);
-
-    VkLayerProperties availableLayers[availableLayerCount];
+    uint32_t availableLayerCount = 10;
+    VkLayerProperties availableLayers[10];
     vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers);
 
     for (int i = 0; i < validationLayersCount; ++i) {
@@ -82,22 +80,24 @@ static bool checkValidationLayerSupport(void) {
     return true;
 }
 
-static void getRequiredExtensions(uint32_t *extensionCount, const char **pExtensions) {
-    uint32_t glfwExtensionCount = 0;
-    const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+static unsigned int getRequiredExtensions(unsigned int extensionsCount, const char *extensions[extensionsCount]) {
+    unsigned int requiredExtensionsCount = 0;
+    const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&requiredExtensionsCount);
 
-    if (pExtensions == NULL) {
-        *extensionCount = glfwExtensionCount + (globalState.vulkanState.enableValidationLayers ? 1 : 0);
-        return;
+    if (requiredExtensionsCount > extensionsCount) return -1;
+
+    for (int i = 0; i < requiredExtensionsCount; ++i) {
+        extensions[i] = glfwExtensions[i];
     }
 
-    for (int i = 0; i < glfwExtensionCount; ++i) {
-        pExtensions[i] = glfwExtensions[i];
-    }
+    requiredExtensionsCount += globalState.vulkanState.enableValidationLayers ? 1 : 0;
+    if (requiredExtensionsCount > extensionsCount) return -1;
 
     if (globalState.vulkanState.enableValidationLayers) {
-        pExtensions[glfwExtensionCount] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
+        extensions[requiredExtensionsCount - 1] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
     }
+
+    return requiredExtensionsCount;
 }
 
 static void createInstance(void) {
@@ -108,7 +108,7 @@ static void createInstance(void) {
 
     VkApplicationInfo appInfo = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-        .pApplicationName = "Vulkan",
+        .pApplicationName = "goldfish",
         .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
         .pEngineName = NULL,
         .engineVersion = VK_MAKE_VERSION(1, 0, 0),
@@ -120,18 +120,16 @@ static void createInstance(void) {
         .pApplicationInfo = &appInfo,
     };
 
-    uint32_t extensionCount = 0;
-    getRequiredExtensions(&extensionCount, NULL);
-
-    const char *extensions[extensionCount];
-    getRequiredExtensions(&extensionCount, extensions);
+    const char *extensions[32];
+    uint32_t extensionCount = getRequiredExtensions(32, extensions);
 
     createInfo.enabledExtensionCount = extensionCount;
     createInfo.ppEnabledExtensionNames = extensions;
     createInfo.enabledLayerCount = 0;
 
-    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {0};
     if (globalState.vulkanState.enableValidationLayers) {
+        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {0};
+
         createInfo.enabledLayerCount = validationLayersCount;
         createInfo.ppEnabledLayerNames = validationLayers;
 

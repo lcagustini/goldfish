@@ -4,6 +4,6 @@
 #include <global.h>
 
 void pickPhysicalDevice(void);
-bool createLogicalDevice(void);
+void createLogicalDevice(void);
 
 #endif //GOLDFISH_VKDEVICE_H

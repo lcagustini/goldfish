@@ -71,7 +71,7 @@ static char *readBinaryFile(const char *filename, uint32_t *length) {
     return contents;
 }
 
-VkShaderModule createShaderModule(const char *code, const uint32_t codeLength) {
+static VkShaderModule createShaderModule(const char *code, const uint32_t codeLength) {
     VkShaderModuleCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
         .codeSize = codeLength,

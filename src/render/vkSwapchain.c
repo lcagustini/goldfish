@@ -3,11 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-VkSurfaceFormatKHR chooseSwapSurfaceFormat(VkSurfaceFormatKHR *availableFormats, uint32_t formatCount) {
+static VkSurfaceFormatKHR chooseSwapSurfaceFormat(uint32_t formatCount, const VkSurfaceFormatKHR availableFormats[static formatCount]) {
     // Favor sRGB if it's available
     for (int i = 0; i < formatCount; ++i) {
-        if (availableFormats[i].format == VK_FORMAT_B8G8R8A8_SRGB &&
-            availableFormats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+        if (availableFormats[i].format == VK_FORMAT_B8G8R8A8_SRGB && availableFormats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
             return availableFormats[i];
         }
     }
@@ -16,12 +15,12 @@ VkSurfaceFormatKHR chooseSwapSurfaceFormat(VkSurfaceFormatKHR *availableFormats,
     return availableFormats[0];
 }
 
-VkPresentModeKHR chooseSwapPresentMode(const VkPresentModeKHR *availablePresentModes, uint32_t presentModeCount) {
+static VkPresentModeKHR chooseSwapPresentMode(uint32_t presentModesCount, const VkPresentModeKHR availablePresentModes[static presentModesCount]) {
     // This logic taken from OVR Vulkan Example
     // VK_PRESENT_MODE_FIFO_KHR - equivalent of eglSwapInterval(1).  The presentation engine waits for the next vertical blanking period to update
     // the current image. Tearing cannot be observed. This mode must be supported by all implementations.
     VkPresentModeKHR swapChainPresentMode = VK_PRESENT_MODE_FIFO_KHR;
-    for (int i = 0; i < presentModeCount; ++i) {
+    for (int i = 0; i < presentModesCount; ++i) {
         // Order of preference for no vsync:
         // 1. VK_PRESENT_MODE_IMMEDIATE_KHR - The presentation engine does not wait for a vertical blanking period to update the current image,
         //                                    meaning this mode may result in visible tearing
@@ -29,17 +28,13 @@ VkPresentModeKHR chooseSwapPresentMode(const VkPresentModeKHR *availablePresentM
         //                                  An internal single-entry queue is used to hold pending presentation requests.
         // 3. VK_PRESENT_MODE_FIFO_RELAXED_KHR - equivalent of eglSwapInterval(-1).
         if (availablePresentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-            // The presentation engine does not wait for a vertical blanking period to update the
-            // current image, meaning this mode may result in visible tearing
             swapChainPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
             break;
         }
         else if (availablePresentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
             swapChainPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
         }
-        else if ((swapChainPresentMode != VK_PRESENT_MODE_MAILBOX_KHR) &&
-                 (availablePresentModes[i] == VK_PRESENT_MODE_FIFO_RELAXED_KHR)) {
-            // VK_PRESENT_MODE_FIFO_RELAXED_KHR - equivalent of eglSwapInterval(-1)
+        else if (swapChainPresentMode != VK_PRESENT_MODE_MAILBOX_KHR && availablePresentModes[i] == VK_PRESENT_MODE_FIFO_RELAXED_KHR) {
             swapChainPresentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
         }
     }
@@ -47,11 +42,12 @@ VkPresentModeKHR chooseSwapPresentMode(const VkPresentModeKHR *availablePresentM
     return swapChainPresentMode;
 }
 
-VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR capabilities) {
+static VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR capabilities) {
     // Logic from OVR Vulkan sample. Logic little different from vulkan tutorial
     VkExtent2D extents;
     if (capabilities.currentExtent.width == -1) {
         // If the surface size is undefined, the size is set to the size of the images requested.
+        // FIXME: pointer aliasing
         glfwGetWindowSize(globalState.window, &extents.width, &extents.height);
     }
     else {
@@ -63,22 +59,19 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR capabilities) {
 }
 
 void createSwapChain(void) {
-    // Logic from OVR Vulkan example
     VkSurfaceCapabilitiesKHR capabilities;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(globalState.vulkanState.physicalDevice, globalState.vulkanState.surface, &capabilities);
 
-    uint32_t formatCount;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(globalState.vulkanState.physicalDevice, globalState.vulkanState.surface, &formatCount, NULL);
-    VkSurfaceFormatKHR formats[formatCount];
-    vkGetPhysicalDeviceSurfaceFormatsKHR(globalState.vulkanState.physicalDevice, globalState.vulkanState.surface, &formatCount, (VkSurfaceFormatKHR *) &formats);
+    uint32_t formatsCount = 256;
+    VkSurfaceFormatKHR formats[256];
+    vkGetPhysicalDeviceSurfaceFormatsKHR(globalState.vulkanState.physicalDevice, globalState.vulkanState.surface, &formatsCount, formats);
 
-    uint32_t presentModeCount;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(globalState.vulkanState.physicalDevice, globalState.vulkanState.surface, &presentModeCount, NULL);
-    VkPresentModeKHR presentModes[presentModeCount];
-    vkGetPhysicalDeviceSurfacePresentModesKHR(globalState.vulkanState.physicalDevice, globalState.vulkanState.surface, &presentModeCount, (VkPresentModeKHR *) &presentModes);
+    uint32_t presentModesCount = 16;
+    VkPresentModeKHR presentModes[16];
+    vkGetPhysicalDeviceSurfacePresentModesKHR(globalState.vulkanState.physicalDevice, globalState.vulkanState.surface, &presentModesCount, presentModes);
 
-    VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(formats, formatCount);
-    VkPresentModeKHR presentMode = chooseSwapPresentMode(presentModes, presentModeCount);
+    VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(formatsCount, formats);
+    VkPresentModeKHR presentMode = chooseSwapPresentMode(presentModesCount, presentModes);
     VkExtent2D extent = chooseSwapExtent(capabilities);
 
     // Have a swap queue depth of at least three frames
@@ -86,7 +79,7 @@ void createSwapChain(void) {
     if (globalState.vulkanState.swapChainImageCount < 2) {
         globalState.vulkanState.swapChainImageCount = 2;
     }
-    if ((capabilities.maxImageCount > 0) && (globalState.vulkanState.swapChainImageCount > capabilities.maxImageCount)) {
+    if (capabilities.maxImageCount > 0 && globalState.vulkanState.swapChainImageCount > capabilities.maxImageCount) {
         // Application must settle for fewer images than desired:
         globalState.vulkanState.swapChainImageCount = capabilities.maxImageCount;
     }
@@ -99,9 +92,9 @@ void createSwapChain(void) {
         preTransform = capabilities.currentTransform;
     }
 
-    VkImageUsageFlags nImageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    if ((capabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT)) {
-        nImageUsageFlags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    VkImageUsageFlags imageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    if (capabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT) {
+        imageUsageFlags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     }
     else {
         printf("Vulkan swapchain does not support VK_IMAGE_USAGE_TRANSFER_DST_BIT. Some operations may not be supported.\n");
@@ -114,7 +107,7 @@ void createSwapChain(void) {
         .imageFormat = surfaceFormat.format,
         .imageColorSpace = surfaceFormat.colorSpace,
         .imageExtent = extent,
-        .imageUsage = nImageUsageFlags,
+        .imageUsage = imageUsageFlags,
         .preTransform = preTransform,
         .imageArrayLayers = 1,
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -138,7 +131,7 @@ void createSwapChain(void) {
     }
 
     vkGetSwapchainImagesKHR(globalState.vulkanState.device, globalState.vulkanState.swapChain, &globalState.vulkanState.swapChainImageCount, NULL);
-    globalState.vulkanState.pSwapChainImages = malloc(sizeof(VkImage) * globalState.vulkanState.swapChainImageCount);
+    globalState.vulkanState.pSwapChainImages = malloc(sizeof(VkImage[globalState.vulkanState.swapChainImageCount]));
     vkGetSwapchainImagesKHR(globalState.vulkanState.device, globalState.vulkanState.swapChain, &globalState.vulkanState.swapChainImageCount, globalState.vulkanState.pSwapChainImages);
 
     globalState.vulkanState.swapChainImageFormat = surfaceFormat.format;
@@ -146,7 +139,7 @@ void createSwapChain(void) {
 }
 
 void createImageViews(void) {
-    globalState.vulkanState.pSwapChainImageViews = malloc(sizeof(VkImageView) * globalState.vulkanState.swapChainImageCount);
+    globalState.vulkanState.pSwapChainImageViews = malloc(sizeof(VkImageView[globalState.vulkanState.swapChainImageCount]));
 
     for (size_t i = 0; i < globalState.vulkanState.swapChainImageCount; i++) {
         VkImageViewCreateInfo createInfo = {
@@ -172,7 +165,7 @@ void createImageViews(void) {
 }
 
 void createFramebuffers(void) {
-    globalState.vulkanState.pSwapChainFramebuffers = malloc(sizeof(VkFramebuffer) * globalState.vulkanState.swapChainImageCount);
+    globalState.vulkanState.pSwapChainFramebuffers = malloc(sizeof(VkFramebuffer[globalState.vulkanState.swapChainImageCount]));
 
     for (size_t i = 0; i < globalState.vulkanState.swapChainImageCount; i++) {
         VkImageView attachments[] = {
