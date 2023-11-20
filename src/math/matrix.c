@@ -1,10 +1,9 @@
 #include <math/matrix.h>
-#include <string.h>
 
-#define _USE_MATH_DEFINES
+#include <math/float.h>
+
 #include <math.h>
-
-#include <print.h>
+#include <string.h>
 
 void multMatrix(union mat4 *result, union mat4 *srcA, union mat4 *srcB) {
     union mat4 tmp;

@@ -1,5 +1,7 @@
 #include <render/vkPipeline.h>
 
+#include <mesh/mesh.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -110,11 +112,16 @@ void createGraphicsPipeline(void) {
     };
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+    VkVertexInputBindingDescription bindingDescription = getVertexBindingDescription();
+    VkVertexInputAttributeDescription attributeDescriptions[2];
+    getVertexAttributeDescriptions(attributeDescriptions);
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-        .vertexBindingDescriptionCount = 0,
-        .vertexAttributeDescriptionCount = 0,
+        .vertexBindingDescriptionCount = 1,
+        .pVertexBindingDescriptions = &bindingDescription,
+        .vertexAttributeDescriptionCount = 2,
+        .pVertexAttributeDescriptions = attributeDescriptions,
     };
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = {

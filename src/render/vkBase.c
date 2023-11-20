@@ -4,6 +4,7 @@
 #include <render/vkDevice.h>
 #include <render/vkSwapchain.h>
 #include <render/vkPipeline.h>
+#include <render/vkBuffer.h>
 #include <render/vkCommandBuffer.h>
 #include <render/vkSync.h>
 
@@ -178,6 +179,7 @@ void initVulkan(void) {
     createGraphicsPipeline();
     createFramebuffers();
     createCommandPool();
+    createVertexBuffer();
     createCommandBuffer();
     createSyncObjects();
 }
@@ -205,6 +207,9 @@ void destroyVulkan(void) {
 
     vkDestroySwapchainKHR(globalState.vulkanState.device, globalState.vulkanState.swapChain, NULL);
     vkDestroyDevice(globalState.vulkanState.device, NULL);
+
+    vkDestroyBuffer(globalState.vulkanState.device, globalState.vulkanState.vertexBuffer, NULL);
+    vkFreeMemory(globalState.vulkanState.device, globalState.vulkanState.vertexBufferMemory, NULL);
 
     if (globalState.vulkanState.enableValidationLayers) {
         destroyDebugUtilsMessenger(globalState.vulkanState.instance, globalState.vulkanState.debugMessenger, NULL);

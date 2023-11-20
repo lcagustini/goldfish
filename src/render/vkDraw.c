@@ -29,6 +29,10 @@ static void recordCommandBuffer(uint32_t imageIndex) {
 
     vkCmdBindPipeline(globalState.vulkanState.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, globalState.vulkanState.graphicsPipeline);
 
+    VkBuffer vertexBuffers[] = { globalState.vulkanState.vertexBuffer };
+    VkDeviceSize offsets[] = { 0 };
+    vkCmdBindVertexBuffers(globalState.vulkanState.commandBuffer, 0, 1, vertexBuffers, offsets);
+
     VkViewport viewport = {
         .x = 0.0f,
         .y = 0.0f,
