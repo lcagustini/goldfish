@@ -41,6 +41,9 @@ struct vulkanState {
     VkSemaphore renderFinishedSemaphore;
     VkFence inFlightFence;
 
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
 };
