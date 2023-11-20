@@ -8,9 +8,14 @@
 #include <string.h>
 
 const struct vertex vertices[] = {
-    {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+};
+
+const uint16_t indices[] = {
+    0, 1, 2, 2, 3, 0
 };
 
 static uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
@@ -95,16 +100,19 @@ static void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size
 void createVertexBuffer() {
     VkDeviceSize bufferSize = sizeof(vertices);
 
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+
     createBuffer(bufferSize,
                  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 &globalState.vulkanState.stagingBuffer,
-                 &globalState.vulkanState.stagingBufferMemory);
+                 &stagingBuffer,
+                 &stagingBufferMemory);
 
     void* data;
-    vkMapMemory(globalState.vulkanState.device, globalState.vulkanState.stagingBufferMemory, 0, bufferSize, 0, &data);
+    vkMapMemory(globalState.vulkanState.device, stagingBufferMemory, 0, bufferSize, 0, &data);
     memcpy(data, vertices, bufferSize);
-    vkUnmapMemory(globalState.vulkanState.device, globalState.vulkanState.stagingBufferMemory);
+    vkUnmapMemory(globalState.vulkanState.device, stagingBufferMemory);
 
     createBuffer(bufferSize,
                  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -112,8 +120,37 @@ void createVertexBuffer() {
                  &globalState.vulkanState.vertexBuffer,
                  &globalState.vulkanState.vertexBufferMemory);
 
-    copyBuffer(globalState.vulkanState.stagingBuffer, globalState.vulkanState.vertexBuffer, bufferSize);
+    copyBuffer(stagingBuffer, globalState.vulkanState.vertexBuffer, bufferSize);
 
-    vkDestroyBuffer(globalState.vulkanState.device, globalState.vulkanState.stagingBuffer, NULL);
-    vkFreeMemory(globalState.vulkanState.device, globalState.vulkanState.stagingBufferMemory, NULL);
+    vkDestroyBuffer(globalState.vulkanState.device, stagingBuffer, NULL);
+    vkFreeMemory(globalState.vulkanState.device, stagingBufferMemory, NULL);
+}
+
+void createIndexBuffer() {
+    VkDeviceSize bufferSize = sizeof(indices);
+
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+
+    createBuffer(bufferSize,
+                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                 &stagingBuffer,
+                 &stagingBufferMemory);
+
+    void* data;
+    vkMapMemory(globalState.vulkanState.device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, indices, bufferSize);
+    vkUnmapMemory(globalState.vulkanState.device, stagingBufferMemory);
+
+    createBuffer(bufferSize,
+                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                 &globalState.vulkanState.indexBuffer,
+                 &globalState.vulkanState.indexBufferMemory);
+
+    copyBuffer(stagingBuffer, globalState.vulkanState.indexBuffer, bufferSize);
+
+    vkDestroyBuffer(globalState.vulkanState.device, stagingBuffer, NULL);
+    vkFreeMemory(globalState.vulkanState.device, stagingBufferMemory, NULL);
 }

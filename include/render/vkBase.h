@@ -41,11 +41,11 @@ struct vulkanState {
     VkSemaphore renderFinishedSemaphore;
     VkFence inFlightFence;
 
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
+
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
 };
 
 void initVulkan(void);

@@ -33,6 +33,8 @@ static void recordCommandBuffer(uint32_t imageIndex) {
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(globalState.vulkanState.commandBuffer, 0, 1, vertexBuffers, offsets);
 
+    vkCmdBindIndexBuffer(globalState.vulkanState.commandBuffer, globalState.vulkanState.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+
     VkViewport viewport = {
         .x = 0.0f,
         .y = 0.0f,
@@ -49,7 +51,7 @@ static void recordCommandBuffer(uint32_t imageIndex) {
     };
     vkCmdSetScissor(globalState.vulkanState.commandBuffer, 0, 1, &scissor);
 
-    vkCmdDraw(globalState.vulkanState.commandBuffer, 3, 1, 0, 0);
+    vkCmdDrawIndexed(globalState.vulkanState.commandBuffer, 6, 1, 0, 0, 0);
 
     vkCmdEndRenderPass(globalState.vulkanState.commandBuffer);
 

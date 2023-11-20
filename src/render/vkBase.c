@@ -180,6 +180,7 @@ void initVulkan(void) {
     createFramebuffers();
     createCommandPool();
     createVertexBuffer();
+    createIndexBuffer();
     createCommandBuffer();
     createSyncObjects();
 }
@@ -207,6 +208,9 @@ void destroyVulkan(void) {
 
     vkDestroySwapchainKHR(globalState.vulkanState.device, globalState.vulkanState.swapChain, NULL);
     vkDestroyDevice(globalState.vulkanState.device, NULL);
+
+    vkDestroyBuffer(globalState.vulkanState.device, globalState.vulkanState.indexBuffer, NULL);
+    vkFreeMemory(globalState.vulkanState.device, globalState.vulkanState.indexBufferMemory, NULL);
 
     vkDestroyBuffer(globalState.vulkanState.device, globalState.vulkanState.vertexBuffer, NULL);
     vkFreeMemory(globalState.vulkanState.device, globalState.vulkanState.vertexBufferMemory, NULL);
