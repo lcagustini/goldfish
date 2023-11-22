@@ -1,5 +1,5 @@
-#ifndef HASHTABLE_H
-#define HASHTABLE_H
+#ifndef GOLDFISH_HASHTABLE_H
+#define GOLDFISH_HASHTABLE_H
 
 #include <stdint.h>
 #include <stdbool.h>

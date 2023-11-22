@@ -1,9 +1,9 @@
 #include <data/hashtable.h>
 
+#include <goldfish/print.h>
+
 #include <string.h>
 #include <stdlib.h>
-
-#include <print.h>
 
 uint32_t hashString(const char *name, uint32_t len) {
     // murmurhash3

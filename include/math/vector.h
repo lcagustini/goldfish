@@ -1,5 +1,5 @@
-#ifndef VECTOR_H
-#define VECTOR_H
+#ifndef GOLDFISH_VECTOR_H
+#define GOLDFISH_VECTOR_H
 
 struct vec2 {
     float x, y;

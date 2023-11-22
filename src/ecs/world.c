@@ -1,6 +1,6 @@
 #include <ecs/world.h>
 
-#include <print.h>
+#include <goldfish/print.h>
 
 #include <string.h>
 #include <assert.h>
@@ -166,7 +166,7 @@ static struct entity copyEntityBetweenTables(struct world *world, struct entity 
 
 static void updateFilter(struct world *world, filterId filterToUpdate) {
     struct filter *filter = hashtableGet(&world->filters, filterToUpdate);
-	filter->resultsLength = getAllTablesWithComponents(world, filter->components, filter->componentsLength, filter->results, MAX_ARCHETYPE_COUNT);
+    filter->resultsLength = getAllTablesWithComponents(world, filter->components, filter->componentsLength, filter->results, MAX_ARCHETYPE_COUNT);
 }
 
 void addComponent(struct world *world, entityId entity, componentId component) {
@@ -192,32 +192,32 @@ void addComponent(struct world *world, entityId entity, componentId component) {
 
     // Update phase systems filters
     for (int j = 0; j < SYSTEM_PHASE_MAX; j++) {
-		for (int i = 0; i < world->phaseSystems[j].bufferCount; i++) {
-			struct system *system = dynarrayGet(&world->phaseSystems[j], i);
+        for (int i = 0; i < world->phaseSystems[j].bufferCount; i++) {
+            struct system *system = dynarrayGet(&world->phaseSystems[j], i);
 
             for (int k = 0; k < system->filtersLength; k++) {
-				updateFilter(world, system->filters[k]);
+                updateFilter(world, system->filters[k]);
             }
-		}
+        }
     }
 
     // Check if any event system is expecting this component
-	for (int i = 0; i < world->eventSystems[SYSTEM_ON_COMPONENT_ADD].bufferCount; i++) {
-		struct system *system = dynarrayGet(&world->eventSystems[SYSTEM_ON_COMPONENT_ADD], i);
-		struct filter *filter = hashtableGet(&world->filters, system->filters[0]);
+    for (int i = 0; i < world->eventSystems[SYSTEM_ON_COMPONENT_ADD].bufferCount; i++) {
+        struct system *system = dynarrayGet(&world->eventSystems[SYSTEM_ON_COMPONENT_ADD], i);
+        struct filter *filter = hashtableGet(&world->filters, system->filters[0]);
 
-		if (filter->components[0] == component) {
-			struct systemRunData data = {
-				world,
-				{ { .entity = entity } },
+        if (filter->components[0] == component) {
+            struct systemRunData data = {
+                world,
+                { { .entity = entity } },
                 1,
-				system,
-				0
-			};
+                system,
+                0
+            };
 
-			system->callback(data);
+            system->callback(data);
         }
-	}
+    }
 }
 
 void *getComponent(struct world *world, entityId entity, componentId component) {
@@ -270,13 +270,13 @@ void removeComponent(struct world *world, entityId entity, componentId component
 
     // Update phase systems filters
     for (int j = 0; j < SYSTEM_PHASE_MAX; j++) {
-		for (int i = 0; i < world->phaseSystems[j].bufferCount; i++) {
-			struct system *system = dynarrayGet(&world->phaseSystems[j], i);
+        for (int i = 0; i < world->phaseSystems[j].bufferCount; i++) {
+            struct system *system = dynarrayGet(&world->phaseSystems[j], i);
 
             for (int k = 0; k < system->filtersLength; k++) {
-				updateFilter(world, system->filters[k]);
+                updateFilter(world, system->filters[k]);
             }
-		}
+        }
     }
 }
 
@@ -322,16 +322,16 @@ entityId searchForEntity(struct world *world, tableId table, unsigned int positi
 
 void addPhaseSystem(struct world *world, enum systemPhase phase, struct system system) {
     dynarrayAdd(&world->phaseSystems[phase], &system);
-	for (int k = 0; k < system.filtersLength; k++) {
-		updateFilter(world, system.filters[k]);
-	}
+    for (int k = 0; k < system.filtersLength; k++) {
+        updateFilter(world, system.filters[k]);
+    }
 }
 
 void addEventSystem(struct world *world, enum systemEvent event, struct system system) {
     dynarrayAdd(&world->eventSystems[event], &system);
-	for (int k = 0; k < system.filtersLength; k++) {
-		updateFilter(world, system.filters[k]);
-	}
+    for (int k = 0; k < system.filtersLength; k++) {
+        updateFilter(world, system.filters[k]);
+    }
 }
 
 void addFilter(struct world *world, const char *name, struct filter filter) {
@@ -348,35 +348,35 @@ void runWorldPhase(struct world *world, enum systemPhase phase, float dt) {
 
         int runTimes = 1;
         for (int k = 0; k < system->filtersLength; k++) {
-			struct filter *filter = hashtableGet(&world->filters, system->filters[k]);
+            struct filter *filter = hashtableGet(&world->filters, system->filters[k]);
             runTimes *= filter->resultsLength;
         }
 
         if (runTimes == 0) continue;
 
-		struct systemRunData *runDatas = malloc(runTimes * sizeof(struct systemRunData));
+        struct systemRunData *runDatas = malloc(runTimes * sizeof(struct systemRunData));
 
-		int incrementAt = runTimes;
-		for (int j = 0; j < system->filtersLength; j++) {
-			struct filter *filter = hashtableGet(&world->filters, system->filters[j]);
+        int incrementAt = runTimes;
+        for (int j = 0; j < system->filtersLength; j++) {
+            struct filter *filter = hashtableGet(&world->filters, system->filters[j]);
 
-			incrementAt /= filter->resultsLength;
+            incrementAt /= filter->resultsLength;
 
-			int l = -1;
-			for (int k = 0; k < runTimes; k++) {
-				if (k % incrementAt == 0) l++;
-				runDatas[k].filterResults[j] = (union genericId) { .table = filter->results[l] };
-			}
-		}
+            int l = -1;
+            for (int k = 0; k < runTimes; k++) {
+                if (k % incrementAt == 0) l++;
+                runDatas[k].filterResults[j] = (union genericId) { .table = filter->results[l] };
+            }
+        }
 
-		for (int k = 0; k < runTimes; k++) {
-			runDatas[k].world = world;
-			runDatas[k].filterResultsLength = system->filtersLength;
-			runDatas[k].system = system;
-			runDatas[k].dt = dt;
+        for (int k = 0; k < runTimes; k++) {
+            runDatas[k].world = world;
+            runDatas[k].filterResultsLength = system->filtersLength;
+            runDatas[k].system = system;
+            runDatas[k].dt = dt;
 
-			system->callback(runDatas[k]);
-		}
+            system->callback(runDatas[k]);
+        }
 
         free(runDatas);
     }
@@ -387,22 +387,22 @@ void printWorld(struct world *world) {
 
     print("[ECS Systems]\n");
     for (int j = 0; j < SYSTEM_PHASE_MAX; j++) {
-		for (int i = 0; i < world->phaseSystems[j].bufferCount; i++) {
-			struct system *system = dynarrayGet(&world->phaseSystems[j], i);
+        for (int i = 0; i < world->phaseSystems[j].bufferCount; i++) {
+            struct system *system = dynarrayGet(&world->phaseSystems[j], i);
 
-			print("(name: %s) (phase: %d) ", system->name, j);
+            print("(name: %s) (phase: %d) ", system->name, j);
 
             for (int l = 0; l < system->filtersLength; l++) {
-				struct filter *filter = hashtableGet(&world->filters, system->filters[l]);
+                struct filter *filter = hashtableGet(&world->filters, system->filters[l]);
 
-				print("(components [%d]:", l);
-				for (int k = 0; k < filter->componentsLength; k++) {
-					print(" %s,", filter->components[k]);
-				}
-				print("\b)");
+                print("(components [%d]:", l);
+                for (int k = 0; k < filter->componentsLength; k++) {
+                    print(" %s,", filter->components[k]);
+                }
+                print("\b)");
             }
-			print("\n");
-		}
+            print("\n");
+        }
     }
     print("\n");
 

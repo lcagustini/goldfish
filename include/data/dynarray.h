@@ -1,5 +1,5 @@
-#ifndef DYNARRAY_H
-#define DYNARRAY_H
+#ifndef GOLDFISH_DYNARRAY_H
+#define GOLDFISH_DYNARRAY_H
 
 #include <stdbool.h>
 

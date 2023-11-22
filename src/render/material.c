@@ -4,10 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-
 #include <qoi.h>
 
-#include <print.h>
+#include <goldfish/print.h>
 
 static GLuint loadShader(const GLchar *shaderSrc, GLenum type, GLint *size) {
     print("Creating Shader...\n");

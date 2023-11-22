@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#define QOI_IMPLEMENTATION
+#include <qoi.h>
+
 #include <math/vector.h>
 #include <math/matrix.h>
 
@@ -11,15 +14,11 @@
 #include <render/skybox.h>
 
 #include <ecs/world.h>
-
-#include <engineUI.h>
-#include <print.h>
-#include <global.h>
-
-#define QOI_IMPLEMENTATION
-#include <qoi.h>
-
 #include <ecs/systems.h>
+
+#include <goldfish/engineUI.h>
+#include <goldfish/print.h>
+#include <goldfish/global.h>
 
 void worldSetup(struct world *world);
 

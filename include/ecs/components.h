@@ -1,5 +1,5 @@
-#ifndef COMPONENTS_H
-#define COMPONENTS_H
+#ifndef GOLDFISH_COMPONENTS_H
+#define GOLDFISH_COMPONENTS_H
 
 #include <stdbool.h>
 
@@ -91,13 +91,6 @@ struct controllerDataComponent {
     bool B;
     bool X;
     bool Y;
-};
-
-struct firstPersonComponent {
-    struct vec2 rotation;
-
-    float rotationSpeed;
-    float moveSpeed;
 };
 
 struct dirLightComponent {

@@ -1,5 +1,5 @@
-#ifndef ENGINEUI_H
-#define ENGINEUI_H
+#ifndef GOLDFISH_ENGINEUI_H
+#define GOLDFISH_ENGINEUI_H
 
 #include <ecs/world.h>
 

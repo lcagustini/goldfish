@@ -1,5 +1,5 @@
-#ifndef MATRIX_H
-#define MATRIX_H
+#ifndef GOLDFISH_MATRIX_H
+#define GOLDFISH_MATRIX_H
 
 #include <math/vector.h>
 

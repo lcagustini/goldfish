@@ -1,5 +1,5 @@
-#ifndef MATERIAL_H
-#define MATERIAL_H
+#ifndef GOLDFISH_MATERIAL_H
+#define GOLDFISH_MATERIAL_H
 
 #include <GL/glew.h>
 #include <GL/gl.h>

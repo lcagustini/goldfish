@@ -1,5 +1,5 @@
-#ifndef MACROS_H
-#define MACROS_H
+#ifndef GOLDFISH_MACROS_H
+#define GOLDFISH_MACROS_H
 
 #define STRINGIFY(c) #c
 #define VARIADIC_COUNT(type, ...) ((int)(sizeof((type[]){__VA_ARGS__})/sizeof(type)))

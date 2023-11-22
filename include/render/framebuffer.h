@@ -1,9 +1,9 @@
-#ifndef FRAMEBUFFER_H
-#define FRAMEBUFFER_H
+#ifndef GOLDFISH_FRAMEBUFFER_H
+#define GOLDFISH_FRAMEBUFFER_H
 
 #define MAX_FRAMEBUFFERS 10
 
-#include <global.h>
+#include <goldfish/global.h>
 
 #include <stdbool.h>
 

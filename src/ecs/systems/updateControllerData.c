@@ -1,5 +1,7 @@
 #include <ecs/systems.h>
 
+#include <string.h>
+
 void updateControllerData(struct systemRunData data) {
     struct controllerDataComponent *controllers = GET_SYSTEM_COMPONENTS(data, 0, 0);
 

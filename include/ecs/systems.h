@@ -1,18 +1,14 @@
-#ifndef SYSTEMS_H
-#define SYSTEMS_H
+#ifndef GOLDFISH_SYSTEMS_H
+#define GOLDFISH_SYSTEMS_H
 
 #include <ecs/world.h>
 #include <ecs/components.h>
-
-#include <string.h>
-#include <global.h>
 
 void setupTransform(struct systemRunData data);
 void setupCamera(struct systemRunData data);
 
 void updateControllerData(struct systemRunData data);
 void updateCameraView(struct systemRunData data);
-void updateFirstPersonTransform(struct systemRunData data);
 
 void updateTransformMatrix(struct systemRunData data);
 

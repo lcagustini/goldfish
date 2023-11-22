@@ -1,5 +1,5 @@
-#ifndef PRINT_H
-#define PRINT_H
+#ifndef GOLDFISH_PRINT_H
+#define GOLDFISH_PRINT_H
 
 enum printType {
 	PRINT_STDOUT,

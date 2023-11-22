@@ -1,12 +1,10 @@
-#include <stdlib.h>
-
-#include <GL/glew.h>
-
 #include <render/skybox.h>
 
+#include <GL/glew.h>
 #include <qoi.h>
+#include <stdlib.h>
 
-#include <print.h>
+#include <goldfish/print.h>
 #include <render/material.h>
 
 void loadSkybox(const char *facePaths[6], struct skyboxComponent *skybox) {

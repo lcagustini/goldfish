@@ -1,9 +1,9 @@
 #include <data/dynarray.h>
 
+#include <goldfish/print.h>
+
 #include <string.h>
 #include <stdlib.h>
-
-#include <print.h>
 
 struct dynarray dynarrayCreate(unsigned int capacity, unsigned int size) {
     if (capacity == 0) {

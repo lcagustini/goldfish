@@ -1,4 +1,4 @@
-#include <print.h>
+#include <goldfish/print.h>
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -9,13 +9,13 @@ static FILE *openFile;
 
 void setPrintType(enum printType type, const char *file) {
     switch (type) {
-		case PRINT_FILE:
-			openFile = fopen(file, "w");
+        case PRINT_FILE:
+            openFile = fopen(file, "w");
             fclose(openFile);
-			openFile = fopen(file, "a");
-			break;
-		default:
-			break;
+            openFile = fopen(file, "a");
+            break;
+        default:
+            break;
     }
 
     currentType = type;
@@ -24,12 +24,12 @@ void setPrintType(enum printType type, const char *file) {
 void print(const char *format, ...) {
     FILE *printTarget;
     switch (currentType) {
-		case PRINT_FILE:
+        case PRINT_FILE:
             printTarget = openFile;
             break;
-		default:
+        default:
             printTarget = stdout;
-			break;
+            break;
     }
 
     va_list args;

@@ -1,5 +1,5 @@
-#ifndef SKYBOX_H
-#define SKYBOX_H
+#ifndef GOLDFISH_SKYBOX_H
+#define GOLDFISH_SKYBOX_H
 
 #include <ecs/components.h>
 

@@ -1,5 +1,5 @@
-#ifndef WORLD_H
-#define WORLD_H
+#ifndef GOLDFISH_WORLD_H
+#define GOLDFISH_WORLD_H
 
 #define MAX_ENTITY_COUNT 50
 #define MAX_COMPONENT_COUNT 50
@@ -23,9 +23,9 @@ typedef char * filterId;
 
 union genericId {
     filterId filter;
-	tableId table;
-	entityId entity;
-	componentId component;
+    tableId table;
+    entityId entity;
+    componentId component;
 };
 
 enum systemEvent {
@@ -48,7 +48,7 @@ enum systemPhase {
     SYSTEM_ON_RENDER_POST,
 
     SYSTEM_ON_RENDER_FINISH,
-    
+
     SYSTEM_PHASE_MAX,
 };
 
@@ -115,7 +115,7 @@ struct world {
     struct hashtable filters;
 };
 
-#include <macros.h>
+#include <goldfish/macros.h>
 
 #define COMPONENT_SIZE(w, c) ((struct component*)hashtableGet(&(w)->components, c))->size
 #define GET_COMPONENT_ID(c) STRINGIFY(c)
@@ -132,9 +132,6 @@ struct world {
 #define GET_SYSTEM_COMPONENT(d) getComponent((d).world, (d).filterResults[0].entity, GET_FILTER_COMPONENT((d).world, (d).system->filters[0], 0))
 #define GET_SYSTEM_COMPONENTS(d, i, j) getComponentsFromTable((d).world, (d).filterResults[i].table, GET_FILTER_COMPONENT((d).world, (d).system->filters[i], j), NULL)
 #define GET_SYSTEM_COMPONENTS_LENGTH(d, i) (((struct table *)dynarrayGet(&(d).world->tables, (d).filterResults[i].table))->componentsLength)
-
-//#define COMPONENT_PACKAGE(...) ({ __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__)})
-//#define COMPONENT_LIST(...) { __VA_ARGS__, VARIADIC_COUNT(__VA_ARGS__) }
 
 #define ADD_FILTER(w, name, ...) do { \
     struct filter f = { \
@@ -157,7 +154,7 @@ struct world {
 } while (0); \
 
 #define ADD_EVENT_SYSTEM(w, ev, callback, component) do { \
-	char *name = STRINGIFY(callback); \
+    char *name = STRINGIFY(callback); \
     struct filter f = { \
         { component }, \
         1, \

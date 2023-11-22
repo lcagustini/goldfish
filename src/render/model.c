@@ -8,7 +8,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/cimport.h>
 
-#include <print.h>
+#include <goldfish/print.h>
 
 static void setupMesh(struct meshComponent *mesh) {
     glGenVertexArrays(1, &mesh->VAO);

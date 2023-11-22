@@ -1,5 +1,5 @@
-#ifndef MODEL_H
-#define MODEL_H
+#ifndef GOLDFISH_MODEL_H
+#define GOLDFISH_MODEL_H
 
 #include <ecs/components.h>
 

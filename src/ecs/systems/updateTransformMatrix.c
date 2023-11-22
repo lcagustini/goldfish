@@ -1,7 +1,5 @@
 #include <ecs/systems.h>
 
-#include <print.h>
-
 static union mat4 getMatrixForTransform(struct transformComponent *t) {
     union mat4 m;
 

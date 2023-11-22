@@ -1,10 +1,9 @@
-#include <global.h>
-#include <print.h>
+#include <goldfish/global.h>
 
-#include <fontIconsMaterialDesign.h>
-
+#include <goldfish/print.h>
 #include <render/framebuffer.h>
 
+#include <fontIconsMaterialDesign.h>
 #include <stdlib.h>
 
 struct globalState globalState;
