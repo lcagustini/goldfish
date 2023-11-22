@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(psvita-opengl)
+project(goldfish)
 
 find_package(assimp REQUIRED)
 find_package(GLEW REQUIRED)
@@ -15,6 +15,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Og -std=c++11 -g")
 include_directories(
     ${ASSIMP_INCLUDE_DIRS}
     include
+	vendor/include
 )
 
 # Add any additional library paths here
@@ -23,8 +24,8 @@ link_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-FILE(GLOB_RECURSE C_SOURCES src/*.c)
-FILE(GLOB_RECURSE CPP_SOURCES src/*.cpp)
+FILE(GLOB_RECURSE C_SOURCES src/*.c vendor/src/*.c)
+FILE(GLOB_RECURSE CPP_SOURCES src/*.cpp vendor/src/*.cpp)
 
 ## Build and link
 # Add all the files needed to compile here
@@ -33,7 +34,7 @@ add_executable(${PROJECT_NAME}
 	${C_SOURCES}
 )
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE 
+target_compile_definitions(${PROJECT_NAME} PRIVATE
 	IMGUI_IMPL_API=extern\ \"C\"
 	IMGUI_IMPL_OPENGL_LOADER_GL3W
 )
