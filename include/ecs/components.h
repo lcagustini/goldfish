@@ -12,10 +12,10 @@
 #include <ecs/world.h>
 
 struct rendererDataComponent {
-	struct meshRenderData opaqueMeshes[512];
+    struct meshRenderData opaqueMeshes[512];
     unsigned int opaqueMeshesLength;
 
-	struct meshRenderData transparentMeshes[512];
+    struct meshRenderData transparentMeshes[512];
     unsigned int transparentMeshesLength;
 
     framebufferId target;
@@ -56,7 +56,8 @@ struct transformComponent {
 };
 
 struct cameraComponent {
-    float fov;
+    bool orthographic;
+    union { float fov; float size; };
     float near;
     float far;
 

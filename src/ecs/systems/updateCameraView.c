@@ -16,6 +16,11 @@ void updateCameraView(struct systemRunData data) {
 
         lookAt(&camera->viewMat, transform->position, dir, worldUp);
 
-        createPerspProjectionMatrix(&camera->projectionMat, camera->fov, (float)width/(float)height, camera->near, camera->far);
+        if (camera->orthographic) {
+            createOrthoProjectionMatrix(&camera->projectionMat, camera->size, (float)width/(float)height, camera->near, camera->far);
+        }
+        else {
+            createPerspProjectionMatrix(&camera->projectionMat, camera->fov, (float)width/(float)height, camera->near, camera->far);
+        }
     }
 }
