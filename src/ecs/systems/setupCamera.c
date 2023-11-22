@@ -5,21 +5,21 @@
 void setupCamera(struct systemRunData data) {
     struct cameraComponent *camera = GET_SYSTEM_COMPONENT(data);
 
-    float quadVertices[] = {  
-		// positions   // texCoords
-		-1.0f,  1.0f,  0.0f, 1.0f,
-		-1.0f, -1.0f,  0.0f, 0.0f,
-		 1.0f, -1.0f,  1.0f, 0.0f,
+    float quadVertices[] = {
+        // positions   // texCoords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+        1.0f, -1.0f,  1.0f, 0.0f,
 
-		-1.0f,  1.0f,  0.0f, 1.0f,
-		 1.0f, -1.0f,  1.0f, 0.0f,
-		 1.0f,  1.0f,  1.0f, 1.0f
-	};	
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        1.0f, -1.0f,  1.0f, 0.0f,
+        1.0f,  1.0f,  1.0f, 1.0f
+    };
 
     camera->framebuffer = createWindowFramebuffer(FRAMEBUFFER_COLOR_DEPTH);
 
-    GLuint vshader = loadShaderFromFile("assets/shaders/quad_v.glsl", GL_VERTEX_SHADER);
-    GLuint fshader = loadShaderFromFile("assets/shaders/quad_f.glsl", GL_FRAGMENT_SHADER);
+    GLuint vshader = loadShaderFromFile("goldfish/assets/shaders/quad_v.glsl", GL_VERTEX_SHADER);
+    GLuint fshader = loadShaderFromFile("goldfish/assets/shaders/quad_f.glsl", GL_FRAGMENT_SHADER);
 
     camera->shader = glCreateProgram();
     if (camera->shader) {

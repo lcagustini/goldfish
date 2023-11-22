@@ -1,7 +1,8 @@
 #include <math/vector.h>
 
-#define _USE_MATH_DEFINES
 #include <math.h>
+
+#include <math/float.h>
 
 float vectorLenSquared2D(struct vec2 v) {
     float len = v.x * v.x + v.y * v.y;

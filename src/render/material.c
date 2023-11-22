@@ -9,7 +9,7 @@
 
 #include <print.h>
 
-GLuint loadShader(const GLchar *shaderSrc, GLenum type, GLint *size) {
+static GLuint loadShader(const GLchar *shaderSrc, GLenum type, GLint *size) {
     print("Creating Shader...\n");
 
     GLuint shader = glCreateShader(type);
@@ -65,7 +65,7 @@ GLuint loadShaderFromFile(const char *shaderFile, GLenum type) {
     return shader;
 }
 
-int createShader(struct shader *shader, const char *vertexPath, const char *fragmentPath) {
+static int createShader(struct shader *shader, const char *vertexPath, const char *fragmentPath) {
     GLuint vshader = loadShaderFromFile(vertexPath, GL_VERTEX_SHADER);
     GLuint fshader = loadShaderFromFile(fragmentPath, GL_FRAGMENT_SHADER);
 
@@ -170,7 +170,7 @@ int createShader(struct shader *shader, const char *vertexPath, const char *frag
     return 0;
 }
 
-void loadTexture(struct texture *texture, const char *path, enum textureType textureType) {
+static void loadTexture(struct texture *texture, const char *path, enum textureType textureType) {
     glGenTextures(1, &texture->textureBuffer);
 
     qoi_desc desc;
@@ -190,7 +190,7 @@ void loadTexture(struct texture *texture, const char *path, enum textureType tex
 }
 
 void createMaterial(struct material *material, const char *diffusePath, const char *normalPath, const char *specularPath, const char *reflectancePath, bool transparent) {
-    createShader(&material->shader, "assets/shaders/default_v.glsl", "assets/shaders/default_f.glsl");
+    createShader(&material->shader, "goldfish/assets/shaders/default_v.glsl", "goldfish/assets/shaders/default_f.glsl");
 
     if (diffusePath) {
         loadTexture(&material->textures[material->texturesLength], diffusePath, TEXTURE_DIFFUSE);

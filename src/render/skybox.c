@@ -79,8 +79,8 @@ void loadSkybox(const char *facePaths[6], struct skyboxComponent *skybox) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skybox->EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skyboxIndices), skyboxIndices, GL_STATIC_DRAW);
 
-    GLuint vshader = loadShaderFromFile("assets/shaders/skybox_v.glsl", GL_VERTEX_SHADER);
-    GLuint fshader = loadShaderFromFile("assets/shaders/skybox_f.glsl", GL_FRAGMENT_SHADER);
+    GLuint vshader = loadShaderFromFile("goldfish/assets/shaders/skybox_v.glsl", GL_VERTEX_SHADER);
+    GLuint fshader = loadShaderFromFile("goldfish/assets/shaders/skybox_f.glsl", GL_FRAGMENT_SHADER);
 
     skybox->shaderProgram = glCreateProgram();
     if (skybox->shaderProgram) {

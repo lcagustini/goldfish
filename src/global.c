@@ -15,7 +15,7 @@ static void GLAPIENTRY errorCallback(GLenum source, GLenum type, GLuint id, GLen
 
 static void windowResizeCallback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
-	updateFramebuffersWindowSize();
+    updateFramebuffersWindowSize();
 }
 
 void globalInit() {
@@ -53,41 +53,39 @@ void globalInit() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glEnable(GL_FRAMEBUFFER_SRGB); 
+    glEnable(GL_FRAMEBUFFER_SRGB);
 
-#if 0
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(errorCallback, 0);
-#endif
 
     print("OpenGL: %s - %s\n\n", glGetString(GL_VERSION), glGetString(GL_RENDERER));
 
-	igCreateContext(NULL);
-	ImGuiIO *imguiIO = igGetIO();
-	ImFontAtlas *fontAtlas = imguiIO->Fonts;
+    igCreateContext(NULL);
+    ImGuiIO *imguiIO = igGetIO();
+    ImFontAtlas *fontAtlas = imguiIO->Fonts;
     ImFontConfig *config = ImFontConfig_ImFontConfig();
 
-	//imguiIO->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	imguiIO->FontDefault = ImFontAtlas_AddFontFromFileTTF(fontAtlas, "assets/SourceCodePro-Medium.ttf", 14, NULL, ImFontAtlas_GetGlyphRangesDefault(fontAtlas));
+    //imguiIO->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    imguiIO->FontDefault = ImFontAtlas_AddFontFromFileTTF(fontAtlas, "goldfish/assets/SourceCodePro-Medium.ttf", 14, NULL, ImFontAtlas_GetGlyphRangesDefault(fontAtlas));
 
-	config->MergeMode = true;
-	config->GlyphMinAdvanceX = 12;
+    config->MergeMode = true;
+    config->GlyphMinAdvanceX = 12;
     config->GlyphOffset = (ImVec2) { .x = 0, .y = 2 };
-	static const ImWchar iconRanges[] = { ICON_MIN_MD, ICON_MAX_16_MD, 0 };
-    ImFontAtlas_AddFontFromFileTTF(fontAtlas, "assets/MaterialIcons-Regular.ttf", 12, config, iconRanges);
+    static const ImWchar iconRanges[] = { ICON_MIN_MD, ICON_MAX_16_MD, 0 };
+    ImFontAtlas_AddFontFromFileTTF(fontAtlas, "goldfish/assets/MaterialIcons-Regular.ttf", 12, config, iconRanges);
 
-	ImGui_ImplGlfw_InitForOpenGL(globalState.window, true);
-	ImGui_ImplOpenGL3_Init("#version 130");
+    ImGui_ImplGlfw_InitForOpenGL(globalState.window, true);
+    ImGui_ImplOpenGL3_Init("#version 130");
 
-	igStyleColorsDark(NULL);
+    igStyleColorsDark(NULL);
 }
 
 void globalEnd() {
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	igDestroyContext(NULL);
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    igDestroyContext(NULL);
 
     glfwTerminate();
 }
