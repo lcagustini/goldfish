@@ -1,14 +1,27 @@
 #!/bin/bash
 
 mkdir -p build
-cd build && cmake .. && cmake --build . && cd ..
 
-DLLS=`ldd ./build/psvita-opengl.exe | grep ucrt64 | cut -d " " -f 3`
+if [[ $* == *--build* ]]; then
+    cd build && cmake .. && cmake --build . && cd ..
+fi
 
-if [[ $* == *--dll* ]]
-then
-    if [ -z "$DLLS" ]
-    then
+# OS specific variables
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    echo "[OS] Linux"
+    TARGET="./build/goldfish"
+    DLLS=""
+elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    echo "[OS] Windows"
+    TARGET="./build/goldfish.exe"
+    DLLS=`ldd ${TARGET} | grep ucrt64 | cut -d " " -f 3`
+else
+    echo "[OS] Unsupported"
+    exit 1
+fi
+
+if [[ $* == *--dll* ]]; then
+    if [ -z "$DLLS" ]; then
         echo "No DLL to copy"
     else
         echo "Copying DLLs..."
@@ -16,18 +29,13 @@ then
     fi
 fi
 
-if [[ $* == *--zip* ]]
-then
-    zip -j ./build/standalone.zip $DLLS ./build/psvita-opengl.exe
+if [[ $* == *--zip* ]]; then
+    zip -j ./build/standalone.zip $DLLS $TARGET
     zip -r ./build/standalone.zip assets/
 fi
 
-if [[ $* == *--run* ]]
-then
-    ./build/psvita-opengl.exe
-fi
-
-if [[ $* == *--debug* ]]
-then
-    gdb ./build/psvita-opengl.exe
+if [[ $* == *--run* ]]; then
+    $TARGET
+elif [[ $* == *--debug* ]]; then
+    gdb $TARGET
 fi
