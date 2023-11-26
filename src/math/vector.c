@@ -91,6 +91,22 @@ struct vec3 vectorRotate(struct vec3 v, struct quat q) {
                 vectorScale(2.0f * s, vectorCross(u, v))));
 }
 
+// https://stackoverflow.com/questions/12435671/quaternion-lookat-function
+struct quat lookAtQuat(const struct vec3 source, const struct vec3 dest, const struct vec3 forward, const struct vec3 up) {
+    struct vec3 toVector = vectorNormalize(vectorSubtract(dest, source));
+
+    //compute rotation axis
+    struct vec3 rotAxis = vectorNormalize(vectorCross(forward, toVector));
+    if (vectorLenSquared(rotAxis) == 0) rotAxis = up;
+
+    //find the angle around rotation axis
+    float dot = vectorDot((struct vec3) { 0, 0, -1 }, toVector);
+    float ang = acos(dot);
+
+    //convert axis angle to quaternion
+    return quatFromAxisAngle(rotAxis, ang);
+}
+
 struct quat getRotationQuat(struct vec3 from, struct vec3 to) {
     struct quat result;
     struct vec3 H;

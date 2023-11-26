@@ -33,6 +33,7 @@ struct vec3 vectorSubtract(struct vec3 a, struct vec3 b);
 
 struct vec3 vectorRotate(struct vec3 v, struct quat q);
 
+struct quat lookAtQuat(const struct vec3 source, const struct vec3 dest, const struct vec3 forward, const struct vec3 up);
 struct quat getRotationQuat(struct vec3 from, struct vec3 to);
 struct quat quatMult(struct quat a, struct quat b);
 struct vec3 quatToEuler(struct quat q);
