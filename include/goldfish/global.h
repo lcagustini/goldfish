@@ -1,7 +1,7 @@
 #ifndef GOLDFISH_GLOBAL_H
 #define GOLDFISH_GLOBAL_H
 
-#include <GL/glew.h>
+#include <epoxy/gl.h>
 #include <GLFW/glfw3.h>
 
 #define CIMGUI_USE_GLFW

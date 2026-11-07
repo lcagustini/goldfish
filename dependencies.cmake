@@ -1,10 +1,12 @@
 find_package(assimp REQUIRED)
-find_package(GLEW REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(EPOXY REQUIRED epoxy)
 find_package(glfw3 REQUIRED)
 
 # Add any additional include paths here
 include_directories(
     ${ASSIMP_INCLUDE_DIRS}
+    ${EPOXY_INCLUDE_DIRS}
 
     goldfish/include
     goldfish/vendor/include

@@ -19,7 +19,8 @@ static void windowResizeCallback(GLFWwindow *window, int width, int height) {
 
 void globalInit() {
     if (!glfwInit()) {
-        return;
+        fprintf(stderr, "Error initializing GLFW\n");
+        exit(1);
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -28,22 +29,14 @@ void globalInit() {
 
     globalState.window = glfwCreateWindow(1280, 720, "psvita-opengl", NULL, NULL);
     if (!globalState.window) {
-        print("Error creating window\n");
+        fprintf(stderr, "Error creating window\n");
         glfwTerminate();
-        return;
+        exit(1);
     }
 
     glfwMakeContextCurrent(globalState.window);
     glfwSetFramebufferSizeCallback(globalState.window, windowResizeCallback);
     glfwSwapInterval(1);
-
-    glewExperimental = 1;
-    GLenum err = glewInit();
-    if (GLEW_OK != err) {
-        print("Error creating window\n");
-        glfwTerminate();
-        return;
-    }
 
     glClearDepthf(1.0f);
     glClearColor(0.1f, 0.1f, 0.3f, 1.0f);

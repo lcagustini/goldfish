@@ -1,7 +1,7 @@
 #ifndef GOLDFISH_MATERIAL_H
 #define GOLDFISH_MATERIAL_H
 
-#include <GL/glew.h>
+#include <epoxy/gl.h>
 #include <GL/gl.h>
 
 #include <math/vector.h>
