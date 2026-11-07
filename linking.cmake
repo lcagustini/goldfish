@@ -1,10 +1,9 @@
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     IMGUI_IMPL_API=extern\ \"C\"
-    IMGUI_IMPL_OPENGL_LOADER_GL3W
 )
 
 target_link_libraries(${PROJECT_NAME}
-    ${GLEW_LIBRARIES}
+    ${EPOXY_LIBRARIES}
 
     ${ASSIMP_LIBRARIES}
 

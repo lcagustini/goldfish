@@ -91,7 +91,7 @@ static tableId getTableForComponents(struct world *world, componentId *component
 
     for (int i = 0; i < componentsLength; i++) {
         newTable.records[i].componentType = components[i];
-        newTable.records[i].components = malloc(MAX_ENTITY_COUNT * COMPONENT_SIZE(world, components[i]));
+        newTable.records[i].components = calloc(MAX_ENTITY_COUNT, COMPONENT_SIZE(world, components[i]));
     }
 
     dynarrayAdd(&world->tables, &newTable);

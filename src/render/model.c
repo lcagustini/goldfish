@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include <GL/glew.h>
+#include <epoxy/gl.h>
 
 #include <render/model.h>
 

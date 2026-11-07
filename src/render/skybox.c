@@ -1,6 +1,6 @@
 #include <render/skybox.h>
 
-#include <GL/glew.h>
+#include <epoxy/gl.h>
 #include <qoi.h>
 #include <stdlib.h>
 
