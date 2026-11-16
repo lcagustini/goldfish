@@ -18,8 +18,8 @@ void setupCamera(struct systemRunData data) {
 
     camera->framebuffer = createWindowFramebuffer(FRAMEBUFFER_COLOR_DEPTH);
 
-    GLuint vshader = loadShaderFromFile("goldfish/assets/shaders/quad_v.glsl", GL_VERTEX_SHADER);
-    GLuint fshader = loadShaderFromFile("goldfish/assets/shaders/quad_f.glsl", GL_FRAGMENT_SHADER);
+    GLuint vshader = loadShaderFromFile(GOLDFISH_ENGINE_ASSETS "/shaders/quad_v.glsl", GL_VERTEX_SHADER);
+    GLuint fshader = loadShaderFromFile(GOLDFISH_ENGINE_ASSETS "/shaders/quad_f.glsl", GL_FRAGMENT_SHADER);
 
     camera->shader = glCreateProgram();
     if (camera->shader) {

@@ -13,6 +13,11 @@ project(${GOLDFISH_GAME_NAME})
 # This file is the engine root; every engine path hangs off GOLDFISH_DIR.
 set(GOLDFISH_DIR ${CMAKE_SOURCE_DIR})
 
+# Engine assets (shaders, engine.lua, fonts) load at runtime relative to the
+# game dir (the working directory); bake the path from the engine's location.
+file(RELATIVE_PATH GOLDFISH_ENGINE_ASSETS "${GOLDFISH_GAME_DIR}" "${GOLDFISH_DIR}/assets")
+add_compile_definitions(GOLDFISH_ENGINE_ASSETS="${GOLDFISH_ENGINE_ASSETS}")
+
 #add_definitions("-march=native -ftree-vectorize -ffast-math -fsigned-char -fno-optimize-sibling-calls")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -std=c11 -Og -g")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -std=c++11 -Og -g")

@@ -161,10 +161,10 @@ entityId loadModel(struct world *world, const char *modelPath, const char *diffu
         return NULL;
     }
 
-    if (diffusePath == NULL) diffusePath = "goldfish/assets/white.qoi";
-    if (normalPath == NULL) normalPath = "goldfish/assets/normal.qoi";
-    if (specularPath == NULL) specularPath = "goldfish/assets/white.qoi";
-    if (reflectancePath == NULL) reflectancePath = "goldfish/assets/black.qoi";
+    if (diffusePath == NULL) diffusePath = GOLDFISH_ENGINE_ASSETS "/white.qoi";
+    if (normalPath == NULL) normalPath = GOLDFISH_ENGINE_ASSETS "/normal.qoi";
+    if (specularPath == NULL) specularPath = GOLDFISH_ENGINE_ASSETS "/white.qoi";
+    if (reflectancePath == NULL) reflectancePath = GOLDFISH_ENGINE_ASSETS "/black.qoi";
 
     struct material material = {0};
     createMaterial(&material, diffusePath, normalPath, specularPath, reflectancePath, transparent);

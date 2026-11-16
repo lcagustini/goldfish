@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 #define NATIVE_CDEFS_FILE "build/generated/nativeCdefs.lua"
-#define ENGINE_LUA_FILE "goldfish/assets/engine.lua"
+#define ENGINE_LUA_FILE GOLDFISH_ENGINE_ASSETS "/engine.lua"
 #define SCRIPTS_DIR "assets/scripts"
 
 lua_State *luaState;

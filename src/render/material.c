@@ -189,7 +189,7 @@ static void loadTexture(struct texture *texture, const char *path, enum textureT
 }
 
 void createMaterial(struct material *material, const char *diffusePath, const char *normalPath, const char *specularPath, const char *reflectancePath, bool transparent) {
-    createShader(&material->shader, "goldfish/assets/shaders/default_v.glsl", "goldfish/assets/shaders/default_f.glsl");
+    createShader(&material->shader, GOLDFISH_ENGINE_ASSETS "/shaders/default_v.glsl", GOLDFISH_ENGINE_ASSETS "/shaders/default_f.glsl");
 
     if (diffusePath) {
         loadTexture(&material->textures[material->texturesLength], diffusePath, TEXTURE_DIFFUSE);

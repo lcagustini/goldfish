@@ -59,13 +59,13 @@ void globalInit() {
     ImFontAtlas *fontAtlas = imguiIO->Fonts;
     ImFontConfig *config = ImFontConfig_ImFontConfig();
 
-    imguiIO->FontDefault = ImFontAtlas_AddFontFromFileTTF(fontAtlas, "goldfish/assets/SourceCodePro-Medium.ttf", 14, NULL, ImFontAtlas_GetGlyphRangesDefault(fontAtlas));
+    imguiIO->FontDefault = ImFontAtlas_AddFontFromFileTTF(fontAtlas, GOLDFISH_ENGINE_ASSETS "/SourceCodePro-Medium.ttf", 14, NULL, ImFontAtlas_GetGlyphRangesDefault(fontAtlas));
 
     config->MergeMode = true;
     config->GlyphMinAdvanceX = 12;
     config->GlyphOffset = (ImVec2) { .x = 0, .y = 2 };
     static const ImWchar iconRanges[] = { ICON_MIN_MD, ICON_MAX_16_MD, 0 };
-    ImFontAtlas_AddFontFromFileTTF(fontAtlas, "goldfish/assets/MaterialIcons-Regular.ttf", 12, config, iconRanges);
+    ImFontAtlas_AddFontFromFileTTF(fontAtlas, GOLDFISH_ENGINE_ASSETS "/MaterialIcons-Regular.ttf", 12, config, iconRanges);
 
     ImGui_ImplGlfw_InitForOpenGL(globalState.window, true);
     ImGui_ImplOpenGL3_Init("#version 130");
