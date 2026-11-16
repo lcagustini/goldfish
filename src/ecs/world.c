@@ -224,7 +224,7 @@ void addComponent(struct world *world, entityId entity, componentId component) {
         struct system *system = dynarrayGet(&world->eventSystems[SYSTEM_ON_COMPONENT_ADD], i);
         struct filter *filter = hashtableGet(&world->filters, system->filters[0]);
 
-        if (filter->components[0] == component) {
+        if (strcmp(filter->components[0], component) == 0) {
             struct systemRunData data = {
                 world,
                 { { .entity = entity } },

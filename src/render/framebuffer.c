@@ -37,6 +37,7 @@ static framebufferId createFramebuffer(enum framebufferType type, bool scaleToWi
 	if (id == -1) return -1;
 
 	struct framebuffer fb = { 0 };
+	fb.type = type;
 	fb.scaleToWindow = scaleToWindow;
 	fb.valid = true;
 
