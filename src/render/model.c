@@ -100,10 +100,10 @@ static entityId processNode(struct world *world, entityId parent, struct aiNode 
     print("- Processing Node (%d meshes, %d children)\n", node->mNumMeshes, node->mNumChildren);
 
     entityId entity = createEntity(world, node->mName.data);
-    ADD_COMPONENT(world, entity, struct transformComponent);
-    ADD_COMPONENT(world, entity, struct modelComponent);
+    ADD_COMPONENT(world, entity, transformComponent);
+    ADD_COMPONENT(world, entity, modelComponent);
 
-    struct transformComponent *transform = GET_COMPONENT(world, entity, struct transformComponent);
+    struct transformComponent *transform = GET_COMPONENT(world, entity, transformComponent);
     transform->parent = parent;
     transform->position = (struct vec3) { node->mTransformation.a4, node->mTransformation.b4, node->mTransformation.c4 };
 
@@ -125,7 +125,7 @@ static entityId processNode(struct world *world, entityId parent, struct aiNode 
     float scaleZ = vectorLen(column3);
     transform->scale = (struct vec3) { scaleX, scaleY, scaleZ };
 
-    struct modelComponent *model = GET_COMPONENT(world, entity, struct modelComponent);
+    struct modelComponent *model = GET_COMPONENT(world, entity, modelComponent);
     memset(model, 0, sizeof(struct modelComponent));
 
     model->meshes = malloc(scene->mNumMeshes * sizeof(struct meshComponent));

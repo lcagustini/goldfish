@@ -70,11 +70,18 @@ struct filter {
     unsigned int resultsLength;
 };
 
+enum systemKind {
+    SYSTEM_C,
+    SYSTEM_LUA,
+};
+
 struct system {
     const char *name;
 
     filterId filters[MAX_FILTER_COUNT];
     unsigned int filtersLength;
+
+    enum systemKind kind;
 
     void (*callback)(struct systemRunData);
 };
@@ -117,10 +124,12 @@ struct world {
 
 #include <goldfish/macros.h>
 
+// Component ids are the bare tag ("transformComponent"); macros that also need
+// the C type build it with "struct c".
 #define COMPONENT_SIZE(w, c) ((struct component*)hashtableGet(&(w)->components, c))->size
 #define GET_COMPONENT_ID(c) STRINGIFY(c)
 
-#define CREATE_COMPONENT(w, c) createComponent((w), STRINGIFY(c), sizeof(c))
+#define CREATE_COMPONENT(w, c) createComponent((w), STRINGIFY(c), sizeof(struct c))
 #define GET_COMPONENT(w, e, c) getComponent((w), (e), STRINGIFY(c))
 #define ADD_COMPONENT(w, e, c) addComponent((w), (e), STRINGIFY(c))
 
@@ -143,18 +152,19 @@ struct world {
     addFilter(w, name, f); \
 } while (0); \
 
-#define ADD_PHASE_SYSTEM(w, ph, callback, ...) do { \
+#define ADD_PHASE_SYSTEM(w, ph, fn, ...) do { \
     struct system s = { \
-        STRINGIFY(callback), \
-        { __VA_ARGS__ }, \
-        VARIADIC_COUNT(filterId, __VA_ARGS__), \
-        callback \
+        .name = STRINGIFY(fn), \
+        .filters = { __VA_ARGS__ }, \
+        .filtersLength = VARIADIC_COUNT(filterId, __VA_ARGS__), \
+        .kind = SYSTEM_C, \
+        .callback = fn \
     }; \
     addPhaseSystem(w, ph, s); \
 } while (0); \
 
-#define ADD_EVENT_SYSTEM(w, ev, callback, component) do { \
-    char *name = STRINGIFY(callback); \
+#define ADD_EVENT_SYSTEM(w, ev, fn, component) do { \
+    char *name = STRINGIFY(fn); \
     struct filter f = { \
         { component }, \
         1, \
@@ -163,10 +173,11 @@ struct world {
     }; \
     addFilter(w, name, f); \
     struct system s = { \
-        name, \
-        { name }, \
-        1, \
-        callback \
+        .name = name, \
+        .filters = { name }, \
+        .filtersLength = 1, \
+        .kind = SYSTEM_C, \
+        .callback = fn \
     }; \
     addEventSystem(w, ev, s); \
 } while (0); \

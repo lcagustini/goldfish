@@ -1,5 +1,8 @@
 #include <ecs/world.h>
 
+#include <ecs/components.h>
+#include <ecs/systems.h>
+
 #include <goldfish/print.h>
 
 #include <string.h>
@@ -20,6 +23,21 @@ struct world createWorld() {
 
     for (int i = 0; i < SYSTEM_PHASE_MAX; i++) world.phaseSystems[i] = DYNARRAY_CREATE(MAX_SYSTEM_COUNT, struct system);
     for (int i = 0; i < SYSTEM_EVENT_MAX; i++) world.eventSystems[i] = DYNARRAY_CREATE(MAX_SYSTEM_COUNT, struct system);
+
+    // Native bootstrap: native components and the native event systems that
+    // maintain them. Game components, filters and phase systems come from scripts.
+    CREATE_COMPONENT(&world, transformComponent);
+    CREATE_COMPONENT(&world, cameraComponent);
+    CREATE_COMPONENT(&world, controllerDataComponent);
+    CREATE_COMPONENT(&world, modelComponent);
+    CREATE_COMPONENT(&world, dirLightComponent);
+    CREATE_COMPONENT(&world, spotLightComponent);
+    CREATE_COMPONENT(&world, pointLightComponent);
+    CREATE_COMPONENT(&world, skyboxComponent);
+    CREATE_COMPONENT(&world, rendererDataComponent);
+
+    ADD_EVENT_SYSTEM(&world, SYSTEM_ON_COMPONENT_ADD, setupTransform, GET_COMPONENT_ID(transformComponent));
+    ADD_EVENT_SYSTEM(&world, SYSTEM_ON_COMPONENT_ADD, setupCamera, GET_COMPONENT_ID(cameraComponent));
 
     return world;
 }

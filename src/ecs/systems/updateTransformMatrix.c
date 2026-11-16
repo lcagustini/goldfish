@@ -24,7 +24,7 @@ void updateTransformMatrix(struct systemRunData data) {
             union mat4 currentModel = getMatrixForTransform(currentTransform);
             multMatrix(&originalTransform->modelMatrix, &originalTransform->modelMatrix, &currentModel);
 
-            currentTransform = GET_COMPONENT(data.world, currentTransform->parent, struct transformComponent);
+            currentTransform = GET_COMPONENT(data.world, currentTransform->parent, transformComponent);
         }
     }
 }

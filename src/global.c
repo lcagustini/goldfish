@@ -59,7 +59,6 @@ void globalInit() {
     ImFontAtlas *fontAtlas = imguiIO->Fonts;
     ImFontConfig *config = ImFontConfig_ImFontConfig();
 
-    //imguiIO->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     imguiIO->FontDefault = ImFontAtlas_AddFontFromFileTTF(fontAtlas, "goldfish/assets/SourceCodePro-Medium.ttf", 14, NULL, ImFontAtlas_GetGlyphRangesDefault(fontAtlas));
 
     config->MergeMode = true;

@@ -91,7 +91,7 @@ static void drawRendererData(struct world *world) {
 
             for (int i = 0; i < filter->resultsLength; i++) {
                 unsigned int rendererDatasLength;
-                struct rendererDataComponent *rendererDatas = getComponentsFromTable(world, filter->results[i], GET_COMPONENT_ID(struct rendererDataComponent), &rendererDatasLength);
+                struct rendererDataComponent *rendererDatas = getComponentsFromTable(world, filter->results[i], GET_COMPONENT_ID(rendererDataComponent), &rendererDatasLength);
 
                 for (int j = 0; j < rendererDatasLength; j++) {
                     struct rendererDataComponent *renderer = &rendererDatas[j];
@@ -264,7 +264,7 @@ static void drawTables(struct world *world) {
 }
 
 static void drawHierarchy(struct world *world) {
-    componentId transformComponentId = GET_COMPONENT_ID(struct transformComponent);
+    componentId transformComponentId = GET_COMPONENT_ID(transformComponent);
     tableId tables[256];
     unsigned int tablesLength = getAllTablesWithComponents(world, &transformComponentId, 1, tables, 256);
 
@@ -284,7 +284,7 @@ static void drawHierarchy(struct world *world) {
 
     int j = 0;
     while (queueLength > 0) {
-        struct transformComponent *t = GET_COMPONENT(world, queue[j], struct transformComponent);
+        struct transformComponent *t = GET_COMPONENT(world, queue[j], transformComponent);
 
         if (t->parent == NULL) {
             depth[drawEntitiesLength] = 0;

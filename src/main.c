@@ -16,11 +16,11 @@
 #include <ecs/world.h>
 #include <ecs/systems.h>
 
+#include <scripting/lua.h>
+
 #include <goldfish/engineUI.h>
 #include <goldfish/print.h>
 #include <goldfish/global.h>
-
-void worldSetup(struct world *world);
 
 int main() {
     setPrintType(PRINT_STDOUT, NULL);
@@ -31,7 +31,7 @@ int main() {
 
     struct world ecsWorld = createWorld();
 
-    worldSetup(&ecsWorld);
+    luaInit(&ecsWorld);
 
     double currentTime = glfwGetTime();
     double lastTime = currentTime;
@@ -61,14 +61,7 @@ int main() {
         glfwSwapBuffers(globalState.window);
     }
 
-#if 0
-    model = getComponent(&ecsWorld, chest1, modelId);
-    destroyModel(model);
-    model = getComponent(&ecsWorld, chest2, modelId);
-    destroyModel(model);
-    model = getComponent(&ecsWorld, chest3, modelId);
-    destroyModel(model);
-#endif
+    luaEnd();
 
     destroyWorld(&ecsWorld);
 
