@@ -202,9 +202,11 @@ void deleteEntity(struct world *world, entityId id);
 entityId searchForEntity(struct world *world, tableId table, unsigned int position);
 
 void addPhaseSystem(struct world *world, enum systemPhase phase, struct system system);
+void removePhaseSystem(struct world *world, enum systemPhase phase, const char *name);
 void addEventSystem(struct world *world, enum systemEvent event, struct system system);
 
 void addFilter(struct world *world, const char *name, struct filter filter);
+void removeFilter(struct world *world, const char *name);
 struct filter *getFilter(struct world *world, const char *name);
 
 void runWorldPhase(struct world *world, enum systemPhase phase, float dt);

@@ -47,6 +47,13 @@ function engine.declare(name, fields)
     return engine.declare0(name, ffi.sizeof(name))
 end
 
+-- declareComponents(map): declare every component from a { name = fields } table.
+function engine.declareComponents(components)
+    for name, fields in pairs(components or {}) do
+        engine.declare(name, fields)
+    end
+end
+
 function engine.vec2(x, y) return ffi.new("struct vec2", x, y) end
 function engine.vec3(x, y, z) return ffi.new("struct vec3", x, y, z) end
 function engine.quat(x, y, z, w) return ffi.new("struct quat", x, y, z, w) end
@@ -86,6 +93,121 @@ function engine.getSingleton(name)
     local pointer = engine.getSingleton0(name)
     if pointer == nil then return nil end
     return ffi.cast("struct " .. name .. " *", pointer)
+end
+
+-- Scene data conventions:
+--   component value true      -> add with defaults
+--   component value table     -> add, then set each field
+--   field value number        -> set direct
+--   field value {n, n}        -> vec2 / vec3 / quat by length 2 / 3 / 4
+--   field rotationEuler       -> eulerToQuat into the rotation field
+--   transform field parent    -> entity name string; resolved after all entities exist
+--   entity model = "path"     -> loadModel; texture keys pass through, nil omitted
+local function toVector(value)
+    if type(value) ~= "table" then return value end
+    local count = #value
+    if count == 2 then return engine.vec2(value[1], value[2]) end
+    if count == 3 then return engine.vec3(value[1], value[2], value[3]) end
+    if count == 4 then return engine.quat(value[1], value[2], value[3], value[4]) end
+    error("scene: cannot convert number array of length " .. count, 0)
+end
+
+local function setFields(record, fields, scene)
+    for field, value in pairs(fields) do
+        if field == "rotationEuler" then
+            record.rotation = engine.math.eulerToQuat(toVector(value))
+        elseif field == "parent" then
+            -- entityId is a raw char*: a Lua string pointer would dangle, so the
+            -- write goes through engine.rawEntity after all entities exist.
+            if type(value) ~= "string" then error("scene: parent must be an entity name string", 0) end
+            scene.deferredParents[#scene.deferredParents + 1] = { record = record, name = value }
+        else
+            record[field] = toVector(value)
+        end
+    end
+end
+
+function engine.loadScene(definition)
+    local scene = { entities = {}, filters = {}, systems = {}, singletons = {}, deferredParents = {} }
+
+    for name, components in pairs(definition.filters or {}) do
+        engine.addFilter(name, components)
+        scene.filters[#scene.filters + 1] = name
+    end
+
+    for _, system in ipairs(definition.systems or {}) do
+        local phase = engine.phases[system.phase]
+        if phase == nil then error("scene: unknown phase " .. tostring(system.phase), 0) end
+        engine.addPhaseSystem(phase, system.fn, system.filters)
+        scene.systems[#scene.systems + 1] = { phase = phase, name = system.fn }
+    end
+
+    for _, name in ipairs(definition.singleton or {}) do
+        engine.addSingleton(name)
+        scene.singletons[#scene.singletons + 1] = name
+    end
+
+    local byName = {}
+    for _, entry in ipairs(definition.entities or {}) do
+        local id
+        if entry.model ~= nil then
+            id = engine.loadModel(entry.model, entry.diffuse, entry.normal, entry.specular, entry.reflectance, entry.transparent)
+        else
+            id = engine.createEntity(entry.name or "Entity")
+        end
+        scene.entities[#scene.entities + 1] = id
+        if entry.name ~= nil then byName[entry.name] = id end
+
+        for component, fields in pairs(entry.components or {}) do
+            if type(fields) ~= "table" and fields ~= true then
+                error("scene: component '" .. component .. "' must be true or a field table", 0)
+            end
+            -- loadModel already added the transform; adding it again would move the entity to a duplicate table.
+            if entry.model == nil or component ~= "transformComponent" then
+                engine.addComponent(id, component)
+            end
+            if type(fields) == "table" then
+                setFields(engine.getComponent(id, component), fields, scene)
+            end
+        end
+    end
+
+    for _, deferred in ipairs(scene.deferredParents) do
+        local parent = byName[deferred.name]
+        if parent == nil then error("scene: unknown parent entity '" .. deferred.name .. "'", 0) end
+        deferred.record.parent = engine.rawEntity(parent)
+    end
+
+    if definition.skybox ~= nil then
+        scene.entities[#scene.entities + 1] = engine.loadSkybox(definition.skybox)
+    end
+
+    engine.activeScene = scene
+    return scene
+end
+
+-- Call between frames only: removing a running system corrupts the phase loop.
+function engine.unloadScene()
+    local scene = engine.activeScene
+    if scene == nil then return end
+
+    for _, system in ipairs(scene.systems) do engine.removePhaseSystem(system.phase, system.name) end
+    for _, id in ipairs(scene.entities) do engine.deleteEntity(id) end
+    for _, name in ipairs(scene.filters) do engine.removeFilter(name) end
+    for _, name in ipairs(scene.singletons) do engine.removeSingleton(name) end
+
+    engine.activeScene = nil
+end
+
+function engine.loadSceneFile(path)
+    local chunk = loadfile(path)
+    if chunk == nil then error("scene file not found: " .. tostring(path), 0) end
+    local definition = chunk()
+    if type(definition) ~= "table" then
+        error("scene file must return a table: " .. tostring(path), 0)
+    end
+    engine.unloadScene()
+    return engine.loadScene(definition)
 end
 
 -- Bounds come from the live C row count, never MAX_ENTITY_COUNT.

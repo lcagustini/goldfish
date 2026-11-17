@@ -5,14 +5,13 @@
 
 #include <goldfish/print.h>
 
-#include <dirent.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #define NATIVE_CDEFS_FILE "build/generated/nativeCdefs.lua"
 #define ENGINE_LUA_FILE GOLDFISH_ENGINE_ASSETS "/engine.lua"
-#define SCRIPTS_DIR "assets/scripts"
+#define GAME_MANIFEST_FILE "build/generated/gameManifest.lua"
 
 lua_State *luaState;
 struct world *activeWorld;
@@ -30,47 +29,6 @@ static void runScript(lua_State *L, const char *path) {
     }
 }
 
-static void runScriptsDirectory(lua_State *L) {
-    DIR *directory = opendir(SCRIPTS_DIR);
-    if (directory == NULL) {
-        luaFatal("scripts dir missing", SCRIPTS_DIR);
-    }
-
-    // Load scripts sorted: alphabetical order decides which declarations run first.
-    int fileCount = 0;
-    char (*names)[256] = NULL;
-    struct dirent *entry;
-    while ((entry = readdir(directory)) != NULL) {
-        size_t length = strlen(entry->d_name);
-        if (length < 5 || strcmp(entry->d_name + length - 4, ".lua") != 0) continue;
-
-        char (*next)[256] = realloc(names, (fileCount + 1) * sizeof(*names));
-        if (next == NULL) luaFatal("out of memory", "script name list");
-        names = next;
-        snprintf(names[fileCount], sizeof(*names), "%s", entry->d_name);
-        fileCount++;
-    }
-    closedir(directory);
-
-    for (int i = 0; i + 1 < fileCount; i++) {
-        for (int j = i + 1; j < fileCount; j++) {
-            if (strcmp(names[i], names[j]) > 0) {
-                char temp[256];
-                memcpy(temp, names[i], sizeof(temp));
-                memcpy(names[i], names[j], sizeof(temp));
-                memcpy(names[j], temp, sizeof(temp));
-            }
-        }
-    }
-
-    for (int i = 0; i < fileCount; i++) {
-        char path[512];
-        snprintf(path, sizeof(path), SCRIPTS_DIR "/%s", names[i]);
-        runScript(L, path);
-    }
-    free(names);
-}
-
 static void runSweep(lua_State *L) {
     lua_getglobal(L, "engine");
     lua_getfield(L, -1, "sweep");
@@ -81,6 +39,54 @@ static void runSweep(lua_State *L) {
         luaFatal("cdef size sweep failed", errorTraceback(L));
     }
     lua_pop(L, 1); // engine table
+}
+
+// The manifest is the whole game map, written by tools/genManifest.lua at configure time:
+// components to declare, system scripts to run, and the scene list. Only the first
+// scene starts; the rest are entry points for engine.loadSceneFile.
+static void runManifest(lua_State *L) {
+    if (luaL_loadfile(L, GAME_MANIFEST_FILE) != LUA_OK) {
+        luaFatal("game manifest missing or invalid", errorTraceback(L));
+    }
+    if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
+        luaFatal("game manifest failed to run", errorTraceback(L));
+    }
+    if (lua_type(L, -1) != LUA_TTABLE) {
+        lua_pop(L, 1);
+        luaFatal("game manifest must return a table", GAME_MANIFEST_FILE);
+    }
+    int manifest = lua_gettop(L);
+
+    lua_getglobal(L, "engine");
+    int engineTable = lua_gettop(L);
+
+    // Every Lua-only component exists before any game code runs.
+    lua_getfield(L, engineTable, "declareComponents");
+    lua_getfield(L, manifest, "components");
+    if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+        luaFatal("component declaration failed", errorTraceback(L));
+    }
+
+    // System scripts keep the old directory scan's soft-fail behavior.
+    lua_getfield(L, manifest, "systems");
+    int systemCount = (int)lua_objlen(L, -1);
+    for (int i = 1; i <= systemCount; i++) {
+        lua_rawgeti(L, -1, i);
+        runScript(L, lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1); // systems
+
+    lua_getfield(L, manifest, "scenes");
+    lua_rawgeti(L, -1, 1);
+    if (lua_isstring(L, -1)) {
+        lua_getfield(L, engineTable, "loadSceneFile");
+        lua_pushvalue(L, -2);
+        if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+            print("[Lua scene error] %s\n", errorTraceback(L));
+        }
+    }
+    lua_pop(L, 4); // scene path, scenes table, engine table, manifest
 }
 
 void luaInit(struct world *world) {
@@ -109,7 +115,7 @@ void luaInit(struct world *world) {
     }
     lua_pop(luaState, 2);
 
-    runScriptsDirectory(luaState);
+    runManifest(luaState);
 
     runSweep(luaState);
 }

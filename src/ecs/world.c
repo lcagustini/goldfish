@@ -325,6 +325,12 @@ entityId createEntity(struct world *world, const char *name) {
 
 void deleteEntity(struct world *world, entityId id) {
     struct entity *e = hashtableGet(&world->entities, id);
+    if (e == NULL) return;
+
+    // Drop the component rows first: a stale row would corrupt every table scan.
+    if (e->table != INVALID_POSITION) {
+        removeEntityFromTable(world, e);
+    }
 
     free(e->name);
     hashtableRemove(&world->entities, id);
@@ -354,6 +360,21 @@ void addEventSystem(struct world *world, enum systemEvent event, struct system s
 
 void addFilter(struct world *world, const char *name, struct filter filter) {
     hashtableSet(&world->filters, name, &filter);
+}
+
+void removeFilter(struct world *world, const char *name) {
+    hashtableRemove(&world->filters, name);
+}
+
+void removePhaseSystem(struct world *world, enum systemPhase phase, const char *name) {
+    struct dynarray *systems = &world->phaseSystems[phase];
+    for (unsigned int i = 0; i < systems->bufferCount; i++) {
+        struct system *system = dynarrayGet(systems, i);
+        if (strcmp(system->name, name) == 0) {
+            dynarrayRemove(systems, i);
+            return;
+        }
+    }
 }
 
 struct filter *getFilter(struct world *world, const char *name) {

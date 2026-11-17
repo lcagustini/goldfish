@@ -52,6 +52,20 @@ if (NOT "${DUMP_RESULT}" EQUAL 0)
     message(FATAL_ERROR "Native cdef generation failed (dumpCdefs.lua exit ${DUMP_RESULT}).")
 endif ()
 
+# Game manifest: runs genManifest.lua against the game folder at every configure,
+# so the runtime loads a fixed map instead of scanning directories.
+set(GOLDFISH_MANIFEST_OUT "${CMAKE_BINARY_DIR}/generated/gameManifest.lua")
+execute_process(
+    COMMAND ${LUAJIT_EXECUTABLE} ${GOLDFISH_DIR}/tools/genManifest.lua
+        ${GOLDFISH_GAME_DIR}
+        ${GOLDFISH_MANIFEST_OUT}
+    RESULT_VARIABLE MANIFEST_RESULT
+)
+
+if (NOT "${MANIFEST_RESULT}" EQUAL 0)
+    message(FATAL_ERROR "Game manifest generation failed (genManifest.lua exit ${MANIFEST_RESULT}).")
+endif ()
+
 # Add any additional include paths here
 include_directories(
     ${ASSIMP_INCLUDE_DIRS}

@@ -277,6 +277,38 @@ static int lLoadSkybox(lua_State *L) {
         luaL_error(L, "skybox component missing after addComponent");
     }
     loadSkybox(facePaths, data);
+    lua_pushstring(L, skybox);
+    return 1;
+}
+
+static int lDeleteEntity(lua_State *L) {
+    entityId entity = (entityId)luaL_checkstring(L, 1);
+    checkEntityId(L, entity);
+    deleteEntity(activeWorld, entity);
+    return 0;
+}
+
+static int lRemoveFilter(lua_State *L) {
+    const char *name = luaL_checkstring(L, 1);
+    if (!hashtableRemove(&activeWorld->filters, name)) {
+        luaL_error(L, "filter '%s' is not registered", name);
+    }
+    return 0;
+}
+
+static int lRemovePhaseSystem(lua_State *L) {
+    int phase = (int)luaL_checkinteger(L, 1);
+    if (phase < 0 || phase >= SYSTEM_PHASE_MAX) {
+        luaL_error(L, "unknown phase %d", phase);
+    }
+    removePhaseSystem(activeWorld, (enum systemPhase)phase, luaL_checkstring(L, 2));
+    return 0;
+}
+
+static int lRemoveSingleton(lua_State *L) {
+    const char *component = (const char *)luaL_checkstring(L, 1);
+    checkComponentId(L, component);
+    removeSingletonComponent(activeWorld, persistentString(component));
     return 0;
 }
 
@@ -345,13 +377,17 @@ static int lRegistry(lua_State *L) {
 const luaL_Reg luaBindings[] = {
     { "declare0", lDeclare },
     { "addFilter", lAddFilter },
+    { "removeFilter", lRemoveFilter },
     { "addPhaseSystem", lAddPhaseSystem },
+    { "removePhaseSystem", lRemovePhaseSystem },
     { "addNativeEventSystem", lAddNativeEventSystem },
     { "createEntity", lCreateEntity },
+    { "deleteEntity", lDeleteEntity },
     { "addComponent", lAddComponent },
     { "getComponent0", lGetComponent },
     { "getSingleton0", lGetSingleton },
     { "addSingleton", lAddSingleton },
+    { "removeSingleton", lRemoveSingleton },
     { "getColumn", lGetColumn },
     { "loadModel", lLoadModel },
     { "loadSkybox", lLoadSkybox },

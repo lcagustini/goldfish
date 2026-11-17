@@ -129,20 +129,29 @@ static void hashtableResize(struct hashtable *hashtable) {
     hashtableDestroy(&oldTable);
 }
 
+// Removed slots stay as tombstones: the key stays allocated, valids goes false.
+// Probes walk over tombstones, so live keys behind them stay reachable.
 void hashtableSet(struct hashtable *hashtable, const char *key, void *data) {
     uint32_t hash = hashString(key, strlen(key));
     unsigned int position = hash % hashtable->bufferCount;
 
-    while (hashtable->valids[position] && strcmp(hashtable->keys[position], key) != 0) {
+    for (unsigned int probes = 0; probes < hashtable->bufferCount; probes++) {
+        if (hashtable->keys[position] == NULL || strcmp(hashtable->keys[position], key) == 0) break;
         position++;
         if (position == hashtable->bufferCount) position = 0;
     }
+    if (hashtable->valids[position] && strcmp(hashtable->keys[position], key) != 0) {
+        print("[hashtable] no slot for %s: every slot holds a key\n", key);
+        return;
+    }
 
+    if (!hashtable->valids[position]) hashtable->validCount++;
     hashtable->valids[position] = true;
-    hashtable->validCount++;
 
-    hashtable->keys[position] = malloc((strlen(key) + 1) * sizeof(char));
-    strcpy(hashtable->keys[position], key);
+    if (hashtable->keys[position] == NULL) {
+        hashtable->keys[position] = malloc((strlen(key) + 1) * sizeof(char));
+        strcpy(hashtable->keys[position], key);
+    }
     memcpy(hashtable->buffer + position * hashtable->typeSize, data, hashtable->typeSize);
 
     if (((float)hashtable->validCount / hashtable->bufferCount) > 0.7f) {
@@ -154,30 +163,30 @@ bool hashtableRemove(struct hashtable *hashtable, const char *key) {
     uint32_t hash = hashString(key, strlen(key));
     unsigned int position = hash % hashtable->bufferCount;
 
-    if (hashtable->valids[position]) {
-        hashtable->valids[position] = false;
-        hashtable->validCount--;
-
-        free(hashtable->keys[position]);
-        hashtable->keys[position] = NULL;
-
-        return true;
+    for (unsigned int probes = 0; probes < hashtable->bufferCount; probes++) {
+        if (hashtable->keys[position] == NULL) return false;
+        if (hashtable->valids[position] && strcmp(hashtable->keys[position], key) == 0) {
+            hashtable->valids[position] = false;
+            hashtable->validCount--;
+            return true;
+        }
+        position++;
+        if (position == hashtable->bufferCount) position = 0;
     }
-    else {
-        return false;
-    }
+    return false;
 }
 
 void *hashtableGet(struct hashtable *hashtable, const char *key) {
     uint32_t hash = hashString(key, strlen(key));
     unsigned int position = hash % hashtable->bufferCount;
 
-    if (!hashtable->valids[position]) return NULL;
-
-    while (strcmp(hashtable->keys[position], key) != 0) {
+    for (unsigned int probes = 0; probes < hashtable->bufferCount; probes++) {
+        if (hashtable->keys[position] == NULL) return NULL;
+        if (hashtable->valids[position] && strcmp(hashtable->keys[position], key) == 0) {
+            return hashtable->buffer + position * hashtable->typeSize;
+        }
         position++;
         if (position == hashtable->bufferCount) position = 0;
     }
-
-    return hashtable->buffer + position * hashtable->typeSize;
+    return NULL;
 }
