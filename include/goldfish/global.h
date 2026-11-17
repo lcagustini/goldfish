@@ -1,6 +1,8 @@
 #ifndef GOLDFISH_GLOBAL_H
 #define GOLDFISH_GLOBAL_H
 
+#include <stdbool.h>
+
 #include <epoxy/gl.h>
 #include <GLFW/glfw3.h>
 
@@ -18,6 +20,8 @@
 
 struct globalState {
     GLFWwindow *window;
+    bool headless;
+    bool quitRequested;
 };
 
 extern struct globalState globalState;

@@ -2,6 +2,7 @@
 
 #include <render/model.h>
 #include <render/skybox.h>
+#include <goldfish/global.h>
 #include <goldfish/print.h>
 
 #include <string.h>
@@ -373,6 +374,11 @@ static int lRegistry(lua_State *L) {
     return 1;
 }
 
+static int lQuit(lua_State *L) {
+    globalState.quitRequested = true;
+    return 0;
+}
+
 // Binding table consumed by lua.c's engine table registration.
 const luaL_Reg luaBindings[] = {
     { "declare0", lDeclare },
@@ -395,6 +401,7 @@ const luaL_Reg luaBindings[] = {
     { "world", lWorld },
     { "filterResults", lFilterResults },
     { "log0", lLog },
+    { "quit", lQuit },
     { "registry", lRegistry },
     { NULL, NULL },
 };

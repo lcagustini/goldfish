@@ -22,7 +22,30 @@
 #include <goldfish/print.h>
 #include <goldfish/global.h>
 
-int main() {
+static void printUsage(const char *program) {
+    print("Usage: %s [--headless]\n", program);
+    print("  --headless   Run with a hidden window and no engine UI.\n");
+}
+
+static void parseArguments(int argc, char **argv) {
+    for (int i = 1; i < argc; i++) {
+        const char *arg = argv[i];
+        if (strcmp(arg, "--headless") == 0) {
+            globalState.headless = true;
+        } else if (strcmp(arg, "--help") == 0) {
+            printUsage(argv[0]);
+            exit(0);
+        } else {
+            fprintf(stderr, "Unknown argument: %s\n", arg);
+            printUsage(argv[0]);
+            exit(1);
+        }
+    }
+}
+
+int main(int argc, char **argv) {
+    parseArguments(argc, argv);
+
     setPrintType(PRINT_STDOUT, NULL);
 
     globalInit();
@@ -35,7 +58,7 @@ int main() {
 
     double currentTime = glfwGetTime();
     double lastTime = currentTime;
-    while (!glfwWindowShouldClose(globalState.window)) {
+    while (!globalState.quitRequested && !glfwWindowShouldClose(globalState.window)) {
         currentTime = glfwGetTime();
         float deltaTime = currentTime - lastTime;
         lastTime = currentTime;
@@ -56,9 +79,10 @@ int main() {
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_POST, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_FINISH, deltaTime);
 
-        drawEngineUI(&ecsWorld);
-
-        glfwSwapBuffers(globalState.window);
+        if (!globalState.headless) {
+            drawEngineUI(&ecsWorld);
+            glfwSwapBuffers(globalState.window);
+        }
     }
 
     luaEnd();

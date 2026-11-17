@@ -27,6 +27,11 @@ void globalInit() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    if (globalState.headless) {
+        // Hidden window: the GL context stays alive, but nothing shows.
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    }
+
     globalState.window = glfwCreateWindow(1280, 720, "psvita-opengl", NULL, NULL);
     if (!globalState.window) {
         fprintf(stderr, "Error creating window\n");
@@ -36,7 +41,9 @@ void globalInit() {
 
     glfwMakeContextCurrent(globalState.window);
     glfwSetFramebufferSizeCallback(globalState.window, windowResizeCallback);
-    glfwSwapInterval(1);
+    if (!globalState.headless) {
+        glfwSwapInterval(1);
+    }
 
     glClearDepthf(1.0f);
     glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
@@ -53,6 +60,10 @@ void globalInit() {
     glDebugMessageCallback(errorCallback, 0);
 
     print("OpenGL: %s - %s\n\n", glGetString(GL_VERSION), glGetString(GL_RENDERER));
+
+    if (globalState.headless) {
+        return;
+    }
 
     igCreateContext(NULL);
     ImGuiIO *imguiIO = igGetIO();
@@ -74,9 +85,11 @@ void globalInit() {
 }
 
 void globalEnd() {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    igDestroyContext(NULL);
+    if (!globalState.headless) {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        igDestroyContext(NULL);
+    }
 
     glfwTerminate();
 }
