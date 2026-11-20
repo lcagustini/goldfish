@@ -1,47 +1,25 @@
 #include <ecs/systems.h>
 
+#include <stdio.h>
+
 static void setupPointLight(struct transformComponent *transform, struct pointLightComponent *light, struct meshRenderData *renderData, int i, int count) {
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.spotLightLocs[i].position,
-		.count = 1,
-		.data.vector3 = transform->position
-	};
+	char name[64];
+	sprintf(name, "pointLights[%d].position", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &transform->position);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.pointLightLocs[i].attenuation,
-		.count = 1,
-		.data.vector3 = light->attenuation
-	};
+	sprintf(name, "pointLights[%d].attenuation", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &light->attenuation);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.pointLightLocs[i].ambientColor,
-		.count = 1,
-		.data.vector3 = light->ambientColor
-	};
+	sprintf(name, "pointLights[%d].ambientColor", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &light->ambientColor);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.pointLightLocs[i].diffuseColor,
-		.count = 1,
-		.data.vector3 = light->diffuseColor
-	};
+	sprintf(name, "pointLights[%d].diffuseColor", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &light->diffuseColor);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.pointLightLocs[i].specularColor,
-		.count = 1,
-		.data.vector3 = light->specularColor
-	};
+	sprintf(name, "pointLights[%d].specularColor", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &light->specularColor);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_INT,
-		.location = renderData->shader.pointLightsLengthLoc,
-		.count = 1,
-		.data.integer = count
-	};
+	shaderPushUniform(renderData, RENDERER_UNIFORM_INT, "pointLightsLength", &count);
 }
 
 void rendererGetPointLights(struct systemRunData data) {

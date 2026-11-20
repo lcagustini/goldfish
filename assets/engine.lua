@@ -210,7 +210,69 @@ function engine.loadSceneFile(path)
     return engine.loadScene(definition)
 end
 
+-- uniformRenderData.type values; matching the anonymous enum in material.h.
+engine.uniformTypes = {
+    MATRIX_4 = 0,
+    VECTOR_3 = 1,
+    VECTOR_2 = 2,
+    INT = 3,
+    FLOAT = 4,
+}
+
+-- mesh must be a struct meshRenderData pointer (rendererData.opaqueMeshes + index).
+function engine.uniformLocation(mesh, name)
+    return engine.uniformLocation0(mesh, name)
+end
+
+-- value: number, {x, y[, z]}, or cdata vec2/vec3/mat4.
+-- Must run after the rendererGet* systems; they rebuild the arrays.
+function engine.setUniform(rendererData, meshIndex, name, value)
+    -- Pointer arithmetic: indexing would copy, this reaches live storage.
+    local mesh = rendererData.opaqueMeshes + meshIndex
+
+    local capacity = ffi.sizeof(mesh.uniforms) / ffi.sizeof("struct uniformRenderData")
+    if mesh.uniformsLength >= capacity then
+        error("engine.setUniform: uniform array is full (" .. capacity .. ")", 0)
+    end
+
+    local entry = mesh.uniforms[mesh.uniformsLength]
+    entry.location = engine.uniformLocation(mesh, name)
+    entry.count = 1
+
+    local valueType = type(value)
+    if valueType == "number" then
+        entry.type = engine.uniformTypes.FLOAT
+        entry.data.single = value
+    elseif valueType == "table" then
+        if #value == 2 then
+            entry.type = engine.uniformTypes.VECTOR_2
+            entry.data.vector2 = engine.vec2(value[1], value[2])
+        elseif #value == 3 then
+            entry.type = engine.uniformTypes.VECTOR_3
+            entry.data.vector3 = engine.vec3(value[1], value[2], value[3])
+        else
+            error("engine.setUniform: table value must have 2 or 3 numbers", 0)
+        end
+    elseif ffi.istype("union mat4", value) then
+        entry.type = engine.uniformTypes.MATRIX_4
+        entry.data.matrix = value
+    elseif ffi.istype("struct vec3", value) then
+        entry.type = engine.uniformTypes.VECTOR_3
+        entry.data.vector3 = value
+    elseif ffi.istype("struct vec2", value) then
+        entry.type = engine.uniformTypes.VECTOR_2
+        entry.data.vector2 = value
+    else
+        error("engine.setUniform: value must be a number, table, vec2, vec3 or mat4", 0)
+    end
+
+    mesh.uniformsLength = mesh.uniformsLength + 1
+end
+
 -- Bounds come from the live C row count, never MAX_ENTITY_COUNT.
+--
+-- ptr(row) returns a pointer into live storage; struct values passed to C
+-- bindings arrive as boxed copies, so pass pointers instead.
 function engine.view(run, filterIdx, ctype)
     local pointer, rows = engine.getColumn(run, filterIdx, ctype)
     if pointer == nil then
@@ -219,7 +281,15 @@ function engine.view(run, filterIdx, ctype)
 
     local column = ffi.cast("struct " .. ctype .. " *", pointer)
     return setmetatable(
-        { rows = rows },
+        {
+            rows = rows,
+            ptr = function(row)
+                if row < 0 or row >= rows then
+                    error(string.format("engine.ptr: row %d out of bounds 0..%d for %s", row, rows - 1, ctype))
+                end
+                return column + row
+            end,
+        },
         {
             __index = function(viewTable, row)
                 local index = tonumber(row)

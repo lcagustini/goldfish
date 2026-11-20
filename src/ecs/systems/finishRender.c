@@ -8,7 +8,7 @@ void finishRender(struct systemRunData data) {
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
         struct cameraComponent *camera = &cameras[i];
 
-		glUseProgram(camera->shader);
+		glUseProgram(camera->shader->program);
 		glBindVertexArray(camera->VAO);
 		glDisable(GL_DEPTH_TEST);
         glActiveTexture(GL_TEXTURE0);

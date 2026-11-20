@@ -244,8 +244,7 @@ static int lGetColumn(lua_State *L) {
 }
 
 // Paths are copied: the renderer keeps the pointers, Lua strings do not.
-static int lLoadModel(lua_State *L) {
-    const char *modelPath = persistentString(luaL_checkstring(L, 1));
+static int lLoadModel(lua_State *L) {    const char *modelPath = persistentString(luaL_checkstring(L, 1));
     const char *diffusePath = lua_isnil(L, 2) ? NULL : persistentString(luaL_checkstring(L, 2));
     const char *normalPath = lua_isnil(L, 3) ? NULL : persistentString(luaL_checkstring(L, 3));
     const char *specularPath = lua_isnil(L, 4) ? NULL : persistentString(luaL_checkstring(L, 4));
@@ -257,7 +256,6 @@ static int lLoadModel(lua_State *L) {
     return 1;
 }
 
-// loadSkybox(pathsTable): 6 face paths; creates the Skybox entity, loads the cubemap.
 static int lLoadSkybox(lua_State *L) {
     luaL_checktype(L, 1, LUA_TTABLE);
     if (lua_objlen(L, 1) != 6) {
@@ -280,6 +278,75 @@ static int lLoadSkybox(lua_State *L) {
     loadSkybox(facePaths, data);
     lua_pushstring(L, skybox);
     return 1;
+}
+
+static int lUniformLocation(lua_State *L) {
+    luaL_argcheck(L, lua_type(L, 1) == 10, 1, "struct meshRenderData pointer expected");
+    const void *payload = lua_topointer(L, 1);
+    luaL_argcheck(L, payload != NULL, 1, "mesh pointer is nil");
+    struct meshRenderData *mesh = *(struct meshRenderData **)payload;
+    luaL_argcheck(L, mesh != NULL, 1, "mesh pointer is nil");
+    const char *name = luaL_checkstring(L, 2);
+
+    lua_pushinteger(L, shaderUniformLocation(&mesh->shader, name));
+    return 1;
+}
+
+static bool isDescendantOf(struct world *world, entityId entity, entityId ancestor) {
+    entityId current = entity;
+    while (current != NULL) {
+        if (strcmp(current, ancestor) == 0) return true;
+
+        struct transformComponent *transform = (struct transformComponent *)getComponent(world, current, "transformComponent");
+        if (transform == NULL || transform->parent == NULL) return false;
+        current = transform->parent;
+    }
+    return false;
+}
+
+static int lSetShader(lua_State *L) {
+    entityId entity = (entityId)luaL_checkstring(L, 1);
+    checkEntityId(L, entity);
+    if (hashtableGet(&activeWorld->components, "modelComponent") == NULL) {
+        luaL_error(L, "entity '%s': modelComponent is not registered", entity);
+    }
+    const char *vertexPath = persistentString(luaL_checkstring(L, 2));
+    const char *fragmentPath = persistentString(luaL_checkstring(L, 3));
+
+    struct shader *replaced[64];
+    unsigned int replacedLength = 0;
+
+    for (unsigned int t = 0; t < activeWorld->tables.bufferCount; t++) {
+        unsigned int rows = 0;
+        struct modelComponent *models = getComponentsFromTable(activeWorld, t, "modelComponent", &rows);
+        if (models == NULL) continue;
+
+        for (unsigned int row = 0; row < rows; row++) {
+            entityId entityAtRow = searchForEntity(activeWorld, t, row);
+            if (strcmp(entityAtRow, entity) != 0 && !isDescendantOf(activeWorld, entityAtRow, entity)) continue;
+
+            struct modelComponent *model = &models[row];
+            if (model->meshesLength == 0 || model->meshes[0].material.shader == NULL) continue;
+
+            struct shader *shader = model->meshes[0].material.shader;
+            bool seen = false;
+            for (unsigned int r = 0; r < replacedLength; r++) seen = seen || replaced[r] == shader;
+            if (seen) continue;
+
+            if (replacedLength == 64) {
+                luaL_error(L, "setShader: more than 64 shader blocks under entity '%s'", entity);
+            }
+            if (!shaderReplace(shader, vertexPath, fragmentPath)) {
+                luaL_error(L, "shader %s/%s failed to build; the previous program stays active", vertexPath, fragmentPath);
+            }
+            replaced[replacedLength++] = shader;
+        }
+    }
+
+    if (replacedLength == 0) {
+        luaL_error(L, "entity '%s' has no loaded shader", entity);
+    }
+    return 0;
 }
 
 static int lDeleteEntity(lua_State *L) {
@@ -397,6 +464,8 @@ const luaL_Reg luaBindings[] = {
     { "getColumn", lGetColumn },
     { "loadModel", lLoadModel },
     { "loadSkybox", lLoadSkybox },
+    { "uniformLocation0", lUniformLocation },
+    { "setShader", lSetShader },
     { "entityIdPointer", lEntityIdPointer },
     { "world", lWorld },
     { "filterResults", lFilterResults },

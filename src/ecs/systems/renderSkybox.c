@@ -19,7 +19,7 @@ void renderSkybox(struct systemRunData data) {
         for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
             struct skyboxComponent *skybox = &skyboxes[i];
 
-            glUseProgram(skybox->shaderProgram);
+            glUseProgram(skybox->shader->program);
 
             union mat4 viewMatrix;
             memcpy(&viewMatrix.mat[0][0], &camera->viewMat.mat[0][0], sizeof(union mat4));
@@ -27,8 +27,8 @@ void renderSkybox(struct systemRunData data) {
             viewMatrix.mat[3][1] = 0;
             viewMatrix.mat[3][2] = 0;
 
-            glUniformMatrix4fv(glGetUniformLocation(skybox->shaderProgram, "view"), 1, false, &viewMatrix.mat[0][0]);
-            glUniformMatrix4fv(glGetUniformLocation(skybox->shaderProgram, "projection"), 1, false, &camera->projectionMat.mat[0][0]);
+            glUniformMatrix4fv(shaderUniformLocation(skybox->shader, "view"), 1, false, &viewMatrix.mat[0][0]);
+            glUniformMatrix4fv(shaderUniformLocation(skybox->shader, "projection"), 1, false, &camera->projectionMat.mat[0][0]);
 
             glBindVertexArray(skybox->VAO);
 

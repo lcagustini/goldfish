@@ -77,35 +77,13 @@ void loadSkybox(const char *facePaths[6], struct skyboxComponent *skybox) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skybox->EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skyboxIndices), skyboxIndices, GL_STATIC_DRAW);
 
-    GLuint vshader = loadShaderFromFile(GOLDFISH_ENGINE_ASSETS "/shaders/skybox_v.glsl", GL_VERTEX_SHADER);
-    GLuint fshader = loadShaderFromFile(GOLDFISH_ENGINE_ASSETS "/shaders/skybox_f.glsl", GL_FRAGMENT_SHADER);
-
-    skybox->shaderProgram = glCreateProgram();
-    if (skybox->shaderProgram) {
-        glAttachShader(skybox->shaderProgram, vshader);
-        glAttachShader(skybox->shaderProgram, fshader);
-        glLinkProgram(skybox->shaderProgram);
-
-        GLint status;
-        glGetProgramiv(skybox->shaderProgram, GL_LINK_STATUS, &status);
-        print("Shader link status: %d\n", status);
-        if (status == GL_FALSE) {
-            GLchar log[256];
-            glGetProgramInfoLog(fshader, 256, NULL, log);
-
-            print("Failed to link shader program: %s\n", log);
-
-            glDeleteProgram(skybox->shaderProgram);
-            skybox->shaderProgram = 0;
-        }
-
-        glDeleteShader(fshader);
-        glDeleteShader(vshader);
-
-        glUseProgram(skybox->shaderProgram);
-        glUniform1i(glGetUniformLocation(skybox->shaderProgram, "skybox"), 0);
-
-        GLuint positionLoc = glGetAttribLocation(skybox->shaderProgram, "aPos");
+    skybox->shader = malloc(sizeof(struct shader));
+    if (!createShader(skybox->shader, GOLDFISH_ENGINE_ASSETS "/shaders/skybox_v.glsl", GOLDFISH_ENGINE_ASSETS "/shaders/skybox_f.glsl")) {
+        free(skybox->shader);
+        skybox->shader = NULL;
+    }
+    else {
+        GLuint positionLoc = glGetAttribLocation(skybox->shader->program, "aPos");
 
         // vertex positions
         glEnableVertexAttribArray(positionLoc);

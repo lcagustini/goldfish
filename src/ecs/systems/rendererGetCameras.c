@@ -1,28 +1,12 @@
 #include <ecs/systems.h>
 
 #include <render/framebuffer.h>
+#include <render/shader.h>
 
 static void setupCameraUniforms(struct transformComponent *transform, struct cameraComponent *camera, struct meshRenderData *renderData) {
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_MATRIX_4,
-		.location = renderData->shader.viewLoc,
-		.count = 1,
-		.data.matrix = camera->viewMat
-	};
-
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_MATRIX_4,
-		.location = renderData->shader.projectionLoc,
-		.count = 1,
-		.data.matrix = camera->projectionMat
-	};
-
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.cameraPosLoc,
-		.count = 1,
-		.data.vector3 = transform->position
-	};
+	shaderPushUniform(renderData, RENDERER_UNIFORM_MATRIX_4, "view", &camera->viewMat);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_MATRIX_4, "projection", &camera->projectionMat);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, "viewPos", &transform->position);
 }
 
 void rendererGetCameras(struct systemRunData data) {

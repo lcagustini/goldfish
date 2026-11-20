@@ -20,25 +20,7 @@ void rendererTransparentRender(struct systemRunData data) {
             glUseProgram(mesh.shader.program);
 
             for (int k = 0; k < mesh.uniformsLength; k++) {
-                struct uniformRenderData uniform = mesh.uniforms[k];
-
-                switch (uniform.type) {
-					case RENDERER_UNIFORM_MATRIX_4:
-						glUniformMatrix4fv(uniform.location, uniform.count, false, &uniform.data.matrix.a1);
-                        break;
-					case RENDERER_UNIFORM_VECTOR_3:
-						glUniform3fv(uniform.location, uniform.count, &uniform.data.vector3.x);
-                        break;
-					case RENDERER_UNIFORM_VECTOR_2:
-						glUniform2fv(uniform.location, uniform.count, &uniform.data.vector2.x);
-                        break;
-					case RENDERER_UNIFORM_INT:
-						glUniform1i(uniform.location, uniform.data.integer);
-                        break;
-					case RENDERER_UNIFORM_FLOAT:
-						glUniform1f(uniform.location, uniform.data.single);
-                        break;
-                }
+                shaderApplyUniform(&mesh.uniforms[k]);
             }
 
             glBindVertexArray(mesh.VAO);

@@ -22,7 +22,7 @@ struct rendererDataComponent {
 };
 
 struct skyboxComponent {
-    unsigned int shaderProgram;
+    struct shader *shader;
 
     unsigned int texture;
     unsigned int VAO, VBO, EBO;
@@ -65,7 +65,7 @@ struct cameraComponent {
     union mat4 projectionMat;
 
     framebufferId framebuffer;
-    unsigned int shader;
+    struct shader *shader;
     unsigned int VAO, VBO;
 };
 

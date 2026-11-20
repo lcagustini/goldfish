@@ -2,6 +2,8 @@
 
 #include <render/material.h>
 
+#include <stdlib.h>
+
 void setupCamera(struct systemRunData data) {
     struct cameraComponent *camera = GET_SYSTEM_COMPONENT(data);
 
@@ -18,15 +20,13 @@ void setupCamera(struct systemRunData data) {
 
     camera->framebuffer = createWindowFramebuffer(FRAMEBUFFER_COLOR_DEPTH);
 
-    GLuint vshader = loadShaderFromFile(GOLDFISH_ENGINE_ASSETS "/shaders/quad_v.glsl", GL_VERTEX_SHADER);
-    GLuint fshader = loadShaderFromFile(GOLDFISH_ENGINE_ASSETS "/shaders/quad_f.glsl", GL_FRAGMENT_SHADER);
-
-    camera->shader = glCreateProgram();
-    if (camera->shader) {
-        glAttachShader(camera->shader, vshader);
-        glAttachShader(camera->shader, fshader);
-        glLinkProgram(camera->shader);
+    camera->shader = malloc(sizeof(struct shader));
+    if (!createShader(camera->shader, GOLDFISH_ENGINE_ASSETS "/shaders/quad_v.glsl", GOLDFISH_ENGINE_ASSETS "/shaders/quad_f.glsl")) {
+        free(camera->shader);
+        camera->shader = NULL;
     }
+
+    GLuint program = camera->shader != NULL ? camera->shader->program : 0;
 
     glGenVertexArrays(1, &camera->VAO);
     glGenBuffers(1, &camera->VBO);
@@ -37,11 +37,11 @@ void setupCamera(struct systemRunData data) {
     glBufferData(GL_ARRAY_BUFFER, 24 * sizeof(float), quadVertices, GL_STATIC_DRAW);
 
     // vertex positions
-    glEnableVertexAttribArray(glGetAttribLocation(camera->shader, "aPos"));
-    glVertexAttribPointer(glGetAttribLocation(camera->shader, "aPos"), 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(glGetAttribLocation(program, "aPos"));
+    glVertexAttribPointer(glGetAttribLocation(program, "aPos"), 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     // vertex texture coords
-    glEnableVertexAttribArray(glGetAttribLocation(camera->shader, "aTexCoords"));
-    glVertexAttribPointer(glGetAttribLocation(camera->shader, "aTexCoords"), 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(glGetAttribLocation(program, "aTexCoords"));
+    glVertexAttribPointer(glGetAttribLocation(program, "aTexCoords"), 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
     glBindVertexArray(0);
 

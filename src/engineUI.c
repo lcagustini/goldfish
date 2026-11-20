@@ -3,6 +3,7 @@
 #include <goldfish/global.h>
 #include <goldfish/print.h>
 #include <ecs/components.h>
+#include <render/shader.h>
 
 #include <fontIconsMaterialDesign.h>
 #include <string.h>
@@ -77,6 +78,10 @@ static void drawMenuBar(struct world *world) {
             }
             if (igMenuItem_Bool("Framebuffers", NULL, false, true)) {
                 guiState.framebuffersWindowOpen = true;
+            }
+            if (igMenuItem_Bool("Reload Shaders", NULL, false, true)) {
+                // After this frame's render phases: takes effect next frame.
+                shaderHotReload();
             }
             igEndMenu();
         }

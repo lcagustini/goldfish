@@ -1,57 +1,31 @@
 #include <ecs/systems.h>
 
+#include <stdio.h>
+
 static void setupSpotLight(struct transformComponent *transform, struct spotLightComponent *light, struct meshRenderData *renderData, int i, int count) {
 	struct vec3 direction = (struct vec3) { 0, 0, -1 };
 	direction = vectorRotate(direction, transform->rotation);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.spotLightLocs[i].position,
-		.count = 1,
-		.data.vector3 = transform->position
-	};
+	char name[64];
+	sprintf(name, "spotLights[%d].position", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &transform->position);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.spotLightLocs[i].direction,
-		.count = 1,
-		.data.vector3 = direction
-	};
+	sprintf(name, "spotLights[%d].direction", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &direction);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_2,
-		.location = renderData->shader.spotLightLocs[i].cutOff,
-		.count = 1,
-		.data.vector2 = light->cutOff
-	};
+	sprintf(name, "spotLights[%d].cutOff", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_2, name, &light->cutOff);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.spotLightLocs[i].ambientColor,
-		.count = 1,
-		.data.vector3 = light->ambientColor
-	};
+	sprintf(name, "spotLights[%d].ambientColor", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &light->ambientColor);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.spotLightLocs[i].diffuseColor,
-		.count = 1,
-		.data.vector3 = light->diffuseColor
-	};
+	sprintf(name, "spotLights[%d].diffuseColor", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &light->diffuseColor);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.spotLightLocs[i].specularColor,
-		.count = 1,
-		.data.vector3 = light->specularColor
-	};
+	sprintf(name, "spotLights[%d].specularColor", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &light->specularColor);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_INT,
-		.location = renderData->shader.spotLightsLengthLoc,
-		.count = 1,
-		.data.integer = count
-	};
+	shaderPushUniform(renderData, RENDERER_UNIFORM_INT, "spotLightsLength", &count);
 }
 
 void rendererGetSpotLights(struct systemRunData data) {

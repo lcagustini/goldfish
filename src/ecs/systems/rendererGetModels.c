@@ -1,5 +1,7 @@
 #include <ecs/systems.h>
 
+#include <render/shader.h>
+
 #include <string.h>
 
 void rendererGetModels(struct systemRunData data) {
@@ -22,32 +24,19 @@ void rendererGetModels(struct systemRunData data) {
 
             for (int j = 0; j < model->meshesLength; j++) {
                 struct meshComponent *mesh = &model->meshes[j];
+
+                // createShader failed at load; this mesh has no program.
+                if (mesh->material.shader == NULL) continue;
+
                 struct meshRenderData *renderData = mesh->material.transparent ? &rendererData->transparentMeshes[rendererData->transparentMeshesLength++] : &rendererData->opaqueMeshes[rendererData->opaqueMeshesLength++];
 
-                renderData->shader = mesh->material.shader;
+                renderData->shader = *mesh->material.shader;
                 renderData->VAO = model->meshes[j].VAO;
                 renderData->indicesLength = model->meshes[j].indicesLength;
 
-                renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-                    .type = RENDERER_UNIFORM_MATRIX_4,
-                        .location = renderData->shader.modelLoc,
-                        .count = 1,
-                        .data.matrix = transform->modelMatrix
-                };
-
-                renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-                    .type = RENDERER_UNIFORM_FLOAT,
-                        .location = renderData->shader.shininessLoc,
-                        .count = 1,
-                        .data.single = mesh->material.shininess
-                };
-
-                renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-                    .type = RENDERER_UNIFORM_FLOAT,
-                        .location = renderData->shader.alphaClippingLoc,
-                        .count = 1,
-                        .data.single = mesh->material.alphaClipping
-                };
+                shaderPushUniform(renderData, RENDERER_UNIFORM_MATRIX_4, "model", &transform->modelMatrix);
+                shaderPushUniform(renderData, RENDERER_UNIFORM_FLOAT, "shininess", &mesh->material.shininess);
+                shaderPushUniform(renderData, RENDERER_UNIFORM_FLOAT, "alphaClipping", &mesh->material.alphaClipping);
 
                 for (int i = 0; i < model->meshes[j].material.texturesLength; i++) {
                     renderData->textures[renderData->texturesLength++] = (struct textureRenderData) {

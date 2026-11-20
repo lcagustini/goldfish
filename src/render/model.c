@@ -23,18 +23,15 @@ static void setupMesh(struct meshComponent *mesh) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indicesLength * sizeof(unsigned int), mesh->indices, GL_STATIC_DRAW);
 
-    // vertex positions
-    glEnableVertexAttribArray(mesh->material.shader.positionLoc);
-    glVertexAttribPointer(mesh->material.shader.positionLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)0);
-    // vertex normals
-    glEnableVertexAttribArray(mesh->material.shader.normalLoc);
-    glVertexAttribPointer(mesh->material.shader.normalLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, normal));
-    // vertex texture coords
-    glEnableVertexAttribArray(mesh->material.shader.textCoordLoc);
-    glVertexAttribPointer(mesh->material.shader.textCoordLoc, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, texture));
-    // vertex tangents
-    glEnableVertexAttribArray(mesh->material.shader.tangentLoc);
-    glVertexAttribPointer(mesh->material.shader.tangentLoc, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, tangent));
+    // Locations pinned by createShader; stable across hot reloads.
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, normal));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, texture));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void*)offsetof(struct vertex, tangent));
 
     glBindVertexArray(0);
 
@@ -190,7 +187,8 @@ void destroyModel(struct modelComponent *model) {
             glDeleteTextures(1, &mesh->material.textures[j].textureBuffer);
         }
 
-        glDeleteProgram(mesh->material.shader.program);
+        // Every mesh of a loadModel shares one block; destroyShader is idempotent.
+        destroyShader(mesh->material.shader);
         glDeleteVertexArrays(1, &mesh->VAO);
         glDeleteBuffers(1, &mesh->VBO);
         glDeleteBuffers(1, &mesh->EBO);

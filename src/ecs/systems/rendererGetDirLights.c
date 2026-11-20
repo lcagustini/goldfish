@@ -1,43 +1,25 @@
 #include <ecs/systems.h>
 
+#include <stdio.h>
+
 static void setupDirLight(struct transformComponent *transform, struct dirLightComponent *light, struct meshRenderData *renderData, int i, int count) {
 	struct vec3 direction = (struct vec3) { 0, 0, -1 };
 	direction = vectorRotate(direction, transform->rotation);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.dirLightLocs[i].direction,
-		.count = 1,
-		.data.vector3 = direction
-	};
+	char name[64];
+	sprintf(name, "dirLights[%d].direction", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &direction);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.dirLightLocs[i].ambientColor,
-		.count = 1,
-		.data.vector3 = light->ambientColor
-	};
+	sprintf(name, "dirLights[%d].ambientColor", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &light->ambientColor);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.dirLightLocs[i].diffuseColor,
-		.count = 1,
-		.data.vector3 = light->diffuseColor
-	};
+	sprintf(name, "dirLights[%d].diffuseColor", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &light->diffuseColor);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_VECTOR_3,
-		.location = renderData->shader.dirLightLocs[i].specularColor,
-		.count = 1,
-		.data.vector3 = light->specularColor
-	};
+	sprintf(name, "dirLights[%d].specularColor", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &light->specularColor);
 
-	renderData->uniforms[renderData->uniformsLength++] = (struct uniformRenderData) {
-		.type = RENDERER_UNIFORM_INT,
-		.location = renderData->shader.dirLightsLengthLoc,
-		.count = 1,
-		.data.integer = count
-	};
+	shaderPushUniform(renderData, RENDERER_UNIFORM_INT, "dirLightsLength", &count);
 }
 
 void rendererGetDirLights(struct systemRunData data) {
