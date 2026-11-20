@@ -34,6 +34,8 @@ static const char *systemPhaseName(enum systemPhase phase) {
             return "Pre Update";
         case SYSTEM_ON_UPDATE:
             return "Update";
+        case SYSTEM_ON_LATE_UPDATE:
+            return "Late Update";
         case SYSTEM_ON_POST_UPDATE:
             return "Post Update";
         case SYSTEM_ON_RENDER_SORT:
@@ -46,8 +48,6 @@ static const char *systemPhaseName(enum systemPhase phase) {
             return "Render Skybox";
         case SYSTEM_ON_RENDER_TRANSPARENT:
             return "Render Transparent";
-        case SYSTEM_ON_RENDER_POST:
-            return "Render Post";
         case SYSTEM_ON_RENDER_FINISH:
             return "Render Finish";
         default:

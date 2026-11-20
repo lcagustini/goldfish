@@ -1,4 +1,3 @@
--- All FFI lives here; game scripts never require("ffi").
 local ffi = require("ffi")
 
 engine = engine or {}
@@ -6,13 +5,13 @@ engine = engine or {}
 engine.phases = {
     preUpdate = 0,
     update = 1,
-    postUpdate = 2,
-    renderSort = 3,
-    renderSetup = 4,
-    renderOpaque = 5,
-    renderSkybox = 6,
-    renderTransparent = 7,
-    renderPost = 8,
+    lateUpdate = 2,
+    postUpdate = 3,
+    renderSort = 4,
+    renderSetup = 5,
+    renderOpaque = 6,
+    renderSkybox = 7,
+    renderTransparent = 8,
     renderFinish = 9,
 }
 
@@ -47,7 +46,6 @@ function engine.declare(name, fields)
     return engine.declare0(name, ffi.sizeof(name))
 end
 
--- declareComponents(map): declare every component from a { name = fields } table.
 function engine.declareComponents(components)
     for name, fields in pairs(components or {}) do
         engine.declare(name, fields)
@@ -95,14 +93,40 @@ function engine.getSingleton(name)
     return ffi.cast("struct " .. name .. " *", pointer)
 end
 
--- Scene data conventions:
---   component value true      -> add with defaults
---   component value table     -> add, then set each field
---   field value number        -> set direct
---   field value {n, n}        -> vec2 / vec3 / quat by length 2 / 3 / 4
---   field rotationEuler       -> eulerToQuat into the rotation field
---   transform field parent    -> entity name string; resolved after all entities exist
---   entity model = "path"     -> loadModel; texture keys pass through, nil omitted
+function engine.newScene()
+    return {
+        filters = {
+            controllerDataFilter = { "controllerDataComponent" },
+            cameraTransformFilter = { "transformComponent", "cameraComponent" },
+            cameraFilter = { "cameraComponent" },
+            transformFilter = { "transformComponent" },
+            rendererDataFilter = { "rendererDataComponent" },
+            modelFilter = { "transformComponent", "modelComponent" },
+            skyboxFilter = { "skyboxComponent" },
+            renderCameraFilter = { "transformComponent", "cameraComponent", "rendererDataComponent" },
+            dirLightFilter = { "transformComponent", "dirLightComponent" },
+            spotLightFilter = { "transformComponent", "spotLightComponent" },
+            pointLightFilter = { "transformComponent", "pointLightComponent" },
+        },
+        systems = {
+            { phase = "preUpdate", fn = "updateControllerData", filters = { "controllerDataFilter" } },
+            { phase = "lateUpdate", fn = "updateCameraView", filters = { "cameraTransformFilter" } },
+            { phase = "postUpdate", fn = "updateTransformMatrix", filters = { "transformFilter" } },
+            { phase = "renderSort", fn = "rendererGetModels", filters = { "modelFilter", "rendererDataFilter" } },
+            { phase = "renderSetup", fn = "rendererGetCameras", filters = { "renderCameraFilter" } },
+            { phase = "renderSetup", fn = "rendererGetSkybox", filters = { "skyboxFilter", "rendererDataFilter" } },
+            { phase = "renderSetup", fn = "rendererGetDirLights", filters = { "dirLightFilter", "rendererDataFilter" } },
+            { phase = "renderSetup", fn = "rendererGetSpotLights", filters = { "spotLightFilter", "rendererDataFilter" } },
+            { phase = "renderSetup", fn = "rendererGetPointLights", filters = { "pointLightFilter", "rendererDataFilter" } },
+            { phase = "renderOpaque", fn = "rendererOpaqueRender", filters = { "rendererDataFilter" } },
+            { phase = "renderSkybox", fn = "renderSkybox", filters = { "skyboxFilter", "cameraFilter" } },
+            { phase = "renderTransparent", fn = "rendererTransparentRender", filters = { "rendererDataFilter" } },
+            { phase = "renderFinish", fn = "finishRender", filters = { "cameraFilter" } },
+        },
+        singleton = { "controllerDataComponent" },
+    }
+end
+
 local function toVector(value)
     if type(value) ~= "table" then return value end
     local count = #value
@@ -117,8 +141,7 @@ local function setFields(record, fields, scene)
         if field == "rotationEuler" then
             record.rotation = engine.math.eulerToQuat(toVector(value))
         elseif field == "parent" then
-            -- entityId is a raw char*: a Lua string pointer would dangle, so the
-            -- write goes through engine.rawEntity after all entities exist.
+            -- entityId is a raw char*. A Lua string pointer would dangle.
             if type(value) ~= "string" then error("scene: parent must be an entity name string", 0) end
             scene.deferredParents[#scene.deferredParents + 1] = { record = record, name = value }
         else
@@ -219,12 +242,10 @@ engine.uniformTypes = {
     FLOAT = 4,
 }
 
--- mesh must be a struct meshRenderData pointer (rendererData.opaqueMeshes + index).
 function engine.uniformLocation(mesh, name)
     return engine.uniformLocation0(mesh, name)
 end
 
--- value: number, {x, y[, z]}, or cdata vec2/vec3/mat4.
 -- Must run after the rendererGet* systems; they rebuild the arrays.
 function engine.setUniform(rendererData, meshIndex, name, value)
     -- Pointer arithmetic: indexing would copy, this reaches live storage.
@@ -271,8 +292,7 @@ end
 
 -- Bounds come from the live C row count, never MAX_ENTITY_COUNT.
 --
--- ptr(row) returns a pointer into live storage; struct values passed to C
--- bindings arrive as boxed copies, so pass pointers instead.
+-- ptr(row) returns a pointer. C bindings box struct values, so pass pointers.
 function engine.view(run, filterIdx, ctype)
     local pointer, rows = engine.getColumn(run, filterIdx, ctype)
     if pointer == nil then
@@ -303,7 +323,6 @@ function engine.view(run, filterIdx, ctype)
     )
 end
 
--- Called from C after all scripts load.
 function engine.sweep()
     local registry = engine.registry()
     for _, entry in ipairs(registry) do

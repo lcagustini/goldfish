@@ -67,6 +67,7 @@ int main(int argc, char **argv) {
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_PRE_UPDATE, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_UPDATE, deltaTime);
+        runWorldPhase(&ecsWorld, SYSTEM_ON_LATE_UPDATE, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_POST_UPDATE, deltaTime);
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SORT, deltaTime);
@@ -76,7 +77,6 @@ int main(int argc, char **argv) {
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SKYBOX, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_TRANSPARENT, deltaTime);
 
-        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_POST, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_FINISH, deltaTime);
 
         if (!globalState.headless) {
