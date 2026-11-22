@@ -11,10 +11,14 @@ material
 meshComponent
 modelComponent
 transformComponent
-controllerDataComponent
 cameraComponent
 dirLightComponent
 spotLightComponent
 pointLightComponent
 skyboxComponent
 rendererDataComponent
+inputBinding
+inputAction
+inputGamepad
+inputCaptureState
+inputComponent

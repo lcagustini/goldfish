@@ -1,5 +1,6 @@
 #include <goldfish/global.h>
 
+#include <goldfish/input.h>
 #include <goldfish/print.h>
 #include <render/framebuffer.h>
 
@@ -41,6 +42,7 @@ void globalInit() {
 
     glfwMakeContextCurrent(globalState.window);
     glfwSetFramebufferSizeCallback(globalState.window, windowResizeCallback);
+    inputInit();
     if (!globalState.headless) {
         glfwSwapInterval(1);
     }
@@ -85,6 +87,8 @@ void globalInit() {
 }
 
 void globalEnd() {
+    inputEnd();
+
     if (!globalState.headless) {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();

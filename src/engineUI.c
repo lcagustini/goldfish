@@ -1,6 +1,7 @@
 #include <goldfish/engineUI.h>
 
 #include <goldfish/global.h>
+#include <goldfish/input.h>
 #include <goldfish/print.h>
 #include <ecs/components.h>
 #include <render/shader.h>
@@ -15,6 +16,7 @@ struct guiState {
     bool tablesWindowOpened;
     bool rendererDataOpened;
     bool framebuffersWindowOpen;
+    bool inputWindowOpened;
 };
 
 static struct guiState guiState;
@@ -63,6 +65,9 @@ static void drawMenuBar(struct world *world) {
             }
             if (igMenuItem_Bool("Systems", NULL, false, true)) {
                 guiState.systemsWindowOpened = true;
+            }
+            if (igMenuItem_Bool("Input", NULL, false, true)) {
+                guiState.inputWindowOpened = true;
             }
             if (igMenuItem_Bool("Components", NULL, false, true)) {
                 guiState.componentsWindowOpened = true;
@@ -382,10 +387,265 @@ static void drawFramebuffers() {
     }
 }
 
+static const char *inputActionTypeName(enum inputActionType type) {
+    switch (type) {
+        case INPUT_ACTION_BUTTON: return "button";
+        case INPUT_ACTION_AXIS_1D: return "axis1d";
+        case INPUT_ACTION_AXIS_2D: return "axis2d";
+        default: return "";
+    }
+}
+
+static const char *inputTargetName(enum inputAxisTarget target) {
+    return target == INPUT_TARGET_Y ? "y" : "x";
+}
+
+static char inputStatus[256];
+
+static void beginInputCapture(struct inputComponent *input, int actionIndex, int bindingIndex, const char *target) {
+    struct inputAction *action = &input->actions[actionIndex];
+
+    if (!inputBeginCapture(input, action->name, bindingIndex, target)) {
+        snprintf(inputStatus, sizeof(inputStatus), "Capture failed: %s", inputLastError());
+        return;
+    }
+
+    snprintf(inputStatus, sizeof(inputStatus),
+        "Press a key, mouse button, gamepad button, stick, trigger, or wheel. Esc cancels.");
+}
+
+static void finishInputCapture(struct inputComponent *input) {
+    struct inputCaptureState *capture = &input->capture;
+    if (capture->actionIndex < 0) return;
+
+    struct inputAction *action = &input->actions[capture->actionIndex];
+    int device = capture->capturedDevice;
+
+    if (action->name[0] == '\0' || device < 0) {
+        capture->actionIndex = -1;
+        capture->bindingIndex = -1;
+        return;
+    }
+
+    enum inputDevice inputDevice = (enum inputDevice)device;
+    const char *deviceName = inputDeviceName(inputDevice);
+    const char *controlName = inputControlName(inputDevice, capture->capturedControl);
+    const char *target = inputTargetName((enum inputAxisTarget)capture->capturedTarget);
+    int player = capture->capturedPlayer;
+
+    if (inputDevice == INPUT_DEVICE_GAMEPAD) {
+        int mappedCount = 0;
+
+        for (int i = 0; i < INPUT_MAX_GAMEPADS; i++) {
+            if (input->gamepads[i].connected && input->gamepads[i].mapped) mappedCount++;
+        }
+
+        if (mappedCount == 1) player = -1;
+    }
+
+    int conflict = inputFindConflict(input, action->name, deviceName, controlName, target, player);
+    if (conflict >= 0) {
+        snprintf(inputStatus, sizeof(inputStatus),
+            "%s %s is already bound to action '%s'.",
+            deviceName, controlName, input->actions[conflict].name);
+        capture->actionIndex = -1;
+        capture->bindingIndex = -1;
+        return;
+    }
+
+    bool ok;
+
+    if (capture->bindingIndex >= 0) {
+        struct inputBinding *binding = &action->bindings[capture->bindingIndex];
+        float scale = binding->scale;
+        float threshold = binding->threshold;
+        target = inputTargetName(binding->target);
+
+        ok = inputSetBinding(input, action->name, (unsigned int)capture->bindingIndex, deviceName,
+            controlName, target, scale, player, threshold);
+    }
+    else {
+        ok = inputBind(input, action->name, deviceName, controlName, target, 1.0f, player, 0.5f);
+    }
+
+    if (!ok) {
+        snprintf(inputStatus, sizeof(inputStatus), "Bind failed: %s", inputLastError());
+    }
+    else {
+        snprintf(inputStatus, sizeof(inputStatus), "Bound %s %s to action '%s'.",
+            deviceName, controlName, action->name);
+    }
+
+    capture->actionIndex = -1;
+    capture->bindingIndex = -1;
+}
+
+static void drawInput(struct inputComponent *input) {
+    if (!guiState.inputWindowOpened) {
+        if (input != NULL) {
+            if (inputCaptureActive(input)) inputCancelCapture(input);
+            input->capture.actionIndex = -1;
+            input->capture.bindingIndex = -1;
+        }
+        return;
+    }
+
+    if (input == NULL) {
+        if (igBegin("Input", &guiState.inputWindowOpened,
+            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+            igTextDisabled("The current scene has no inputComponent.");
+        }
+        igEnd();
+        return;
+    }
+
+    if (inputCaptureActive(input) && inputCapturePoll(input)) finishInputCapture(input);
+
+    if (igBegin("Input", &guiState.inputWindowOpened,
+        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+
+        if (inputCaptureActive(input)) {
+            igTextWrapped("Press any input. Esc cancels.");
+
+            if (input->capture.actionIndex >= 0) {
+                igText("Rebinding action: %s", input->actions[input->capture.actionIndex].name);
+            }
+
+            if (igSmallButton("Cancel capture")) {
+                inputCancelCapture(input);
+                input->capture.actionIndex = -1;
+                input->capture.bindingIndex = -1;
+                snprintf(inputStatus, sizeof(inputStatus), "Capture cancelled.");
+            }
+
+            igSeparator();
+        }
+
+        if (inputStatus[0] != '\0') {
+            igTextWrapped("%s", inputStatus);
+            igSeparator();
+        }
+
+        if (input->actionCount == 0) {
+            igTextDisabled("No input actions in the current scene.");
+        }
+
+        for (unsigned int actionIndex = 0; actionIndex < input->actionCount; actionIndex++) {
+            struct inputAction *action = &input->actions[actionIndex];
+
+            char actionLabel[128];
+            if (action->type == INPUT_ACTION_AXIS_2D) {
+                snprintf(actionLabel, sizeof(actionLabel), "%s (%s, deadzone %.2f)",
+                    action->name, inputActionTypeName(action->type), action->deadzone);
+            }
+            else {
+                snprintf(actionLabel, sizeof(actionLabel), "%s (%s)",
+                    action->name, inputActionTypeName(action->type));
+            }
+
+            igPushID_Int((int)actionIndex);
+
+            if (igTreeNode_Str(actionLabel)) {
+                for (unsigned int bindingIndex = 0; bindingIndex < action->bindingCount; bindingIndex++) {
+                    struct inputBinding *binding = &action->bindings[bindingIndex];
+
+                    const char *deviceName = inputDeviceName(binding->device);
+                    const char *controlName = inputControlName(binding->device, binding->control);
+
+                    char playerText[16];
+                    if (binding->device == INPUT_DEVICE_GAMEPAD) {
+                        if (binding->player < 0) snprintf(playerText, sizeof(playerText), "any");
+                        else snprintf(playerText, sizeof(playerText), "%d", binding->player);
+                    }
+                    else {
+                        snprintf(playerText, sizeof(playerText), "any");
+                    }
+
+                    char bindingText[192];
+                    if (action->type == INPUT_ACTION_AXIS_2D) {
+                        snprintf(bindingText, sizeof(bindingText), "%s %s -> %s (player %s)",
+                            deviceName, controlName,
+                            inputTargetName(binding->target), playerText);
+                    }
+                    else {
+                        snprintf(bindingText, sizeof(bindingText), "%s %s (player %s)",
+                            deviceName, controlName, playerText);
+                    }
+
+                    igPushID_Int((int)bindingIndex);
+                    igText("%s", bindingText);
+                    igSameLine(0, 8);
+
+                    if (igSmallButton("Rebind")) {
+                        beginInputCapture(input, (int)actionIndex, (int)bindingIndex, "x");
+                    }
+
+                    igSameLine(0, 4);
+
+                    if (igSmallButton("Flip")) {
+                        float scale = -binding->scale;
+                        float threshold = binding->threshold;
+                        const char *target = inputTargetName(binding->target);
+
+                        if (!inputSetBinding(input, action->name, bindingIndex, deviceName,
+                            controlName, target, scale, binding->player, threshold)) {
+                            snprintf(inputStatus, sizeof(inputStatus), "Flip failed: %s", inputLastError());
+                        }
+                    }
+
+                    igSameLine(0, 4);
+
+                    if (igSmallButton("Remove")) {
+                        if (!inputRemoveBinding(input, action->name, bindingIndex)) {
+                            snprintf(inputStatus, sizeof(inputStatus), "Remove failed: %s", inputLastError());
+                        }
+                    }
+
+                    igPopID();
+                }
+
+                if (action->type == INPUT_ACTION_AXIS_2D) {
+                    if (igSmallButton("+ X")) beginInputCapture(input, (int)actionIndex, -1, "x");
+                    igSameLine(0, 4);
+                    if (igSmallButton("+ Y")) beginInputCapture(input, (int)actionIndex, -1, "y");
+                }
+                else {
+                    if (igSmallButton("+ Add")) beginInputCapture(input, (int)actionIndex, -1, "x");
+                }
+
+                igTreePop();
+            }
+
+            igPopID();
+        }
+
+        igSeparatorText("Gamepads");
+
+        int connectedPads = 0;
+        for (int player = 0; player < INPUT_MAX_GAMEPADS; player++) {
+            struct inputGamepad *pad = &input->gamepads[player];
+            if (!pad->connected) continue;
+
+            connectedPads++;
+            igText("%d: %s (%s)", player, pad->name, pad->mapped ? "mapped" : "no mapping");
+        }
+
+        if (connectedPads == 0) {
+            igTextDisabled("No gamepad connected.");
+        }
+    }
+
+    igEnd();
+}
+
 void drawEngineUI(struct world *world) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     igNewFrame();
+
+    struct inputComponent *input = GET_SINGLETON_COMPONENT(world, inputComponent);
+    ImGuiIO *imguiIO = igGetIO();
+    inputSetUiCapture(input, imguiIO->WantCaptureKeyboard, imguiIO->WantCaptureMouse);
 
     drawMenuBar(world);
     drawSystems(world);
@@ -394,6 +654,7 @@ void drawEngineUI(struct world *world) {
     drawRendererData(world);
     drawHierarchy(world);
     drawFramebuffers();
+    drawInput(input);
 
     igRender();
     ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());

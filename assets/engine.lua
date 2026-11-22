@@ -93,10 +93,13 @@ function engine.getSingleton(name)
     return ffi.cast("struct " .. name .. " *", pointer)
 end
 
+function engine.input.action(name)
+    return ffi.cast("struct inputAction *", engine.input.action0(name))
+end
+
 function engine.newScene()
     return {
         filters = {
-            controllerDataFilter = { "controllerDataComponent" },
             cameraTransformFilter = { "transformComponent", "cameraComponent" },
             cameraFilter = { "cameraComponent" },
             transformFilter = { "transformComponent" },
@@ -107,9 +110,10 @@ function engine.newScene()
             dirLightFilter = { "transformComponent", "dirLightComponent" },
             spotLightFilter = { "transformComponent", "spotLightComponent" },
             pointLightFilter = { "transformComponent", "pointLightComponent" },
+            inputFilter = { "inputComponent" },
         },
         systems = {
-            { phase = "preUpdate", fn = "updateControllerData", filters = { "controllerDataFilter" } },
+            { phase = "preUpdate", fn = "updateInput", filters = { "inputFilter" } },
             { phase = "lateUpdate", fn = "updateCameraView", filters = { "cameraTransformFilter" } },
             { phase = "postUpdate", fn = "updateTransformMatrix", filters = { "transformFilter" } },
             { phase = "renderSort", fn = "rendererGetModels", filters = { "modelFilter", "rendererDataFilter" } },
@@ -123,7 +127,7 @@ function engine.newScene()
             { phase = "renderTransparent", fn = "rendererTransparentRender", filters = { "rendererDataFilter" } },
             { phase = "renderFinish", fn = "finishRender", filters = { "cameraFilter" } },
         },
-        singleton = { "controllerDataComponent" },
+        singleton = { "inputComponent" },
     }
 end
 
@@ -169,6 +173,8 @@ function engine.loadScene(definition)
         engine.addSingleton(name)
         scene.singletons[#scene.singletons + 1] = name
     end
+
+    engine.input.applyScene(definition.input)
 
     local byName = {}
     for _, entry in ipairs(definition.entities or {}) do

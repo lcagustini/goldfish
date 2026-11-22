@@ -11,6 +11,38 @@
 
 #include <ecs/world.h>
 
+#include <goldfish/input.h>
+
+struct inputComponent {
+    struct inputAction actions[INPUT_MAX_ACTIONS];
+    unsigned int actionCount;
+
+    bool keys[INPUT_KEY_COUNT];
+    bool previousKeys[INPUT_KEY_COUNT];
+
+    bool mouseButtons[INPUT_MOUSE_BUTTON_COUNT];
+    bool previousMouseButtons[INPUT_MOUSE_BUTTON_COUNT];
+
+    double mouseX;
+    double mouseY;
+    double previousMouseX;
+    double previousMouseY;
+    double mouseDeltaX;
+    double mouseDeltaY;
+    double scrollX;
+    double scrollY;
+
+    struct inputGamepad gamepads[INPUT_MAX_GAMEPADS];
+
+    bool focused;
+    bool firstPoll;
+    bool resetMouse;
+    bool uiCaptureKeyboard;
+    bool uiCaptureMouse;
+
+    struct inputCaptureState capture;
+};
+
 struct rendererDataComponent {
     struct meshRenderData opaqueMeshes[512];
     unsigned int opaqueMeshesLength;
@@ -67,30 +99,6 @@ struct cameraComponent {
     framebufferId framebuffer;
     struct shader *shader;
     unsigned int VAO, VBO;
-};
-
-struct controllerDataComponent {
-    unsigned char lx;
-    unsigned char ly;
-
-    unsigned char rx;
-    unsigned char ry;
-
-    bool up;
-    bool right;
-    bool down;
-    bool left;
-
-    bool lt;
-    bool rt;
-
-    bool lb;
-    bool rb;
-
-    bool A;
-    bool B;
-    bool X;
-    bool Y;
 };
 
 struct dirLightComponent {

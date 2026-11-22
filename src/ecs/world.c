@@ -28,13 +28,13 @@ struct world createWorld() {
     // maintain them. Game components, filters and phase systems come from scripts.
     CREATE_COMPONENT(&world, transformComponent);
     CREATE_COMPONENT(&world, cameraComponent);
-    CREATE_COMPONENT(&world, controllerDataComponent);
     CREATE_COMPONENT(&world, modelComponent);
     CREATE_COMPONENT(&world, dirLightComponent);
     CREATE_COMPONENT(&world, spotLightComponent);
     CREATE_COMPONENT(&world, pointLightComponent);
     CREATE_COMPONENT(&world, skyboxComponent);
     CREATE_COMPONENT(&world, rendererDataComponent);
+    CREATE_COMPONENT(&world, inputComponent);
 
     ADD_EVENT_SYSTEM(&world, SYSTEM_ON_COMPONENT_ADD, setupTransform, GET_COMPONENT_ID(transformComponent));
     ADD_EVENT_SYSTEM(&world, SYSTEM_ON_COMPONENT_ADD, setupCamera, GET_COMPONENT_ID(cameraComponent));

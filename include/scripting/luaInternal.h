@@ -16,5 +16,6 @@ void luaSystemCallback(struct systemRunData data);
 void (*findNativeSystem(const char *name))(struct systemRunData);
 
 extern const luaL_Reg luaBindings[];
+extern const luaL_Reg luaInputBindings[];
 
 #endif

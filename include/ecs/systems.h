@@ -5,9 +5,9 @@
 #include <ecs/components.h>
 
 void setupTransform(struct systemRunData data);
+void updateInput(struct systemRunData data);
 void setupCamera(struct systemRunData data);
 
-void updateControllerData(struct systemRunData data);
 void updateCameraView(struct systemRunData data);
 
 void updateTransformMatrix(struct systemRunData data);

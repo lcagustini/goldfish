@@ -12,7 +12,7 @@ struct nativeSystem {
 
 // The native systems scripts can bind by name; findNativeSystem resolves them.
 static const struct nativeSystem nativeSystems[] = {
-    { "updateControllerData", updateControllerData },
+    { "updateInput", updateInput },
     { "updateCameraView", updateCameraView },
     { "updateTransformMatrix", updateTransformMatrix },
     { "rendererGetModels", rendererGetModels },

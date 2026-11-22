@@ -101,6 +101,10 @@ void luaInit(struct world *world) {
     // The engine binding table exists before engine.lua extends it.
     lua_newtable(luaState);
     luaL_setfuncs(luaState, luaBindings, 0);
+
+    lua_newtable(luaState);
+    luaL_setfuncs(luaState, luaInputBindings, 0);
+    lua_setfield(luaState, -2, "input");
     lua_setglobal(luaState, "engine");
 
     // Native cdef text first, before any script can touch engine memory.
