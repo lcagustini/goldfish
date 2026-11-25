@@ -1,5 +1,7 @@
 #include <ecs/systems.h>
 
+#include <render/shadow.h>
+
 #include <stdio.h>
 
 static void setupPointLight(struct transformComponent *transform, struct pointLightComponent *light, struct meshRenderData *renderData, int i, int count) {
@@ -18,6 +20,35 @@ static void setupPointLight(struct transformComponent *transform, struct pointLi
 
 	sprintf(name, "pointLights[%d].specularColor", i);
 	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &light->specularColor);
+
+	int shadowIndex = light->castShadows ? light->shadowIndex : -1;
+	float range = light->range > 0 ? light->range : 25.0f;
+	float bias = light->shadowBias > 0 ? light->shadowBias : 0.02f;
+	float normalBias = light->shadowNormalBias > 0 ? light->shadowNormalBias : 0.02f;
+	float softness = light->shadowSoftness > 0 ? light->shadowSoftness : 1.0f;
+
+	sprintf(name, "pointLights[%d].farPlane", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_FLOAT, name, &range);
+
+	sprintf(name, "pointLights[%d].shadowIndex", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_INT, name, &shadowIndex);
+
+	sprintf(name, "pointLights[%d].shadowBias", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_FLOAT, name, &bias);
+
+	sprintf(name, "pointLights[%d].shadowNormalBias", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_FLOAT, name, &normalBias);
+
+	sprintf(name, "pointLights[%d].shadowSoftness", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_FLOAT, name, &softness);
+
+	if (shadowIndex >= 0) {
+		renderData->textures[renderData->texturesLength++] = (struct textureRenderData) {
+			.type = RENDERER_TEXTURE_CUBE_MAP,
+			.slot = GL_TEXTURE0 + SHADOW_CUBE_UNIT_BASE + shadowIndex,
+			.buffer = shadowTextureCube(shadowIndex),
+		};
+	}
 
 	shaderPushUniform(renderData, RENDERER_UNIFORM_INT, "pointLightsLength", &count);
 }

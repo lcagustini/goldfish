@@ -17,6 +17,15 @@ enum textureType {
     TEXTURE_MAX,
 };
 
+// Shadow samplers live in units after the material textures. These counts
+// must match the defines in lights.glsl.
+#define MAX_SHADOW_2D 6
+#define MAX_SHADOW_CUBE 4
+#define MAX_SHADOW_CASCADES 4
+
+#define SHADOW_2D_UNIT_BASE TEXTURE_MAX
+#define SHADOW_CUBE_UNIT_BASE (SHADOW_2D_UNIT_BASE + MAX_SHADOW_2D)
+
 struct shader {
     GLuint program;
     struct hashtable *uniforms;

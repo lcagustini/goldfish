@@ -93,7 +93,7 @@ static void processMesh(struct meshComponent *mesh, struct aiMesh *aiMesh, const
     setupMesh(mesh);
 }
 
-static entityId processNode(struct world *world, entityId parent, struct aiNode *node, const struct aiScene *scene, struct material material) {
+static entityId processNode(struct world *world, entityId parent, struct aiNode *node, const struct aiScene *scene, struct material material, bool castShadows, bool receiveShadows) {
     print("- Processing Node (%d meshes, %d children)\n", node->mNumMeshes, node->mNumChildren);
 
     entityId entity = createEntity(world, node->mName.data);
@@ -124,6 +124,8 @@ static entityId processNode(struct world *world, entityId parent, struct aiNode 
 
     struct modelComponent *model = GET_COMPONENT(world, entity, modelComponent);
     memset(model, 0, sizeof(struct modelComponent));
+    model->castShadows = castShadows;
+    model->receiveShadows = receiveShadows;
 
     model->meshes = malloc(scene->mNumMeshes * sizeof(struct meshComponent));
     memset(model->meshes, 0, scene->mNumMeshes * sizeof(struct meshComponent));
@@ -135,13 +137,13 @@ static entityId processNode(struct world *world, entityId parent, struct aiNode 
     }
 
     for (int i = 0; i < node->mNumChildren; i++) {
-        processNode(world, entity, node->mChildren[i], scene, material);
+        processNode(world, entity, node->mChildren[i], scene, material, castShadows, receiveShadows);
     }
 
     return entity;
 }
 
-entityId loadModel(struct world *world, const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath, const char *reflectancePath, bool transparent) {
+entityId loadModel(struct world *world, const char *modelPath, const char *diffusePath, const char *normalPath, const char *specularPath, const char *reflectancePath, bool transparent, bool castShadows, bool receiveShadows) {
     print("[Model load start]\n");
 
     const struct aiScene *scene = aiImportFile(modelPath,
@@ -167,7 +169,7 @@ entityId loadModel(struct world *world, const char *modelPath, const char *diffu
     createMaterial(&material, diffusePath, normalPath, specularPath, reflectancePath, transparent);
 
     print("File has %d meshes\n", scene->mNumMeshes);
-    entityId model = processNode(world, NULL, scene->mRootNode, scene, material);
+    entityId model = processNode(world, NULL, scene->mRootNode, scene, material, castShadows, receiveShadows);
 
     aiReleaseImport(scene);
 

@@ -228,6 +228,20 @@ static bool buildShader(struct shader *result, const char *vertexPath, const cha
         if (location != -1) glUniform1i(location, defaultSamplers[i].slot);
     }
 
+    for (int i = 0; i < MAX_SHADOW_2D; i++) {
+        char name[40];
+        snprintf(name, sizeof(name), "shadowMaps2D[%d]", i);
+        GLint location = glGetUniformLocation(program, name);
+        if (location != -1) glUniform1i(location, SHADOW_2D_UNIT_BASE + i);
+    }
+
+    for (int i = 0; i < MAX_SHADOW_CUBE; i++) {
+        char name[40];
+        snprintf(name, sizeof(name), "shadowMapsCube[%d]", i);
+        GLint location = glGetUniformLocation(program, name);
+        if (location != -1) glUniform1i(location, SHADOW_CUBE_UNIT_BASE + i);
+    }
+
     *includesOut = malloc(includes.bufferCount * sizeof(char *));
     memcpy(*includesOut, includes.buffer, includes.bufferCount * sizeof(char *));
     *includesLengthOut = includes.bufferCount;

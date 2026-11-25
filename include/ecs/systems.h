@@ -19,6 +19,10 @@ void rendererGetDirLights(struct systemRunData data);
 void rendererGetSpotLights(struct systemRunData data);
 void rendererGetPointLights(struct systemRunData data);
 
+void rendererDirShadowPass(struct systemRunData data);
+void rendererSpotShadowPass(struct systemRunData data);
+void rendererPointShadowPass(struct systemRunData data);
+
 void rendererOpaqueRender(struct systemRunData data);
 void renderSkybox(struct systemRunData data);
 void rendererTransparentRender(struct systemRunData data);

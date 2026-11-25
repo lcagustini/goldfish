@@ -401,10 +401,8 @@ void runWorldPhase(struct world *world, enum systemPhase phase, float dt) {
 
             incrementAt /= filter->resultsLength;
 
-            int l = -1;
             for (int k = 0; k < runTimes; k++) {
-                if (k % incrementAt == 0) l++;
-                runDatas[k].filterResults[j] = (union genericId) { .table = filter->results[l] };
+                runDatas[k].filterResults[j] = (union genericId) { .table = filter->results[(k / incrementAt) % filter->resultsLength] };
             }
         }
 

@@ -50,6 +50,20 @@ struct rendererDataComponent {
     struct meshRenderData transparentMeshes[512];
     unsigned int transparentMeshesLength;
 
+    struct vec3 cameraPosition;
+    struct vec3 cameraForward;
+    struct vec3 cameraRight;
+    struct vec3 cameraUp;
+
+    float cameraFov;
+    float cameraAspect;
+    float cameraNear;
+    float cameraFar;
+    float cameraOrthoSize;
+    bool cameraOrthographic;
+
+    bool cameraValid;
+
     framebufferId target;
 };
 
@@ -75,6 +89,9 @@ struct meshComponent {
 struct modelComponent {
     struct meshComponent *meshes;
     unsigned int meshesLength;
+
+    bool castShadows;
+    bool receiveShadows;
 };
 
 struct transformComponent {
@@ -105,6 +122,24 @@ struct dirLightComponent {
     struct vec3 ambientColor;
     struct vec3 diffuseColor;
     struct vec3 specularColor;
+
+    bool castShadows;
+    int shadowResolution;
+    float shadowDistance;
+    int shadowCascades;
+    float shadowSplitLambda;
+    float shadowCascadeBlend;
+    float shadowBias;
+    float shadowNormalBias;
+    float shadowSlopeBias;
+    float shadowSoftness;
+    float shadowCasterPadding;
+
+    // Runtime: written by rendererDirShadowPass, read by rendererGetDirLights.
+    int shadowIndices[MAX_SHADOW_CASCADES];
+    union mat4 shadowMatrices[MAX_SHADOW_CASCADES];
+    float shadowSplits[MAX_SHADOW_CASCADES];
+    int shadowCascadeCount;
 };
 
 struct pointLightComponent {
@@ -113,6 +148,17 @@ struct pointLightComponent {
     struct vec3 ambientColor;
     struct vec3 diffuseColor;
     struct vec3 specularColor;
+
+    float range;
+
+    bool castShadows;
+    int shadowResolution;
+    float shadowBias;
+    float shadowNormalBias;
+    float shadowSoftness;
+
+    // Runtime: written by rendererPointShadowPass.
+    int shadowIndex;
 };
 
 struct spotLightComponent {
@@ -121,6 +167,19 @@ struct spotLightComponent {
     struct vec3 ambientColor;
     struct vec3 diffuseColor;
     struct vec3 specularColor;
+
+    float range;
+
+    bool castShadows;
+    int shadowResolution;
+    float shadowBias;
+    float shadowNormalBias;
+    float shadowSlopeBias;
+    float shadowSoftness;
+
+    // Runtime: written by rendererSpotShadowPass, read by rendererGetSpotLights.
+    int shadowIndex;
+    union mat4 shadowMatrix;
 };
 
 #endif

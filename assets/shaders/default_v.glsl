@@ -15,6 +15,8 @@ out vec3 position;
 out vec3 normal;
 out vec2 textCoord;
 
+out float viewDepth;
+
 out vec3 tangentPosition;
 out vec3 tangentViewPosition;
 out mat3 TBN;
@@ -31,6 +33,8 @@ void main() {
 
     tangentPosition = TBN * position;
     tangentViewPosition = TBN * viewPos;
+
+    viewDepth = -(view * vec4(position, 1.0)).z;
 
     gl_Position = projection * view * model * vec4(aPos, 1.0);
 }

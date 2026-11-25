@@ -1,6 +1,7 @@
 #include <ecs/systems.h>
 
 #include <render/shader.h>
+#include <render/shadow.h>
 
 #include <string.h>
 
@@ -10,9 +11,16 @@ void rendererGetModels(struct systemRunData data) {
 
     struct rendererDataComponent *rendererDatas = GET_SYSTEM_COMPONENTS(data, 1, 0);
 
-    for (int k = 0; k < GET_SYSTEM_COMPONENTS_LENGTH(data, 1); k++) {
-        struct rendererDataComponent *rendererData = &rendererDatas[k];
-        memset(rendererData, 0, sizeof(struct rendererDataComponent));
+    // Shadow map slots are claimed for one frame by the shadow passes.
+    shadowBeginFrame();
+
+    // This system runs once per model table. Only the first run starts a new list.
+    struct filter *modelFilter = getFilter(data.world, data.system->filters[0]);
+    if (data.filterResults[0].table == modelFilter->results[0]) {
+        for (int k = 0; k < GET_SYSTEM_COMPONENTS_LENGTH(data, 1); k++) {
+            struct rendererDataComponent *rendererData = &rendererDatas[k];
+            memset(rendererData, 0, sizeof(struct rendererDataComponent));
+        }
     }
 
     for (int i = 0; i < GET_SYSTEM_COMPONENTS_LENGTH(data, 0); i++) {
@@ -33,6 +41,12 @@ void rendererGetModels(struct systemRunData data) {
                 renderData->shader = *mesh->material.shader;
                 renderData->VAO = model->meshes[j].VAO;
                 renderData->indicesLength = model->meshes[j].indicesLength;
+                renderData->modelMatrix = transform->modelMatrix;
+                renderData->castShadows = model->castShadows;
+                renderData->receiveShadows = model->receiveShadows;
+
+                int receivesShadows = model->receiveShadows ? 1 : 0;
+                shaderPushUniform(renderData, RENDERER_UNIFORM_INT, "receivesShadows", &receivesShadows);
 
                 shaderPushUniform(renderData, RENDERER_UNIFORM_MATRIX_4, "model", &transform->modelMatrix);
                 shaderPushUniform(renderData, RENDERER_UNIFORM_FLOAT, "shininess", &mesh->material.shininess);

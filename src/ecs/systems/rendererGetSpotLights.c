@@ -1,5 +1,7 @@
 #include <ecs/systems.h>
 
+#include <render/shadow.h>
+
 #include <stdio.h>
 
 static void setupSpotLight(struct transformComponent *transform, struct spotLightComponent *light, struct meshRenderData *renderData, int i, int count) {
@@ -24,6 +26,38 @@ static void setupSpotLight(struct transformComponent *transform, struct spotLigh
 
 	sprintf(name, "spotLights[%d].specularColor", i);
 	shaderPushUniform(renderData, RENDERER_UNIFORM_VECTOR_3, name, &light->specularColor);
+
+	int shadowIndex = light->castShadows ? light->shadowIndex : -1;
+	float bias = light->shadowBias > 0 ? light->shadowBias : 0.0008f;
+	float normalBias = light->shadowNormalBias > 0 ? light->shadowNormalBias : 0.02f;
+	float slopeBias = light->shadowSlopeBias > 0 ? light->shadowSlopeBias : 0.002f;
+	float softness = light->shadowSoftness > 0 ? light->shadowSoftness : 1.0f;
+
+	sprintf(name, "spotLights[%d].shadowIndex", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_INT, name, &shadowIndex);
+
+	sprintf(name, "spotLights[%d].shadowBias", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_FLOAT, name, &bias);
+
+	sprintf(name, "spotLights[%d].shadowNormalBias", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_FLOAT, name, &normalBias);
+
+	sprintf(name, "spotLights[%d].shadowSlopeBias", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_FLOAT, name, &slopeBias);
+
+	sprintf(name, "spotLights[%d].shadowSoftness", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_FLOAT, name, &softness);
+
+	sprintf(name, "spotLights[%d].lightSpaceMatrix", i);
+	shaderPushUniform(renderData, RENDERER_UNIFORM_MATRIX_4, name, &light->shadowMatrix);
+
+	if (shadowIndex >= 0) {
+		renderData->textures[renderData->texturesLength++] = (struct textureRenderData) {
+			.type = RENDERER_TEXTURE_2D,
+			.slot = GL_TEXTURE0 + SHADOW_2D_UNIT_BASE + shadowIndex,
+			.buffer = shadowTexture2D(shadowIndex),
+		};
+	}
 
 	shaderPushUniform(renderData, RENDERER_UNIFORM_INT, "spotLightsLength", &count);
 }

@@ -250,8 +250,10 @@ static int lLoadModel(lua_State *L) {    const char *modelPath = persistentStrin
     const char *specularPath = lua_isnil(L, 4) ? NULL : persistentString(luaL_checkstring(L, 4));
     const char *reflectancePath = lua_isnil(L, 5) ? NULL : persistentString(luaL_checkstring(L, 5));
     bool transparent = lua_toboolean(L, 6) != 0;
+    bool castShadows = lua_isnoneornil(L, 7) ? !transparent : lua_toboolean(L, 7) != 0;
+    bool receiveShadows = lua_isnoneornil(L, 8) ? true : lua_toboolean(L, 8) != 0;
 
-    entityId id = loadModel(activeWorld, modelPath, diffusePath, normalPath, specularPath, reflectancePath, transparent);
+    entityId id = loadModel(activeWorld, modelPath, diffusePath, normalPath, specularPath, reflectancePath, transparent, castShadows, receiveShadows);
     lua_pushstring(L, id);
     return 1;
 }

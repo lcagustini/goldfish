@@ -28,6 +28,17 @@ void shaderApplyUniform(const struct uniformRenderData *uniform) {
 }
 
 void shaderPushUniform(struct meshRenderData *mesh, unsigned int type, const char *name, const void *data) {
+    unsigned int capacity = sizeof(mesh->uniforms) / sizeof(mesh->uniforms[0]);
+    if (mesh->uniformsLength >= capacity) {
+        // One warning per run: a scene with many lights would otherwise spam.
+        static bool warned = false;
+        if (!warned) {
+            print("[renderer] uniform array is full (%u); extra light uniforms are dropped\n", capacity);
+            warned = true;
+        }
+        return;
+    }
+
     struct uniformRenderData *uniform = &mesh->uniforms[mesh->uniformsLength++];
     uniform->type = type;
     uniform->location = shaderUniformLocation(&mesh->shader, name);

@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
         runWorldPhase(&ecsWorld, SYSTEM_ON_POST_UPDATE, deltaTime);
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SORT, deltaTime);
+        runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SHADOW, deltaTime);
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_SETUP, deltaTime);
 
         runWorldPhase(&ecsWorld, SYSTEM_ON_RENDER_OPAQUE, deltaTime);

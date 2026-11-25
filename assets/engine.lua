@@ -8,11 +8,12 @@ engine.phases = {
     lateUpdate = 2,
     postUpdate = 3,
     renderSort = 4,
-    renderSetup = 5,
-    renderOpaque = 6,
-    renderSkybox = 7,
-    renderTransparent = 8,
-    renderFinish = 9,
+    renderShadow = 5,
+    renderSetup = 6,
+    renderOpaque = 7,
+    renderSkybox = 8,
+    renderTransparent = 9,
+    renderFinish = 10,
 }
 
 engine.events = {
@@ -117,7 +118,10 @@ function engine.newScene()
             { phase = "lateUpdate", fn = "updateCameraView", filters = { "cameraTransformFilter" } },
             { phase = "postUpdate", fn = "updateTransformMatrix", filters = { "transformFilter" } },
             { phase = "renderSort", fn = "rendererGetModels", filters = { "modelFilter", "rendererDataFilter" } },
-            { phase = "renderSetup", fn = "rendererGetCameras", filters = { "renderCameraFilter" } },
+            { phase = "renderSort", fn = "rendererGetCameras", filters = { "renderCameraFilter" } },
+            { phase = "renderShadow", fn = "rendererDirShadowPass", filters = { "rendererDataFilter", "dirLightFilter" } },
+            { phase = "renderShadow", fn = "rendererSpotShadowPass", filters = { "rendererDataFilter", "spotLightFilter" } },
+            { phase = "renderShadow", fn = "rendererPointShadowPass", filters = { "rendererDataFilter", "pointLightFilter" } },
             { phase = "renderSetup", fn = "rendererGetSkybox", filters = { "skyboxFilter", "rendererDataFilter" } },
             { phase = "renderSetup", fn = "rendererGetDirLights", filters = { "dirLightFilter", "rendererDataFilter" } },
             { phase = "renderSetup", fn = "rendererGetSpotLights", filters = { "spotLightFilter", "rendererDataFilter" } },
@@ -154,8 +158,38 @@ local function setFields(record, fields, scene)
     end
 end
 
+-- Shadow fields each light type accepts. scene.shadows fills unset fields.
+local SHADOW_FIELDS = {
+    dirLightComponent = {
+        "castShadows", "shadowResolution", "shadowDistance", "shadowCascades",
+        "shadowSplitLambda", "shadowCascadeBlend", "shadowBias", "shadowNormalBias",
+        "shadowSlopeBias", "shadowSoftness", "shadowCasterPadding",
+    },
+    spotLightComponent = {
+        "castShadows", "shadowResolution", "shadowBias", "shadowNormalBias",
+        "shadowSlopeBias", "shadowSoftness",
+    },
+    pointLightComponent = {
+        "castShadows", "shadowResolution", "shadowBias", "shadowNormalBias",
+        "shadowSoftness",
+    },
+}
+
+local function withShadowDefaults(component, fields, defaults)
+    local allowed = SHADOW_FIELDS[component]
+    if allowed == nil or defaults == nil then return fields end
+
+    local merged = {}
+    for key, value in pairs(fields) do merged[key] = value end
+    for _, key in ipairs(allowed) do
+        if merged[key] == nil and defaults[key] ~= nil then merged[key] = defaults[key] end
+    end
+    return merged
+end
+
 function engine.loadScene(definition)
     local scene = { entities = {}, filters = {}, systems = {}, singletons = {}, deferredParents = {} }
+    local shadows = definition.shadows
 
     for name, components in pairs(definition.filters or {}) do
         engine.addFilter(name, components)
@@ -180,7 +214,7 @@ function engine.loadScene(definition)
     for _, entry in ipairs(definition.entities or {}) do
         local id
         if entry.model ~= nil then
-            id = engine.loadModel(entry.model, entry.diffuse, entry.normal, entry.specular, entry.reflectance, entry.transparent)
+            id = engine.loadModel(entry.model, entry.diffuse, entry.normal, entry.specular, entry.reflectance, entry.transparent, entry.castShadows, entry.receiveShadows)
         else
             id = engine.createEntity(entry.name or "Entity")
         end
@@ -190,6 +224,10 @@ function engine.loadScene(definition)
         for component, fields in pairs(entry.components or {}) do
             if type(fields) ~= "table" and fields ~= true then
                 error("scene: component '" .. component .. "' must be true or a field table", 0)
+            end
+            -- A true component still takes the scene-wide shadow defaults.
+            if type(fields) == "table" or (fields == true and shadows ~= nil and SHADOW_FIELDS[component] ~= nil) then
+                fields = withShadowDefaults(component, fields == true and {} or fields, shadows)
             end
             -- loadModel already added the transform; adding it again would move the entity to a duplicate table.
             if entry.model == nil or component ~= "transformComponent" then

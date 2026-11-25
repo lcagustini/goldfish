@@ -68,6 +68,11 @@ struct meshRenderData {
     struct textureRenderData textures[16];
     unsigned int texturesLength;
 
+    union mat4 modelMatrix;
+
+    bool castShadows;
+    bool receiveShadows;
+
     unsigned int VAO;
     unsigned int indicesLength;
 };
