@@ -44,12 +44,27 @@ function engine.declare(name, fields)
 
     ffi.cdef(table.concat(cdef))
     engine.declared[name] = fields
-    return engine.declare0(name, ffi.sizeof(name))
+
+    local id = engine.declare0(name, ffi.sizeof(name))
+    for _, field in ipairs(fields) do
+        engine.registerField0(name, field[1], field[2], ffi.offsetof("struct " .. name, field[1]), field[3] or 1)
+    end
+
+    return id
 end
 
 function engine.declareComponents(components)
     for name, fields in pairs(components or {}) do
         engine.declare(name, fields)
+    end
+end
+
+-- The generated cdef file also exports native field layouts for the inspector.
+for _, component in ipairs(nativeComponentFields or {}) do
+    for _, field in ipairs(component[2]) do
+        if field[4] ~= nil then
+            engine.registerField0(component[1], field[1], field[2], field[4], field[3])
+        end
     end
 end
 

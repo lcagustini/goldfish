@@ -3,6 +3,7 @@
 
 #define MAX_ENTITY_COUNT 50
 #define MAX_COMPONENT_COUNT 50
+#define MAX_COMPONENT_FIELDS 64
 #define MAX_SYSTEM_COUNT 20
 #define MAX_ARCHETYPE_COUNT 50
 #define MAX_FILTER_COUNT 10
@@ -93,9 +94,35 @@ struct entity {
     unsigned int position;
 };
 
+enum componentFieldType {
+    COMPONENT_FIELD_BOOL,
+    COMPONENT_FIELD_INT,
+    COMPONENT_FIELD_UINT,
+    COMPONENT_FIELD_FLOAT,
+    COMPONENT_FIELD_DOUBLE,
+    COMPONENT_FIELD_VEC2,
+    COMPONENT_FIELD_VEC3,
+    COMPONENT_FIELD_QUAT,
+    COMPONENT_FIELD_MAT4,
+    COMPONENT_FIELD_ENTITY,
+    COMPONENT_FIELD_POINTER,
+    COMPONENT_FIELD_OPAQUE,
+};
+
+struct componentField {
+    const char *name;
+    enum componentFieldType type;
+    unsigned int offset;
+    unsigned int count;
+    unsigned int elementSize;
+};
+
 struct component {
     const char *name;
     unsigned int size;
+
+    struct componentField fields[MAX_COMPONENT_FIELDS];
+    unsigned int fieldsLength;
 };
 
 struct record {
@@ -187,6 +214,7 @@ struct world createWorld();
 void destroyWorld(struct world *world);
 
 void createComponent(struct world *world, const char *component, unsigned int componentSize);
+void registerComponentField(struct world *world, componentId component, const char *name, const char *type, unsigned int offset, unsigned int count);
 
 void addComponent(struct world *world, entityId entity, componentId component);
 void *getComponent(struct world *world, entityId entity, componentId component);

@@ -347,6 +347,40 @@ local function emitFields(record, write, indent, emitted)
     flushHeld()
 end
 
+-- Flatten top-level fields for the debug inspector. Anonymous unions expose
+-- their members as unqualified names, so recurse into them with the parent
+-- record name for the offset lookup.
+local function collectInspectorFields(record, out)
+    local function walk(current)
+        for index, member in ipairs(current.inner or {}) do
+            if member.kind == "FieldDecl" then
+                local fieldName = member.name
+                if member.isImplicit ~= true and fieldName ~= nil and fieldName ~= "" then
+                    local base, dims = fieldValueText(member.type.qualType, record.name, fieldName)
+                    local count = 1
+                    for dimension in dims:gmatch("%[(%d+)%]") do
+                        count = count * tonumber(dimension)
+                    end
+                    out[#out + 1] = { fieldName, base, count }
+                end
+            elseif member.kind == "RecordDecl" then
+                -- Recurse only into a true anonymous union/struct. A named
+                -- field of an unnamed type follows its record and stays opaque.
+                local nextMember = (current.inner or {})[index + 1]
+                local namedFieldFollows = nextMember ~= nil
+                    and nextMember.kind == "FieldDecl"
+                    and nextMember.isImplicit ~= true
+
+                if (member.name == nil or member.name == "") and not namedFieldFollows then
+                    walk(member)
+                end
+            end
+        end
+    end
+
+    walk(record)
+end
+
 local function generate(clang, header, typesPath, outPath, includes, defines)
     local typesHandle = io.open(typesPath)
     if typesHandle == nil then
@@ -403,6 +437,25 @@ local function generate(clang, header, typesPath, outPath, includes, defines)
         outHandle:write("\n" .. block)
     end
     outHandle:write("]]\n")
+
+    outHandle:write("\n-- Field layout for the debug inspector.\n")
+    outHandle:write("nativeComponentFields = {\n")
+    for _, typeName in ipairs(exposure) do
+        local record = records[typeName]
+        local layout = {}
+        collectInspectorFields(record, layout)
+
+        outHandle:write(string.format("    { %q, {\n", typeName))
+        for _, field in ipairs(layout) do
+            outHandle:write(string.format(
+                "        { %q, %q, %d, ffi.offsetof(%q, %q) },\n",
+                field[1], field[2], field[3],
+                record.tagUsed .. " " .. typeName, field[1]))
+        end
+        outHandle:write("    }},\n")
+    end
+    outHandle:write("}\n")
+
     outHandle:close()
 end
 

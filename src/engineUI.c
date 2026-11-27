@@ -17,9 +17,22 @@ struct guiState {
     bool rendererDataOpened;
     bool framebuffersWindowOpen;
     bool inputWindowOpened;
+    bool inspectorWindowOpened;
+
+    char selectedEntity[256];
 };
 
 static struct guiState guiState;
+
+static void selectEntity(entityId entity) {
+    snprintf(guiState.selectedEntity, sizeof(guiState.selectedEntity), "%s", entity);
+    guiState.inspectorWindowOpened = true;
+}
+
+static bool entityAlive(struct world *world, const char *entity) {
+    if (entity == NULL || entity[0] == '\0') return false;
+    return hashtableGet(&world->entities, entity) != NULL;
+}
 
 static const char *systemEventName(enum systemEvent event) {
     switch (event) {
@@ -59,11 +72,32 @@ static const char *systemPhaseName(enum systemPhase phase) {
     }
 }
 
+static const char *componentFieldTypeName(enum componentFieldType type) {
+    switch (type) {
+        case COMPONENT_FIELD_BOOL: return "bool";
+        case COMPONENT_FIELD_INT: return "int";
+        case COMPONENT_FIELD_UINT: return "uint";
+        case COMPONENT_FIELD_FLOAT: return "float";
+        case COMPONENT_FIELD_DOUBLE: return "double";
+        case COMPONENT_FIELD_VEC2: return "vec2";
+        case COMPONENT_FIELD_VEC3: return "vec3";
+        case COMPONENT_FIELD_QUAT: return "quat";
+        case COMPONENT_FIELD_MAT4: return "mat4";
+        case COMPONENT_FIELD_ENTITY: return "entity";
+        case COMPONENT_FIELD_POINTER: return "pointer";
+        case COMPONENT_FIELD_OPAQUE: return "opaque";
+        default: return "unknown";
+    }
+}
+
 static void drawMenuBar(struct world *world) {
     if (igBeginMainMenuBar()) {
         if (igBeginMenu("World", true)) {
             if (igMenuItem_Bool("Entities", NULL, false, true)) {
                 guiState.hierarchyWindowOpened = true;
+            }
+            if (igMenuItem_Bool("Inspector", NULL, false, true)) {
+                guiState.inspectorWindowOpened = true;
             }
             if (igMenuItem_Bool("Systems", NULL, false, true)) {
                 guiState.systemsWindowOpened = true;
@@ -247,7 +281,16 @@ static void drawComponents(struct world *world) {
             for (int i = 0; i < world->components.bufferCount; i++) {
                 if (!world->components.valids[i]) continue;
 
-                igText("%s (%u bytes)", components[i].name, components[i].size);
+                char label[128];
+                snprintf(label, sizeof(label), "%s (%u bytes, %u fields)", components[i].name, components[i].size, components[i].fieldsLength);
+
+                if (igTreeNode_Str(label)) {
+                    for (unsigned int j = 0; j < components[i].fieldsLength; j++) {
+                        struct componentField *field = &components[i].fields[j];
+                        igText("%s: %s%s (%u bytes)", field->name, componentFieldTypeName(field->type), field->count > 1 ? "[]" : "", field->elementSize);
+                    }
+                    igTreePop();
+                }
             }
         }
         igEnd();
@@ -273,6 +316,226 @@ static void drawTables(struct world *world) {
         }
         igEnd();
     }
+}
+
+static bool fieldTypeEditable(enum componentFieldType type) {
+    switch (type) {
+        case COMPONENT_FIELD_BOOL:
+        case COMPONENT_FIELD_INT:
+        case COMPONENT_FIELD_FLOAT:
+        case COMPONENT_FIELD_DOUBLE:
+        case COMPONENT_FIELD_VEC2:
+        case COMPONENT_FIELD_VEC3:
+        case COMPONENT_FIELD_QUAT:
+        case COMPONENT_FIELD_ENTITY:
+            return true;
+        default:
+            return false;
+    }
+}
+
+static bool entityInParentChain(struct world *world, entityId entity, entityId candidate) {
+    if (candidate == entity) return true;
+
+    struct transformComponent *transform = GET_COMPONENT(world, candidate, transformComponent);
+    while (transform != NULL && transform->parent != NULL) {
+        if (transform->parent == entity) return true;
+        transform = GET_COMPONENT(world, transform->parent, transformComponent);
+    }
+    return false;
+}
+
+static void drawEntityField(struct world *world, entityId owner, const char *label, entityId *value) {
+    entityId current = *value;
+
+    if (igBeginCombo(label, current != NULL ? current : "(none)", 0)) {
+        if (igSelectable_Bool("(none)", current == NULL, 0, (ImVec2) { 0, 0 })) {
+            *value = NULL;
+        }
+
+        struct entity *entities = world->entities.buffer;
+        for (unsigned int i = 0; i < world->entities.bufferCount; i++) {
+            if (!world->entities.valids[i]) continue;
+
+            entityId candidate = entities[i].name;
+            if (entityInParentChain(world, owner, candidate)) continue;
+
+            if (igSelectable_Bool(candidate, candidate == current, 0, (ImVec2) { 0, 0 })) {
+                *value = candidate;
+            }
+        }
+
+        igEndCombo();
+    }
+}
+
+static void drawFieldValue(struct world *world, entityId owner, const char *label, enum componentFieldType type, void *value) {
+    switch (type) {
+        case COMPONENT_FIELD_BOOL:
+            igCheckbox(label, value);
+            break;
+        case COMPONENT_FIELD_INT:
+            igDragScalar(label, ImGuiDataType_S32, value, 1.0f, NULL, NULL, "%d", 0);
+            break;
+        case COMPONENT_FIELD_UINT:
+            igText("%s: %u", label, *(unsigned int *)value);
+            break;
+        case COMPONENT_FIELD_FLOAT:
+            igDragScalar(label, ImGuiDataType_Float, value, 0.01f, NULL, NULL, "%.3f", 0);
+            break;
+        case COMPONENT_FIELD_DOUBLE:
+            igDragScalar(label, ImGuiDataType_Double, value, 0.01f, NULL, NULL, "%.5f", 0);
+            break;
+        case COMPONENT_FIELD_VEC2:
+            igDragFloat2(label, value, 0.01f, 0.0f, 0.0f, "%.3f", 0);
+            break;
+        case COMPONENT_FIELD_VEC3:
+            igDragFloat3(label, value, 0.01f, 0.0f, 0.0f, "%.3f", 0);
+            break;
+        case COMPONENT_FIELD_QUAT:
+            igDragFloat4(label, value, 0.01f, 0.0f, 0.0f, "%.3f", 0);
+            break;
+        case COMPONENT_FIELD_MAT4: {
+            char title[160];
+            snprintf(title, sizeof(title), "%s (matrix)", label);
+            if (igTreeNode_Str(title)) {
+                union mat4 *matrix = value;
+                for (int row = 0; row < 4; row++) {
+                    igText("%.3f %.3f %.3f %.3f", matrix->mat[row][0], matrix->mat[row][1], matrix->mat[row][2], matrix->mat[row][3]);
+                }
+                igTreePop();
+            }
+            break;
+        }
+        case COMPONENT_FIELD_ENTITY:
+            drawEntityField(world, owner, label, value);
+            break;
+        case COMPONENT_FIELD_POINTER:
+            igText("%s: %p", label, *(void **)value);
+            break;
+        case COMPONENT_FIELD_OPAQUE:
+        default:
+            igTextDisabled("%s (opaque)", label);
+            break;
+    }
+}
+
+static void drawComponentField(struct world *world, entityId entity, void *data, struct componentField *field) {
+    void *values = (char *)data + field->offset;
+
+    igPushID_Str(field->name);
+
+    if (field->count > 1) {
+        if (field->count <= 16 && fieldTypeEditable(field->type)) {
+            for (unsigned int i = 0; i < field->count; i++) {
+                char label[160];
+                snprintf(label, sizeof(label), "%s[%u]", field->name, i);
+
+                igPushID_Int((int)i);
+                drawFieldValue(world, entity, label, field->type, (char *)values + i * field->elementSize);
+                igPopID();
+            }
+        }
+        else {
+            igTextDisabled("%s: %u elements, read-only", field->name, field->count);
+        }
+    }
+    else {
+        drawFieldValue(world, entity, field->name, field->type, values);
+    }
+
+    igPopID();
+}
+
+static const char *drawAddComponent(struct world *world, entityId entity) {
+    const char *chosen = NULL;
+
+    if (igBeginCombo("Add component", "Select...", 0)) {
+        struct component *components = world->components.buffer;
+        for (unsigned int i = 0; i < world->components.bufferCount; i++) {
+            if (!world->components.valids[i]) continue;
+
+            const char *name = components[i].name;
+            if (getComponent(world, entity, (componentId)name) != NULL) continue;
+
+            if (igSelectable_Bool(name, false, 0, (ImVec2) { 0, 0 })) {
+                chosen = name;
+            }
+        }
+        igEndCombo();
+    }
+
+    return chosen;
+}
+
+static void drawInspector(struct world *world) {
+    if (!guiState.inspectorWindowOpened) return;
+
+    if (!entityAlive(world, guiState.selectedEntity)) {
+        guiState.selectedEntity[0] = '\0';
+    }
+
+    if (igBegin("Inspector", &guiState.inspectorWindowOpened, ImGuiWindowFlags_None)) {
+        if (guiState.selectedEntity[0] == '\0') {
+            igTextDisabled("Select an entity in the Entities window.");
+        }
+        else {
+            igText("%s", guiState.selectedEntity);
+            igSeparator();
+
+            struct entity *entity = hashtableGet(&world->entities, guiState.selectedEntity);
+            entityId selected = entity != NULL ? entity->name : NULL;
+            const char *pendingRemove = NULL;
+            const char *pendingAdd = NULL;
+
+            if (entity != NULL && entity->table != INVALID_POSITION) {
+                struct table *table = dynarrayGet(&world->tables, entity->table);
+
+                for (int i = 0; i < table->recordsLength; i++) {
+                    const char *componentName = table->records[i].componentType;
+                    struct component *component = hashtableGet(&world->components, componentName);
+                    void *data = getComponent(world, selected, (componentId)componentName);
+
+                    if (data == NULL) continue;
+
+                    igPushID_Str(componentName);
+
+                    if (igTreeNodeEx_Str(componentName, ImGuiTreeNodeFlags_DefaultOpen)) {
+                        if (component == NULL || component->fieldsLength == 0) {
+                            igTextDisabled("%u bytes, no field metadata", component != NULL ? component->size : 0);
+                        }
+                        else {
+                            for (unsigned int field = 0; field < component->fieldsLength; field++) {
+                                drawComponentField(world, selected, data, &component->fields[field]);
+                            }
+                        }
+
+                        if (igSmallButton("Remove")) {
+                            pendingRemove = componentName;
+                        }
+
+                        igTreePop();
+                    }
+
+                    igPopID();
+                }
+            }
+            else {
+                igTextDisabled("No components.");
+            }
+
+            igSeparator();
+            pendingAdd = drawAddComponent(world, selected);
+
+            if (pendingRemove != NULL) {
+                removeComponent(world, selected, (componentId)pendingRemove);
+            }
+            if (pendingAdd != NULL) {
+                addComponent(world, selected, (componentId)pendingAdd);
+            }
+        }
+    }
+    igEnd();
 }
 
 static void drawHierarchy(struct world *world) {
@@ -341,18 +604,23 @@ removeFromQueue:
                 if (currentLevel < depth[i]) continue;
 
                 if (i + 1 < drawEntitiesLength && depth[i + 1] > depth[i]) {
-                    if (igTreeNode_Str(drawEntities[i])) {
+                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+                    if (strcmp(guiState.selectedEntity, drawEntities[i]) == 0) flags |= ImGuiTreeNodeFlags_Selected;
+
+                    if (igTreeNodeEx_Str(drawEntities[i], flags)) {
                         currentLevel++;
+                    }
+                    if (igIsItemClicked(ImGuiMouseButton_Left)) {
+                        selectEntity(drawEntities[i]);
                     }
                 }
                 else {
-                    igIndent(0);
-                    igText(drawEntities[i]);
-                    igUnindent(0);
+                    if (igSelectable_Bool(drawEntities[i], strcmp(guiState.selectedEntity, drawEntities[i]) == 0, 0, (ImVec2) { 0, 0 })) {
+                        selectEntity(drawEntities[i]);
+                    }
                 }
             }
-            int diff = currentLevel - depth[drawEntitiesLength - 1];
-            for (int j = 0; j < diff; j++) {
+            for (int j = 0; j < currentLevel; j++) {
                 igTreePop();
             }
 
@@ -370,7 +638,12 @@ removeFromQueue:
                 }
 
                 if (!found) {
-                    igText(world->entities.keys[i]);
+                    struct entity *entities = world->entities.buffer;
+                    entityId id = entities[i].name;
+
+                    if (igSelectable_Bool(id, strcmp(guiState.selectedEntity, id) == 0, 0, (ImVec2) { 0, 0 })) {
+                        selectEntity(id);
+                    }
                 }
             }
         }
@@ -655,6 +928,7 @@ void drawEngineUI(struct world *world) {
     drawTables(world);
     drawRendererData(world);
     drawHierarchy(world);
+    drawInspector(world);
     drawFramebuffers();
     drawInput(input);
 

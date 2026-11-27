@@ -47,6 +47,18 @@ static int lDeclare(lua_State *L) {
     return 0;
 }
 
+// registerField0(component, field, ctype, offset, count): debug inspector metadata.
+static int lRegisterField(lua_State *L) {
+    componentId component = persistentString(luaL_checkstring(L, 1));
+    const char *field = persistentString(luaL_checkstring(L, 2));
+    const char *type = luaL_checkstring(L, 3);
+    unsigned int offset = (unsigned int)luaL_checkinteger(L, 4);
+    unsigned int count = (unsigned int)luaL_optinteger(L, 5, 1);
+
+    registerComponentField(activeWorld, component, field, type, offset, count);
+    return 0;
+}
+
 static int lAddFilter(lua_State *L) {
     const char *name = persistentString(luaL_checkstring(L, 1));
 
@@ -451,6 +463,7 @@ static int lQuit(lua_State *L) {
 // Binding table consumed by lua.c's engine table registration.
 const luaL_Reg luaBindings[] = {
     { "declare0", lDeclare },
+    { "registerField0", lRegisterField },
     { "addFilter", lAddFilter },
     { "removeFilter", lRemoveFilter },
     { "addPhaseSystem", lAddPhaseSystem },

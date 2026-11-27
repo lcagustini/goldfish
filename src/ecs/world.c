@@ -57,11 +57,46 @@ void destroyWorld(struct world *world) {
 
 void createComponent(struct world *world, const char *component, unsigned int componentSize) {
     struct component newComponent = {
-        component,
-        componentSize
+        .name = component,
+        .size = componentSize,
     };
 
     return hashtableSet(&world->components, component, &newComponent);
+}
+
+// Field type names come from the Lua declarations and the generated C metadata.
+static enum componentFieldType componentFieldTypeFromName(const char *type, unsigned int *size) {
+    if (strcmp(type, "bool") == 0) { *size = sizeof(bool); return COMPONENT_FIELD_BOOL; }
+    if (strcmp(type, "int") == 0 || strcmp(type, "int32_t") == 0) { *size = sizeof(int); return COMPONENT_FIELD_INT; }
+    if (strcmp(type, "unsigned int") == 0 || strcmp(type, "unsigned") == 0 || strcmp(type, "uint32_t") == 0) { *size = sizeof(unsigned int); return COMPONENT_FIELD_UINT; }
+    if (strcmp(type, "framebufferId") == 0) { *size = sizeof(framebufferId); return COMPONENT_FIELD_UINT; }
+    if (strcmp(type, "float") == 0) { *size = sizeof(float); return COMPONENT_FIELD_FLOAT; }
+    if (strcmp(type, "double") == 0) { *size = sizeof(double); return COMPONENT_FIELD_DOUBLE; }
+    if (strcmp(type, "vec2") == 0 || strcmp(type, "struct vec2") == 0) { *size = sizeof(struct vec2); return COMPONENT_FIELD_VEC2; }
+    if (strcmp(type, "vec3") == 0 || strcmp(type, "struct vec3") == 0) { *size = sizeof(struct vec3); return COMPONENT_FIELD_VEC3; }
+    if (strcmp(type, "quat") == 0 || strcmp(type, "struct quat") == 0) { *size = sizeof(struct quat); return COMPONENT_FIELD_QUAT; }
+    if (strcmp(type, "mat4") == 0 || strcmp(type, "struct mat4") == 0 || strcmp(type, "union mat4") == 0) { *size = sizeof(union mat4); return COMPONENT_FIELD_MAT4; }
+    if (strcmp(type, "entityId") == 0) { *size = sizeof(entityId); return COMPONENT_FIELD_ENTITY; }
+    if (strstr(type, "*") != NULL) { *size = sizeof(void *); return COMPONENT_FIELD_POINTER; }
+
+    *size = 0;
+    return COMPONENT_FIELD_OPAQUE;
+}
+
+void registerComponentField(struct world *world, componentId component, const char *name, const char *type, unsigned int offset, unsigned int count) {
+    struct component *entry = hashtableGet(&world->components, component);
+    if (entry == NULL) return;
+
+    if (entry->fieldsLength >= MAX_COMPONENT_FIELDS) {
+        print("[components] %s: field limit reached, skip %s\n", component, name);
+        return;
+    }
+
+    struct componentField *field = &entry->fields[entry->fieldsLength++];
+    field->name = name;
+    field->offset = offset;
+    field->count = count == 0 ? 1 : count;
+    field->type = componentFieldTypeFromName(type, &field->elementSize);
 }
 
 unsigned int getAllTablesWithComponents(struct world *world, componentId *components, unsigned int componentsLength, tableId *tables, unsigned int tablesLength) {
@@ -242,6 +277,7 @@ void *getComponent(struct world *world, entityId entity, componentId component) 
     if (entity == NULL) return NULL;
 
     struct entity *e = hashtableGet(&world->entities, entity);
+    if (e == NULL || e->table == INVALID_POSITION) return NULL;
     struct table *table = dynarrayGet(&world->tables, e->table);
 
     for (int i = 0; i < table->recordsLength; i++) {
